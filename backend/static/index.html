@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Assistant Backend - Chirag's Test Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Voice Assistant Backend</h1>
+        <p class="subtitle">Chirag's Personal Assistant API - Test Interface</p>
+        
+        <div id="server-status" class="status-indicator status-offline">
+            Server Status: Checking...
+        </div>
+        
+        <div class="endpoint">
+            <h3>🏥 Health Check</h3>
+            <span class="method get">GET</span>
+            <code>/health</code>
+            <button class="test-button" onclick="testEndpoint('/health', 'GET', 'health')">Test Health</button>
+            <div id="result-health" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>👤 Session Info</h3>
+            <span class="method get">GET</span>
+            <code>/api/auth/session</code>
+            <button class="test-button" onclick="testEndpoint('/api/auth/session', 'GET', 'session')">Get Session</button>
+            <div id="result-session" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>📅 Today's Schedule</h3>
+            <span class="method get">GET</span>
+            <code>/api/calendar/today</code>
+            <button class="test-button" onclick="testEndpoint('/api/calendar/today', 'GET', 'today')">Get Today's Schedule</button>
+            <div id="result-today" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>📊 Upcoming Events</h3>
+            <span class="method get">GET</span>
+            <code>/api/calendar/upcoming?days=7</code>
+            <button class="test-button" onclick="testEndpoint('/api/calendar/upcoming?days=7', 'GET', 'upcoming')">Get Upcoming (7 days)</button>
+            <button class="test-button" onclick="testEndpoint('/api/calendar/upcoming?days=14', 'GET', 'upcoming')">Get Upcoming (14 days)</button>
+            <div id="result-upcoming" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>⏰ Next Meeting</h3>
+            <span class="method get">GET</span>
+            <code>/api/calendar/next-meeting</code>
+            <button class="test-button" onclick="testEndpoint('/api/calendar/next-meeting', 'GET', 'next-meeting')">Get Next Meeting</button>
+            <div id="result-next-meeting" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>🆓 Free Time</h3>
+            <span class="method get">GET</span>
+            <code>/api/calendar/free-time</code>
+            <button class="test-button" onclick="testEndpoint('/api/calendar/free-time', 'GET', 'free-time')">Get Free Time</button>
+            <div id="result-free-time" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>🎙️ Voice Assistant Status</h3>
+            <span class="method get">GET</span>
+            <code>/api/voice/status</code>
+            <button class="test-button" onclick="testEndpoint('/api/voice/status', 'GET', 'voice-status')">Get Voice Status</button>
+            <div id="result-voice-status" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>➕ Create Event</h3>
+            <span class="method post">POST</span>
+            <code>/api/calendar/create</code>
+            <div class="input-group">
+                <input type="text" id="event-text" placeholder="e.g., 'Meeting with John tomorrow at 2pm'" />
+                <button class="test-button" onclick="testCreateEvent()">Create Event</button>
+            </div>
+            <div id="result-create-event" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>🎛️ Voice Assistant Controls</h3>
+            <button class="test-button" onclick="testEndpoint('/api/voice/start', 'POST', 'voice-controls')">🎤 Start Voice</button>
+            <button class="test-button" onclick="testEndpoint('/api/voice/stop', 'POST', 'voice-controls')">🔇 Stop Voice</button>
+            <div id="result-voice-controls" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>🧪 Quick Tests</h3>
+            <button class="test-button" onclick="runAllTests()">Run All Tests</button>
+            <button class="test-button" onclick="clearAllResults()">Clear Results</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
