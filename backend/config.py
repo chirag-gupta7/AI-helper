@@ -7,6 +7,10 @@ class Config:
     # Flask Configuration
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+
+    # Database Configuration
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'assistant.db'))
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Server Configuration
     HOST = os.getenv('HOST', '0.0.0.0')

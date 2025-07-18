@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import logging
 import threading
 import time
+from flask import current_app
 
 # Setup logging
 logging.basicConfig(
@@ -22,6 +23,39 @@ from google_calendar_integration import (
     get_next_meeting,
     get_free_time_today
 )
+
+# Database logging helper function for voice assistant
+def log_voice_to_database(user_id, level, message, commit=True):
+    """
+    Log voice assistant events to the database
+    
+    Args:
+        user_id (str): User ID from session
+        level (str): Log level (INFO, ERROR, USER, AGENT, etc.)
+        message (str): Log message
+        commit (bool): Whether to commit immediately (default True)
+    """
+    try:
+        # Import here to avoid circular imports
+        from models import db, Log
+        
+        new_log = Log(
+            user_id=user_id,
+            level=level,
+            message=message
+        )
+        db.session.add(new_log)
+        if commit:
+            db.session.commit()
+    except Exception as e:
+        # Don't let database logging errors break the voice functionality
+        logger.error(f"Failed to log voice event to database: {e}")
+        # Try to rollback if there was an issue
+        try:
+            from models import db
+            db.session.rollback()
+        except:
+            pass
 
 # Check for ElevenLabs dependencies
 ELEVENLABS_AVAILABLE = False
@@ -110,10 +144,15 @@ if ELEVENLABS_AVAILABLE:
 # Global variable to control conversation state
 conversation_active = True
 conversation_instance = None
+current_user_id = None
 
 def print_agent_response(response):
-    global conversation_active, conversation_instance
+    global conversation_active, conversation_instance, current_user_id
     logger.info(f"Agent: {response}")
+    
+    # Log agent response to database
+    if current_user_id:
+        log_voice_to_database(current_user_id, 'AGENT', f"Agent response: {response}")
     
     # Check if agent wants to create a calendar event
     if "I'll create that event for you:" in response:
@@ -121,16 +160,26 @@ def print_agent_response(response):
         event_description = response.split("I'll create that event for you:")[1].strip()
         logger.info(f"Creating calendar event: {event_description}")
         
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'INFO', f"Voice assistant creating calendar event: {event_description}")
+        
         # Create the event
         try:
             result = create_event_from_conversation(event_description)
             logger.info(f"Calendar result: {result}")
+            
+            if current_user_id:
+                log_voice_to_database(current_user_id, 'INFO', f"Calendar event created successfully: {event_description} - Result: {result}")
         except Exception as e:
             logger.error(f"Error creating event: {e}")
+            if current_user_id:
+                log_voice_to_database(current_user_id, 'ERROR', f"Failed to create calendar event '{event_description}': {str(e)}")
     
     # Check if conversation should end
     if "CONVERSATION_END" in response:
         logger.info("Ending conversation as requested...")
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'INFO', "Voice conversation ended by agent")
         conversation_active = False
         if conversation_instance:
             try:
@@ -141,21 +190,32 @@ def print_agent_response(response):
 
 def print_interrupted_response(original, corrected):
     logger.info(f"Agent interrupted, truncated response: {corrected}")
+    if current_user_id:
+        log_voice_to_database(current_user_id, 'INFO', f"Agent response interrupted: {corrected}")
 
 def print_user_transcript(transcript):
+    global current_user_id
     logger.info(f"User: {transcript}")
+    
+    # Log user input to database
+    if current_user_id:
+        log_voice_to_database(current_user_id, 'USER', f"User said: {transcript}")
     
     # Check for explicit end commands from user
     end_phrases = ["end chat", "stop", "goodbye", "bye", "that's all", "thanks bye"]
     if any(phrase in transcript.lower() for phrase in end_phrases):
         logger.info("User wants to end conversation...")
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'INFO', "User requested to end conversation")
 
 # Auto-shutdown timer
 def auto_shutdown_timer():
-    global conversation_active, conversation_instance
+    global conversation_active, conversation_instance, current_user_id
     time.sleep(600)  # 10 minutes
     if conversation_active:
         logger.info("Auto-shutdown: Ending conversation due to inactivity...")
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'INFO', "Voice conversation ended due to inactivity (10 min timeout)")
         conversation_active = False
         if conversation_instance:
             try:
@@ -164,8 +224,11 @@ def auto_shutdown_timer():
             except Exception as e:
                 logger.error(f"Error ending session: {e}")
 
-def start_voice_assistant():
-    global conversation_active, conversation_instance
+def start_voice_assistant(user_id=None):
+    global conversation_active, conversation_instance, current_user_id
+    
+    # Set the current user ID for logging
+    current_user_id = user_id
     
     # Reset conversation state
     conversation_active = True
@@ -174,14 +237,27 @@ def start_voice_assistant():
     try:
         # Check if ElevenLabs is available
         if not ELEVENLABS_AVAILABLE:
-            raise ImportError("ElevenLabs modules not available. Please install with: pip install --upgrade elevenlabs")
+            error_msg = "ElevenLabs modules not available. Please install with: pip install --upgrade elevenlabs"
+            if current_user_id:
+                log_voice_to_database(current_user_id, 'ERROR', error_msg)
+            raise ImportError(error_msg)
         
         # Check API key and Agent ID
         if not API_KEY or API_KEY == "your_elevenlabs_api_key":
-            raise ValueError("Invalid ElevenLabs API key. Please check your .env file.")
+            error_msg = "Invalid ElevenLabs API key. Please check your .env file."
+            if current_user_id:
+                log_voice_to_database(current_user_id, 'ERROR', error_msg)
+            raise ValueError(error_msg)
             
         if not AGENT_ID or AGENT_ID == "your_elevenlabs_agent_id":
-            raise ValueError("Invalid ElevenLabs agent ID. Please check your .env file.")
+            error_msg = "Invalid ElevenLabs agent ID. Please check your .env file."
+            if current_user_id:
+                log_voice_to_database(current_user_id, 'ERROR', error_msg)
+            raise ValueError(error_msg)
+        
+        logger.info("Starting voice assistant with Google Calendar integration...")
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'INFO', "Voice assistant session starting with Google Calendar integration")
         
         # Create the conversation instance
         conversation_instance = Conversation(
@@ -195,9 +271,11 @@ def start_voice_assistant():
             callback_user_transcript=print_user_transcript,
         )
         
-        logger.info("Starting voice assistant with Google Calendar integration...")
         logger.info("Say 'goodbye', 'end chat', or 'stop' to end the conversation.")
         logger.info("To schedule events, say something like: 'Schedule a meeting with John tomorrow at 2pm'")
+        
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'INFO', "Voice assistant session initialized successfully")
         
         # Start auto-shutdown timer
         timer_thread = threading.Thread(target=auto_shutdown_timer, daemon=True)
@@ -212,13 +290,19 @@ def start_voice_assistant():
             
     except KeyboardInterrupt:
         logger.info("\nKeyboard interrupt detected. Ending conversation...")
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'INFO', "Voice conversation interrupted by keyboard")
         conversation_active = False
     except ImportError as e:
         logger.error(f"Missing required modules: {e}")
         logger.error("Please install all required packages with: pip install --upgrade elevenlabs")
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'ERROR', f"Voice assistant failed to start: {str(e)}")
         raise
     except Exception as e:
         logger.error(f"Error starting voice assistant: {e}")
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'ERROR', f"Voice assistant error: {str(e)}")
         conversation_active = False
         raise
     finally:
@@ -228,6 +312,5 @@ def start_voice_assistant():
             except:
                 pass
         logger.info("Voice assistant stopped.")
-
-if __name__ == "__main__":
-    start_voice_assistant()
+        if current_user_id:
+            log_voice_to_database(current_user_id, 'INFO', "Voice assistant session ended")

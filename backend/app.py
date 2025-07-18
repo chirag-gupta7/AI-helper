@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_migrate import Migrate
 import os
 import logging
 import threading
@@ -24,6 +25,7 @@ from google_calendar_integration import (
     get_free_time_today,
     test_calendar_connection
 )
+from models import db, Log
 
 # Configure logging
 def setup_logging():
@@ -40,6 +42,35 @@ def setup_logging():
 
 logger = setup_logging()
 
+# Database logging helper function
+def log_to_database(user_id, level, message, commit=True):
+    """
+    Log important events to the database
+    
+    Args:
+        user_id (str): User ID from session
+        level (str): Log level (INFO, ERROR, USER, AGENT, etc.)
+        message (str): Log message
+        commit (bool): Whether to commit immediately (default True)
+    """
+    try:
+        new_log = Log(
+            user_id=user_id,
+            level=level,
+            message=message
+        )
+        db.session.add(new_log)
+        if commit:
+            db.session.commit()
+    except Exception as e:
+        # Don't let database logging errors break the main functionality
+        logger.error(f"Failed to log to database: {e}")
+        # Try to rollback if there was an issue
+        try:
+            db.session.rollback()
+        except:
+            pass
+
 def create_app(config_name=None):
     """Application factory pattern"""
     app = Flask(__name__)
@@ -48,6 +79,10 @@ def create_app(config_name=None):
     config_name = config_name or os.getenv('FLASK_ENV', 'development')
     app.config.from_object(config[config_name])
     
+    # Initialize database
+    db.init_app(app)
+    migrate = Migrate(app, db)
+
     # Validate environment variables
     try:
         config[config_name].validate_required_env_vars()
@@ -99,6 +134,9 @@ def create_app(config_name=None):
         """Simple authentication check"""
         if 'user_id' not in session:
             session['user_id'] = str(uuid.uuid4())
+            # Save a log of the new session
+            with app.app_context():
+                log_to_database(session['user_id'], 'INFO', 'New user session created')
         return session['user_id']
     
     # Routes
@@ -117,6 +155,7 @@ def create_app(config_name=None):
                     'calendar': '/api/calendar/*',
                     'voice': '/api/voice/*',
                     'auth': '/api/auth/*',
+                    'logs': '/api/logs',
                     'test_page': '/static/index.html'
                 }
             },
@@ -163,6 +202,26 @@ def create_app(config_name=None):
             }
         )
     
+    # Log endpoint
+    @app.route('/api/logs', methods=['GET'])
+    def get_logs():
+        """Get paginated logs for the current user"""
+        user_id = require_auth()
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+
+        logs = Log.query.filter_by(user_id=user_id).order_by(Log.timestamp.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        
+        return create_response(
+            success=True,
+            data={
+                'logs': [log.to_dict() for log in logs.items],
+                'total': logs.total,
+                'page': logs.page,
+                'pages': logs.pages
+            }
+        )
+
     # Calendar API endpoints
     @app.route('/api/calendar/today', methods=['GET'])
     @limiter.limit("30 per minute")
@@ -172,7 +231,11 @@ def create_app(config_name=None):
         
         try:
             logger.info(f"User {user_id} requested today's schedule")
+            log_to_database(user_id, 'INFO', "Requested today's schedule")
+            
             schedule = get_today_schedule()
+            
+            log_to_database(user_id, 'INFO', f"Successfully retrieved today's schedule: {len(schedule) if isinstance(schedule, list) else 'schedule data'} events")
             
             return create_response(
                 success=True,
@@ -182,6 +245,7 @@ def create_app(config_name=None):
         except Exception as e:
             logger.error(f"Error getting today's schedule: {e}")
             logger.error(traceback.format_exc())
+            log_to_database(user_id, 'ERROR', f"Failed to retrieve today's schedule: {str(e)}")
             return create_response(
                 success=False,
                 error=str(e)
@@ -203,7 +267,11 @@ def create_app(config_name=None):
         
         try:
             logger.info(f"User {user_id} requested upcoming events for {days} days")
+            log_to_database(user_id, 'INFO', f"Requested upcoming events for {days} days")
+            
             events = get_upcoming_events(days)
+            
+            log_to_database(user_id, 'INFO', f"Successfully retrieved {len(events) if isinstance(events, list) else 'upcoming'} events for {days} days")
             
             return create_response(
                 success=True,
@@ -213,6 +281,7 @@ def create_app(config_name=None):
         except Exception as e:
             logger.error(f"Error getting upcoming events: {e}")
             logger.error(traceback.format_exc())
+            log_to_database(user_id, 'ERROR', f"Failed to retrieve upcoming events: {str(e)}")
             return create_response(
                 success=False,
                 error=str(e)
@@ -241,7 +310,11 @@ def create_app(config_name=None):
         
         try:
             logger.info(f"User {user_id} creating event: {event_text}")
+            log_to_database(user_id, 'INFO', f"Creating calendar event: {event_text}")
+            
             result = create_event_from_conversation(event_text)
+            
+            log_to_database(user_id, 'INFO', f"Successfully created calendar event: {event_text} - Result: {result}")
             
             # Emit real-time update to connected clients
             socketio.emit('calendar_update', {
@@ -259,6 +332,7 @@ def create_app(config_name=None):
         except Exception as e:
             logger.error(f"Error creating event: {e}")
             logger.error(traceback.format_exc())
+            log_to_database(user_id, 'ERROR', f"Failed to create calendar event '{event_text}': {str(e)}")
             return create_response(
                 success=False,
                 error=str(e)
@@ -272,7 +346,11 @@ def create_app(config_name=None):
         
         try:
             logger.info(f"User {user_id} requested next meeting")
+            log_to_database(user_id, 'INFO', "Requested next meeting information")
+            
             meeting = get_next_meeting()
+            
+            log_to_database(user_id, 'INFO', f"Successfully retrieved next meeting: {meeting.get('summary', 'No meeting') if isinstance(meeting, dict) else 'meeting data'}")
             
             return create_response(
                 success=True,
@@ -282,6 +360,7 @@ def create_app(config_name=None):
         except Exception as e:
             logger.error(f"Error getting next meeting: {e}")
             logger.error(traceback.format_exc())
+            log_to_database(user_id, 'ERROR', f"Failed to retrieve next meeting: {str(e)}")
             return create_response(
                 success=False,
                 error=str(e)
@@ -295,7 +374,11 @@ def create_app(config_name=None):
         
         try:
             logger.info(f"User {user_id} requested free time")
+            log_to_database(user_id, 'INFO', "Requested free time slots")
+            
             free_time = get_free_time_today()
+            
+            log_to_database(user_id, 'INFO', f"Successfully retrieved free time slots: {len(free_time) if isinstance(free_time, list) else 'free time data'} slots")
             
             return create_response(
                 success=True,
@@ -305,6 +388,7 @@ def create_app(config_name=None):
         except Exception as e:
             logger.error(f"Error getting free time: {e}")
             logger.error(traceback.format_exc())
+            log_to_database(user_id, 'ERROR', f"Failed to retrieve free time: {str(e)}")
             return create_response(
                 success=False,
                 error=str(e)
@@ -327,6 +411,7 @@ def create_app(config_name=None):
                     }), 400
             
             logger.info(f"Starting voice assistant for user {user_id}")
+            log_to_database(user_id, 'INFO', "Voice assistant started")
             
             # Create voice session
             session_data = {
@@ -350,12 +435,14 @@ def create_app(config_name=None):
                         'message': 'Voice assistant is now active'
                     }, room=f"user_{user_id}")
                     
-                    # Start the actual voice assistant
-                    start_voice_assistant()
+                    # Start the actual voice assistant with user_id for database logging
+                    start_voice_assistant(user_id=user_id)
                     
                 except Exception as e:
                     logger.error(f"Voice assistant error: {e}")
                     logger.error(traceback.format_exc())
+                    log_to_database(user_id, 'ERROR', f"Voice assistant error: {str(e)}")
+                    
                     socketio.emit('voice_error', {
                         'error': str(e),
                         'timestamp': datetime.utcnow().isoformat()
@@ -379,6 +466,7 @@ def create_app(config_name=None):
         except Exception as e:
             logger.error(f"Error starting voice assistant: {e}")
             logger.error(traceback.format_exc())
+            log_to_database(user_id, 'ERROR', f"Failed to start voice assistant: {str(e)}")
             
             # Always return valid JSON
             return jsonify({
@@ -404,6 +492,7 @@ def create_app(config_name=None):
         
         try:
             logger.info(f"Stopping voice assistant for user {user_id}")
+            log_to_database(user_id, 'INFO', "Voice assistant stopped")
             
             # Stop the session
             app.state['voice_sessions'][user_id]['active'] = False
@@ -424,6 +513,7 @@ def create_app(config_name=None):
         except Exception as e:
             logger.error(f"Error stopping voice assistant: {e}")
             logger.error(traceback.format_exc())
+            log_to_database(user_id, 'ERROR', f"Failed to stop voice assistant: {str(e)}")
             
             return jsonify({
                 'success': False,
@@ -482,6 +572,7 @@ def create_app(config_name=None):
         user_id = require_auth()
         join_room(f"user_{user_id}")
         logger.info(f"Client connected: {user_id}")
+        log_to_database(user_id, 'INFO', "WebSocket client connected")
         
         emit('connection_status', {
             'connected': True,
@@ -495,6 +586,7 @@ def create_app(config_name=None):
         user_id = session.get('user_id')
         if user_id:
             logger.info(f"Client disconnected: {user_id}")
+            log_to_database(user_id, 'INFO', "WebSocket client disconnected")
             leave_room(f"user_{user_id}")
             
             # Clean up voice session if active
