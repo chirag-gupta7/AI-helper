@@ -365,3 +365,668 @@ ModuleNotFoundError: No module named 'elevenlabs.client'
 2025-07-14 13:51:18,023 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
 2025-07-14 13:51:19,069 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
 2025-07-14 13:51:20,101 - werkzeug - INFO - 192.168.29.121 - - [14/Jul/2025 13:51:20] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:06:50,759 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 15:06:50,762 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 15:06:56,316 - werkzeug - INFO - 192.168.29.121 - - [17/Jul/2025 15:06:56] "GET / HTTP/1.1" 200 -
+2025-07-17 15:06:56,451 - werkzeug - INFO - 192.168.29.121 - - [17/Jul/2025 15:06:56] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-17 15:07:13,583 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:07:14,723 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:07:15,906 - werkzeug - INFO - 192.168.29.121 - - [17/Jul/2025 15:07:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:07:21,633 - werkzeug - INFO - 192.168.29.121 - - [17/Jul/2025 15:07:21] "GET / HTTP/1.1" 200 -
+2025-07-17 15:07:34,351 - werkzeug - INFO - 192.168.29.121 - - [17/Jul/2025 15:07:34] "[33mGET /static/index HTTP/1.1[0m" 404 -
+2025-07-17 15:08:13,217 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:08:14,217 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:08:15,287 - werkzeug - INFO - 192.168.29.121 - - [17/Jul/2025 15:08:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:10:34,128 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 15:10:34,128 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 15:10:34,129 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 15:10:37,652 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 15:10:37,660 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 15:10:38,054 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:38] "GET /static/index.html HTTP/1.1" 200 -
+2025-07-17 15:10:38,148 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:38] "GET /static/styles.css HTTP/1.1" 200 -
+2025-07-17 15:10:38,193 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:38] "GET /static/app.js HTTP/1.1" 200 -
+2025-07-17 15:10:38,425 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:10:38,461 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:38] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-17 15:10:39,569 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:10:40,605 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:40] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:10:42,611 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:10:43,671 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:10:44,687 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:44] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:10:45,207 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:45] "GET /api/auth/session HTTP/1.1" 200 -
+2025-07-17 15:10:45,720 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested today's schedule
+2025-07-17 15:10:45,725 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:10:46,836 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:46] "GET /api/calendar/today HTTP/1.1" 200 -
+2025-07-17 15:10:47,351 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested upcoming events for 7 days
+2025-07-17 15:10:47,355 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:10:48,465 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:48] "GET /api/calendar/upcoming?days=7 HTTP/1.1" 200 -
+2025-07-17 15:10:48,988 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested next meeting
+2025-07-17 15:10:48,994 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:10:50,042 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:50] "GET /api/calendar/next-meeting HTTP/1.1" 200 -
+2025-07-17 15:10:50,557 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested free time
+2025-07-17 15:10:50,561 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:10:51,634 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:51] "GET /api/calendar/free-time HTTP/1.1" 200 -
+2025-07-17 15:10:52,147 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:52] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-17 15:10:54,940 - __main__ - INFO - Starting voice assistant for user 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9
+2025-07-17 15:10:54,942 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:10:54] "POST /api/voice/start HTTP/1.1" 200 -
+2025-07-17 15:10:56,265 - __main__ - ERROR - Voice assistant error: No module named 'elevenlabs.client'
+2025-07-17 15:10:56,267 - __main__ - ERROR - Traceback (most recent call last):
+  File "D:\coding\Python coding\AI helper\backend\app.py", line 343, in voice_worker
+    from voice_assistant import start_voice_assistant
+  File "D:\coding\Python coding\AI helper\backend\voice_assistant.py", line 3, in <module>
+    from elevenlabs.client import ElevenLabs
+ModuleNotFoundError: No module named 'elevenlabs.client'
+
+2025-07-17 15:11:08,427 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:11:09,442 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:11:10,479 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:11:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:11:13,220 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:11:14,262 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:11:15,232 - werkzeug - INFO - 192.168.29.121 - - [17/Jul/2025 15:11:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:11:39,219 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:11:40,212 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:11:41,231 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:11:41] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:15:45,115 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 15:15:45,117 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 15:15:45,118 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 15:15:47,920 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 15:15:47,926 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 15:15:48,069 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:15:48] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 15:15:48,128 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:15:48] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 15:15:48,133 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:15:48] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 15:15:48,422 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:15:49,515 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:15:50,675 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:15:50] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:15:59,535 - __main__ - INFO - Starting voice assistant for user 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9
+2025-07-17 15:15:59,537 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:15:59] "POST /api/voice/start HTTP/1.1" 200 -
+2025-07-17 15:16:00,414 - __main__ - ERROR - Voice assistant error: No module named 'elevenlabs.conversational_ai'
+2025-07-17 15:16:00,416 - __main__ - ERROR - Traceback (most recent call last):
+  File "D:\coding\Python coding\AI helper\backend\app.py", line 343, in voice_worker
+    from voice_assistant import start_voice_assistant
+  File "D:\coding\Python coding\AI helper\backend\voice_assistant.py", line 4, in <module>
+    from elevenlabs.conversational_ai.conversation import Conversation
+ModuleNotFoundError: No module named 'elevenlabs.conversational_ai'
+
+2025-07-17 15:16:18,423 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:16:19,456 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:16:20,472 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:16:20] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:17:27,815 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 15:17:27,816 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 15:17:27,817 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 15:17:30,701 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 15:17:30,708 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 15:17:30,847 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:30] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 15:17:30,904 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:30] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 15:17:30,905 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:30] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 15:17:31,151 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:17:32,338 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:17:33,509 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:33] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:17:35,247 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:35] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 15:17:35,297 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:35] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 15:17:35,299 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:35] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 15:17:35,331 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:17:36,426 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:17:37,406 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:37] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 15:17:37,464 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:37] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 15:17:37,465 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:37] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 15:17:37,491 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:17:37,527 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:37] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:17:38,646 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:17:39,702 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:39] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:17:42,221 - __main__ - INFO - Starting voice assistant for user 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9
+2025-07-17 15:17:42,224 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:17:42] "POST /api/voice/start HTTP/1.1" 200 -
+2025-07-17 15:17:45,877 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:17:48,413 - httpx - INFO - HTTP Request: GET https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=agent_01jzwh6c9df98rqxyc624gv7wt "HTTP/1.1 200 OK"
+2025-07-17 15:18:04,709 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:18:08,223 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:18:09,197 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:18:10,183 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:18:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:18:23,941 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:18:38,222 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:18:39,294 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:18:40,346 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:18:40] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:40:05,805 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 15:40:05,806 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 15:40:05,807 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 15:40:08,856 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 15:40:08,868 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 15:40:09,092 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:40:09] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 15:40:09,141 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:40:09] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 15:40:09,168 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:40:09] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 15:40:09,395 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:40:10,637 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:40:11,799 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:40:11] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:40:39,400 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:40:40,702 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:40:42,271 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:40:42] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:41:10,217 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:41:11,257 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:41:12,406 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:41:12] "GET /health HTTP/1.1" 200 -
+2025-07-17 15:41:40,218 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:41:41,208 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 15:41:42,254 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 15:41:42] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:30:05,291 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 18:30:05,291 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 18:30:05,292 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 18:30:07,307 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 18:30:07,317 - werkzeug - INFO -  * Debugger PIN: 940-779-358
+2025-07-17 18:30:07,496 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:30:07] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 18:30:07,585 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:30:07] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 18:30:07,636 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:30:07] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 18:30:09,136 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:30:10,459 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:30:11,586 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:30:11] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:30:38,215 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:30:39,210 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:30:40,217 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:30:40] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:31:08,231 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:09,210 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:10,223 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:31:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:31:19,612 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:20,612 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:21,939 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:31:21] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:31:22,466 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:31:22] "GET /api/auth/session HTTP/1.1" 200 -
+2025-07-17 18:31:22,982 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested today's schedule
+2025-07-17 18:31:22,986 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:24,029 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:31:24] "GET /api/calendar/today HTTP/1.1" 200 -
+2025-07-17 18:31:24,547 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested upcoming events for 7 days
+2025-07-17 18:31:24,552 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:25,606 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:31:25] "GET /api/calendar/upcoming?days=7 HTTP/1.1" 200 -
+2025-07-17 18:31:26,130 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested next meeting
+2025-07-17 18:31:26,134 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:27,159 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:31:27] "GET /api/calendar/next-meeting HTTP/1.1" 200 -
+2025-07-17 18:31:27,671 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested free time
+2025-07-17 18:31:27,676 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:28,693 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:31:28] "GET /api/calendar/free-time HTTP/1.1" 200 -
+2025-07-17 18:31:29,215 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:31:29] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-17 18:31:38,216 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:39,226 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:31:40,218 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:31:40] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:32:08,228 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:32:09,215 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:32:10,290 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:32:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:32:38,232 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:32:39,253 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:32:40,406 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:32:40] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:33:08,228 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:33:09,324 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:33:10,432 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:33:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:33:38,239 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:33:39,604 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:33:41,438 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:33:41] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:34:13,243 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:34:14,675 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:34:16,644 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:34:16] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:35:13,241 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:35:14,304 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:35:15,390 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:35:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:36:13,219 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:36:14,328 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:36:15,423 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:36:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:37:13,228 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:37:14,248 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:37:15,379 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:37:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:38:13,229 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:38:14,315 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:38:15,386 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:38:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:39:13,227 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:39:14,383 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:39:15,449 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:39:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:40:13,219 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:40:14,228 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:40:15,241 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:40:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:41:13,225 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:41:14,246 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:41:15,253 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:41:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:42:13,223 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:42:14,260 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:42:15,358 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:42:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:42:37,909 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:42:38,897 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:42:39,999 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:42:39] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:43:07,916 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:43:08,931 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:43:09,959 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:43:09] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:43:38,226 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:43:39,272 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:43:40,590 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:43:40] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:44:08,218 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:44:09,220 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:44:10,242 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:44:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:45:09,223 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:45:10,229 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:45:11,468 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:45:11] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:45:38,231 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:45:39,237 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:45:40,291 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:45:40] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:46:08,227 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:46:09,167 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:46:10,148 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:46:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:47:09,217 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:47:10,209 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:47:11,187 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:47:11] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:48:10,223 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:48:11,204 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:48:12,176 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:48:12] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:49:11,227 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:49:12,442 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:49:13,480 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:49:13] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:50:12,224 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:50:13,245 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:50:14,271 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:50:14] "GET /health HTTP/1.1" 200 -
+2025-07-17 18:50:20,670 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:50:20] "GET /socket.io/?EIO=4&transport=polling&t=f3wyt56n HTTP/1.1" 200 -
+2025-07-17 18:50:20,846 - __main__ - INFO - Client connected: 4e81769a-cc90-4e2f-948c-6baea4168d15
+2025-07-17 18:50:20,849 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:50:20] "POST /socket.io/?EIO=4&transport=polling&t=f3x3hoai&sid=1arsoz9ukr7a807rAAAA HTTP/1.1" 200 -
+2025-07-17 18:50:20,857 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:50:20] "GET /socket.io/?EIO=4&transport=polling&t=f3x3krp4&sid=1arsoz9ukr7a807rAAAA HTTP/1.1" 200 -
+2025-07-17 18:50:20,864 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:50:20] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-17 18:50:20,881 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:50:20] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-17 18:50:27,992 - __main__ - INFO - Starting voice assistant for user 7941abe9-cf70-4e97-8b26-7365d6f48398
+2025-07-17 18:50:27,995 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:50:27] "POST /api/voice/start HTTP/1.1" 200 -
+2025-07-17 18:50:29,565 - __main__ - ERROR - Voice assistant error: No module named 'elevenlabs.conversational_ai'
+2025-07-17 18:50:29,570 - __main__ - ERROR - Traceback (most recent call last):
+  File "D:\coding\Python coding\AI helper\backend\app.py", line 343, in voice_worker
+    from voice_assistant import start_voice_assistant
+  File "D:\coding\Python coding\AI helper\backend\voice_assistant.py", line 4, in <module>
+    from elevenlabs.conversational_ai.conversation import Conversation
+ModuleNotFoundError: No module named 'elevenlabs.conversational_ai'
+
+2025-07-17 18:50:46,819 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:50:46] "[31m[1mPOST /api/voice/stop HTTP/1.1[0m" 400 -
+2025-07-17 18:51:00,428 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:51:00] "[31m[1mPOST /api/voice/stop HTTP/1.1[0m" 400 -
+2025-07-17 18:51:00,696 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:51:00] "[31m[1mPOST /api/voice/stop HTTP/1.1[0m" 400 -
+2025-07-17 18:51:01,162 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:51:01] "[31m[1mPOST /api/voice/stop HTTP/1.1[0m" 400 -
+2025-07-17 18:51:01,352 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:51:01] "[31m[1mPOST /api/voice/stop HTTP/1.1[0m" 400 -
+2025-07-17 18:51:01,533 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:51:01] "[31m[1mPOST /api/voice/stop HTTP/1.1[0m" 400 -
+2025-07-17 18:51:03,995 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:51:03] "[31m[1mPOST /api/voice/stop HTTP/1.1[0m" 400 -
+2025-07-17 18:51:05,167 - __main__ - INFO - Client disconnected: 4e81769a-cc90-4e2f-948c-6baea4168d15
+2025-07-17 18:51:05,168 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:51:05] "GET /socket.io/?EIO=4&transport=websocket&sid=1arsoz9ukr7a807rAAAA HTTP/1.1" 200 -
+2025-07-17 18:51:05,184 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:51:06,252 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 18:51:07,280 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 18:51:07] "GET /health HTTP/1.1" 200 -
+2025-07-17 19:58:04,268 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 19:58:04,268 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 19:58:04,269 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 19:58:07,053 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 19:58:07,062 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 19:58:07,360 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:58:07] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 19:58:07,421 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:58:07] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 19:58:07,423 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:58:07] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 19:58:08,855 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 19:58:10,116 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 19:58:11,294 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:58:11] "GET /health HTTP/1.1" 200 -
+2025-07-17 19:58:37,693 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 19:58:38,676 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 19:58:39,911 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:58:39] "GET /health HTTP/1.1" 200 -
+2025-07-17 19:59:07,694 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 19:59:08,744 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 19:59:09,931 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:59:09] "GET /health HTTP/1.1" 200 -
+2025-07-17 19:59:26,449 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:59:26] "GET /socket.io/?EIO=4&transport=polling&t=hkrvb0b6 HTTP/1.1" 200 -
+2025-07-17 19:59:26,613 - __main__ - INFO - Client connected: 7941abe9-cf70-4e97-8b26-7365d6f48398
+2025-07-17 19:59:26,615 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:59:26] "POST /socket.io/?EIO=4&transport=polling&t=hks03wkj&sid=gyCdGim-HQd_NWgdAAAA HTTP/1.1" 200 -
+2025-07-17 19:59:26,619 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:59:26] "GET /socket.io/?EIO=4&transport=polling&t=hks079g2&sid=gyCdGim-HQd_NWgdAAAA HTTP/1.1" 200 -
+2025-07-17 19:59:26,625 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:59:26] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-17 19:59:26,643 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:59:26] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-17 19:59:33,289 - __main__ - INFO - Starting voice assistant for user 7941abe9-cf70-4e97-8b26-7365d6f48398
+2025-07-17 19:59:33,292 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:59:33] "POST /api/voice/start HTTP/1.1" 200 -
+2025-07-17 19:59:38,225 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 19:59:38,926 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 19:59:39,275 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 19:59:40,528 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 19:59:40] "GET /health HTTP/1.1" 200 -
+2025-07-17 19:59:41,688 - httpx - INFO - HTTP Request: GET https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=agent_01jzwh6c9df98rqxyc624gv7wt "HTTP/1.1 200 OK"
+2025-07-17 19:59:57,613 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:00:07,409 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:00:08,218 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:00:09,243 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:00:10,822 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:00:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:00:38,224 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:00:39,323 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:00:40,367 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:00:40] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:01:08,218 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:01:09,209 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:01:10,262 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:01:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:01:23,076 - __main__ - INFO - Client disconnected: 7941abe9-cf70-4e97-8b26-7365d6f48398
+2025-07-17 20:01:23,078 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:01:23] "GET /socket.io/?EIO=4&transport=websocket&sid=gyCdGim-HQd_NWgdAAAA HTTP/1.1" 200 -
+2025-07-17 20:13:44,389 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 20:13:44,390 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 20:13:44,391 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 20:13:47,187 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 20:13:47,193 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 20:13:47,364 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:13:47] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 20:13:47,441 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:13:47] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 20:13:47,445 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:13:47] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 20:13:47,784 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:13:48,892 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:13:50,019 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:13:50] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:14:18,232 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:14:19,262 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:14:20,476 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:14:20] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:14:48,219 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:14:49,286 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:14:50,378 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:14:50] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:15:18,219 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:15:19,335 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:15:20,633 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:15:20] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:15:48,231 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:15:49,324 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:15:50,427 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:15:50] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:16:18,227 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:16:19,294 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:16:20,351 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:16:20] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:16:48,231 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:16:49,492 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:16:50,546 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:16:50] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:17:18,229 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:17:19,229 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:17:20,255 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:17:20] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:18:13,233 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:18:14,281 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:18:15,696 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:18:15] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:21:29,446 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 20:21:29,446 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 20:21:29,447 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 20:21:32,083 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 20:21:32,091 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 20:21:32,230 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:21:32] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 20:21:32,278 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:21:32] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 20:21:32,280 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:21:32] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 20:21:32,569 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:21:33,677 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:21:34,782 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:21:34] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:25:01,414 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 20:25:01,414 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 20:25:01,415 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 20:25:04,261 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 20:25:04,267 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 20:25:04,404 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:04] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 20:25:04,459 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:04] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 20:25:04,461 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:04] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 20:25:04,801 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:05,995 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:07,211 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:07] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:25:35,218 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:36,240 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:37,349 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:37] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:25:41,169 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:42,155 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:43,204 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:43] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:25:43,722 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:43] "GET /api/auth/session HTTP/1.1" 200 -
+2025-07-17 20:25:44,236 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested today's schedule
+2025-07-17 20:25:44,240 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:45,370 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:45] "GET /api/calendar/today HTTP/1.1" 200 -
+2025-07-17 20:25:45,886 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested upcoming events for 7 days
+2025-07-17 20:25:45,891 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:46,985 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:46] "GET /api/calendar/upcoming?days=7 HTTP/1.1" 200 -
+2025-07-17 20:25:47,515 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested next meeting
+2025-07-17 20:25:47,519 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:48,609 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:48] "GET /api/calendar/next-meeting HTTP/1.1" 200 -
+2025-07-17 20:25:49,134 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested free time
+2025-07-17 20:25:49,137 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:50,187 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:50] "GET /api/calendar/free-time HTTP/1.1" 200 -
+2025-07-17 20:25:50,703 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:50] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-17 20:25:52,166 - __main__ - INFO - User 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9 requested next meeting
+2025-07-17 20:25:52,170 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:25:53,243 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:25:53] "GET /api/calendar/next-meeting HTTP/1.1" 200 -
+2025-07-17 20:26:05,230 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:26:06,351 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:26:07,514 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:26:07] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:34:53,492 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 20:34:53,492 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 20:34:53,493 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 20:34:56,504 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 20:34:56,513 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 20:34:56,703 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:34:56] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 20:34:56,791 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:34:56] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 20:34:56,793 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:34:56] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 20:34:57,145 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:34:58,333 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:34:59,491 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:34:59] "GET /health HTTP/1.1" 200 -
+2025-07-17 20:35:27,229 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:35:28,323 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:37:23,963 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 20:37:23,963 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 20:37:23,964 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 20:37:26,811 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 20:37:26,820 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 20:37:26,986 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:37:26] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 20:37:27,042 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:37:27] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 20:37:27,044 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:37:27] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 20:37:27,273 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:37:28,628 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 20:37:29,853 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 20:37:29] "GET /health HTTP/1.1" 200 -
+2025-07-17 21:02:32,336 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 21:02:32,336 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 21:02:32,337 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 21:02:34,885 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 21:02:34,890 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 21:02:35,058 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:02:35] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 21:02:35,122 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:02:35] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 21:02:35,123 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:02:35] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 21:02:36,360 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:02:37,502 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:02:38,650 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:02:38] "GET /health HTTP/1.1" 200 -
+2025-07-17 21:03:05,403 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:03:06,404 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:03:07,491 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:03:07] "GET /health HTTP/1.1" 200 -
+2025-07-17 21:22:17,450 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 21:22:17,450 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 21:22:17,451 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 21:22:20,222 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 21:22:20,231 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 21:22:20,425 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:22:20] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 21:22:20,510 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:22:20] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 21:22:20,514 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:22:20] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 21:22:20,932 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:22:22,225 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:22:23,535 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:22:23] "GET /health HTTP/1.1" 200 -
+2025-07-17 21:22:51,218 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:22:52,261 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:22:53,402 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:22:53] "GET /health HTTP/1.1" 200 -
+2025-07-17 21:31:14,140 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 21:31:14,141 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 21:31:14,141 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 21:31:17,019 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 21:31:17,027 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 21:31:17,174 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:31:17] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 21:31:17,233 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:31:17] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 21:31:17,235 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:31:17] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 21:31:17,491 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:31:18,620 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:31:19,744 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:31:19] "GET /health HTTP/1.1" 200 -
+2025-07-17 21:31:24,418 - __main__ - INFO - Starting voice assistant for user 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9
+2025-07-17 21:31:24,420 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:31:24] "POST /api/voice/start HTTP/1.1" 200 -
+2025-07-17 21:31:28,135 - voice_assistant - INFO - Fetching today's schedule from Google Calendar...
+2025-07-17 21:31:28,139 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:31:29,197 - voice_assistant - INFO - Schedule retrieved: Meeting in What should I call it? at 19:59; Birthday celebration in Does that sound right? at 20:00
+2025-07-17 21:31:30,000 - voice_assistant - INFO - Starting voice assistant with Google Calendar integration...
+2025-07-17 21:31:30,001 - voice_assistant - INFO - Say 'goodbye', 'end chat', or 'stop' to end the conversation.
+2025-07-17 21:31:30,001 - voice_assistant - INFO - To schedule events, say something like: 'Schedule a meeting with John tomorrow at 2pm'
+2025-07-17 21:31:30,407 - httpx - INFO - HTTP Request: GET https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=agent_01jzwh6c9df98rqxyc624gv7wt "HTTP/1.1 200 OK"
+2025-07-17 21:31:32,226 - voice_assistant - INFO - Agent: Hi Chirag! I've got your schedule ready. I can help you view events, schedule meetings, or find free time. What would you like to do?
+2025-07-17 21:31:37,367 - voice_assistant - INFO - Agent interrupted, truncated response: Hi Chirag! I've got your schedule ready. I can help you view events, schedule meetings, or find free...
+2025-07-17 21:31:38,407 - voice_assistant - INFO - User: Goodbye.
+2025-07-17 21:31:38,408 - voice_assistant - INFO - User wants to end conversation...
+2025-07-17 21:31:38,852 - voice_assistant - INFO - Agent: Goodbye! Have a great day, Chirag. CONVERSATION_END
+2025-07-17 21:31:38,853 - voice_assistant - INFO - Ending conversation as requested...
+2025-07-17 21:31:39,281 - voice_assistant - INFO - Session ended gracefully.
+2025-07-17 21:31:39,419 - voice_assistant - INFO - Voice assistant stopped.
+2025-07-17 21:31:44,930 - __main__ - INFO - Stopping voice assistant for user 7d1c8c42-c87d-4f90-8d7a-0b9f2d1d08c9
+2025-07-17 21:31:44,932 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:31:44] "POST /api/voice/stop HTTP/1.1" 200 -
+2025-07-17 21:31:47,499 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:31:48,530 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:31:49,601 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:31:49] "GET /health HTTP/1.1" 200 -
+2025-07-17 21:32:18,234 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:32:19,260 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:32:20,361 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:32:20] "GET /health HTTP/1.1" 200 -
+2025-07-17 21:58:21,909 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 21:58:21,909 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 21:58:21,909 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 21:58:24,773 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 21:58:24,781 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 21:58:24,934 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:58:24] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 21:58:24,994 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:58:24] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 21:58:24,995 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:58:24] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 21:58:25,328 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:58:26,509 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:58:27,660 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:58:27] "GET /health HTTP/1.1" 200 -
+2025-07-17 21:58:56,220 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:58:57,280 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 21:58:58,455 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 21:58:58] "GET /health HTTP/1.1" 200 -
+2025-07-17 22:25:03,796 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-17 22:25:03,796 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 22:25:03,797 - werkzeug - INFO -  * Restarting with stat
+2025-07-17 22:25:06,439 - werkzeug - WARNING -  * Debugger is active!
+2025-07-17 22:25:06,448 - werkzeug - INFO -  * Debugger PIN: 147-242-804
+2025-07-17 22:25:06,764 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:06] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-17 22:25:06,836 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:06] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-17 22:25:06,837 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:06] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-17 22:25:07,868 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 22:25:09,176 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 22:25:10,282 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:10] "GET /health HTTP/1.1" 200 -
+2025-07-17 22:25:17,535 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:17] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-17 22:25:17,552 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:17] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-17 22:25:17,672 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:17] "GET /socket.io/?EIO=4&transport=polling&t=msc4xk9e HTTP/1.1" 200 -
+2025-07-17 22:25:17,941 - __main__ - INFO - Client connected: 938ed818-fbd3-4779-9cf7-06c6c210dc37
+2025-07-17 22:25:17,942 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:17] "POST /socket.io/?EIO=4&transport=polling&t=mscdq7c1&sid=nyreI-AIe-mzAU65AAAA HTTP/1.1" 200 -
+2025-07-17 22:25:17,988 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:17] "GET /socket.io/?EIO=4&transport=polling&t=mscdteix&sid=nyreI-AIe-mzAU65AAAA HTTP/1.1" 200 -
+2025-07-17 22:25:18,004 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:18] "GET /socket.io/?EIO=4&transport=polling&t=mscmnbet&sid=nyreI-AIe-mzAU65AAAA HTTP/1.1" 200 -
+2025-07-17 22:25:20,557 - __main__ - INFO - Starting voice assistant for user 7941abe9-cf70-4e97-8b26-7365d6f48398
+2025-07-17 22:25:20,560 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:20] "POST /api/voice/start HTTP/1.1" 200 -
+2025-07-17 22:25:24,158 - voice_assistant - INFO - Fetching today's schedule from Google Calendar...
+2025-07-17 22:25:24,161 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 22:25:25,216 - voice_assistant - INFO - Schedule retrieved: Meeting in What should I call it? at 19:59; Birthday celebration in Does that sound right? at 20:00
+2025-07-17 22:25:25,934 - voice_assistant - INFO - Starting voice assistant with Google Calendar integration...
+2025-07-17 22:25:25,935 - voice_assistant - INFO - Say 'goodbye', 'end chat', or 'stop' to end the conversation.
+2025-07-17 22:25:25,935 - voice_assistant - INFO - To schedule events, say something like: 'Schedule a meeting with John tomorrow at 2pm'
+2025-07-17 22:25:26,410 - httpx - INFO - HTTP Request: GET https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=agent_01jzwh6c9df98rqxyc624gv7wt "HTTP/1.1 200 OK"
+2025-07-17 22:25:28,422 - voice_assistant - INFO - Agent: Hi Chirag! I've got your schedule ready. I can help you view events, schedule meetings, or find free time. What would you like to do?
+2025-07-17 22:25:37,219 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 22:25:38,196 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 22:25:39,235 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:25:39] "GET /health HTTP/1.1" 200 -
+2025-07-17 22:25:48,035 - voice_assistant - INFO - User: Please create a schedule for me from 6 a.m. to 7.30 p.m. for tomorrow.
+2025-07-17 22:25:48,521 - voice_assistant - INFO - Agent: I'll create that event for you: Schedule from six a.m. to seven thirty p.m. for tomorrow. Is there anything else I can help you with?
+2025-07-17 22:25:48,522 - voice_assistant - INFO - Creating calendar event: Schedule from six a.m. to seven thirty p.m. for tomorrow. Is there anything else I can help you with?
+2025-07-17 22:25:48,526 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 22:25:59,787 - voice_assistant - INFO - User: Just name the meeting very important
+2025-07-17 22:26:00,328 - voice_assistant - INFO - Agent: I'll create that event for you: Schedule from six a.m. to seven thirty p.m. for tomorrow named very important. Is that correct?
+2025-07-17 22:26:00,328 - voice_assistant - INFO - Creating calendar event: Schedule from six a.m. to seven thirty p.m. for tomorrow named very important. Is that correct?
+2025-07-17 22:26:00,333 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 22:26:07,231 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 22:26:08,200 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-17 22:26:09,221 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:26:09] "GET /health HTTP/1.1" 200 -
+2025-07-17 22:26:09,953 - voice_assistant - INFO - User: Yes goodbye
+2025-07-17 22:26:09,953 - voice_assistant - INFO - User wants to end conversation...
+2025-07-17 22:26:10,410 - voice_assistant - INFO - Agent: Goodbye! Have a great day, Chirag. CONVERSATION_END
+2025-07-17 22:26:10,410 - voice_assistant - INFO - Ending conversation as requested...
+2025-07-17 22:26:16,703 - __main__ - INFO - Stopping voice assistant for user 7941abe9-cf70-4e97-8b26-7365d6f48398
+2025-07-17 22:26:16,707 - werkzeug - INFO - 127.0.0.1 - - [17/Jul/2025 22:26:16] "POST /api/voice/stop HTTP/1.1" 200 -
+2025-07-18 09:24:59,211 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-18 09:24:59,213 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-18 09:24:59,213 - werkzeug - INFO -  * Restarting with stat
+2025-07-18 09:25:01,723 - werkzeug - WARNING -  * Debugger is active!
+2025-07-18 09:25:01,733 - werkzeug - INFO -  * Debugger PIN: 126-652-730
+2025-07-18 09:25:02,003 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:02] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-18 09:25:02,070 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:02] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-18 09:25:02,113 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:02] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-18 09:25:02,383 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:02] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-18 09:25:03,406 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:25:04,532 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:25:05,610 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:05] "GET /health HTTP/1.1" 200 -
+2025-07-18 09:25:33,219 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:25:34,216 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:25:35,287 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:35] "GET /health HTTP/1.1" 200 -
+2025-07-18 09:25:35,586 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:35] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-18 09:25:35,603 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:35] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-18 09:25:35,750 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:35] "GET /socket.io/?EIO=4&transport=polling&t=adhn0i28 HTTP/1.1" 200 -
+2025-07-18 09:25:35,997 - __main__ - INFO - Client connected: aab0201e-031f-4ebc-8456-ee5e3b5de7e3
+2025-07-18 09:25:35,998 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:35] "POST /socket.io/?EIO=4&transport=polling&t=adhvwea8&sid=rGqBVD-ThaqFlpdoAAAA HTTP/1.1" 200 -
+2025-07-18 09:25:36,078 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:36] "GET /socket.io/?EIO=4&transport=polling&t=adhvzhvo&sid=rGqBVD-ThaqFlpdoAAAA HTTP/1.1" 200 -
+2025-07-18 09:25:36,089 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:36] "GET /socket.io/?EIO=4&transport=polling&t=adi51hls&sid=rGqBVD-ThaqFlpdoAAAA HTTP/1.1" 200 -
+2025-07-18 09:25:43,501 - __main__ - INFO - Starting voice assistant for user d4be53f4-5658-4836-b83d-f0807e8a2618
+2025-07-18 09:25:43,503 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:25:43] "POST /api/voice/start HTTP/1.1" 200 -
+2025-07-18 09:25:48,723 - voice_assistant - INFO - Fetching today's schedule from Google Calendar...
+2025-07-18 09:25:48,727 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:25:49,754 - voice_assistant - INFO - Schedule retrieved: Schedule from six am to seven thirty pm for Is there anything else I can help you with? at All day; Schedule from six am to seven thirty pm for named very important. Is that correct? at All day
+2025-07-18 09:25:50,605 - voice_assistant - INFO - Starting voice assistant with Google Calendar integration...
+2025-07-18 09:25:50,607 - voice_assistant - INFO - Say 'goodbye', 'end chat', or 'stop' to end the conversation.
+2025-07-18 09:25:50,607 - voice_assistant - INFO - To schedule events, say something like: 'Schedule a meeting with John tomorrow at 2pm'
+2025-07-18 09:25:51,140 - httpx - INFO - HTTP Request: GET https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=agent_01jzwh6c9df98rqxyc624gv7wt "HTTP/1.1 200 OK"
+2025-07-18 09:25:52,873 - voice_assistant - INFO - Agent: Hi Chirag! I've got your schedule ready. I can help you view events, schedule meetings, or find free time. What would you like to do?
+2025-07-18 09:26:03,215 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:26:04,203 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:26:05,207 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:26:05] "GET /health HTTP/1.1" 200 -
+2025-07-18 09:26:06,559 - voice_assistant - INFO - User: Copy my schedule for today for the next seven days.
+2025-07-18 09:26:06,688 - voice_assistant - INFO - Agent: I can copy your schedule for today for the next seven days. Is that correct?
+2025-07-18 09:26:12,426 - voice_assistant - INFO - User: Yes.
+2025-07-18 09:26:13,200 - voice_assistant - INFO - Agent: I'll copy your schedule for today for the next seven days: Schedule from six am to seven thirty pm for Is there anything else I can help you with? at All day; Schedule from six am to seven thirty pm for named very important. Is that correct?
+2025-07-18 09:26:27,213 - voice_assistant - INFO - User: Yes.
+2025-07-18 09:26:27,365 - voice_assistant - INFO - Agent: I'll create that event for you: Copy today's schedule for the next seven days.
+2025-07-18 09:26:27,365 - voice_assistant - INFO - Creating calendar event: Copy today's schedule for the next seven days.
+2025-07-18 09:26:27,369 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:26:33,217 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:26:34,202 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:26:35,223 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:26:35] "GET /health HTTP/1.1" 200 -
+2025-07-18 09:26:36,650 - voice_assistant - INFO - User: What is my schedule for tomorrow?
+2025-07-18 09:26:37,416 - voice_assistant - INFO - Agent: I can copy your schedule for today for the next seven days: Schedule from six am to seven thirty pm for Is there anything else I can help you with? at All day; Schedule from six am to seven thirty pm for named very important. Is that correct?
+2025-07-18 09:26:58,512 - voice_assistant - INFO - User: Goodbye! Goodbye!
+2025-07-18 09:26:58,513 - voice_assistant - INFO - User wants to end conversation...
+2025-07-18 09:26:58,876 - voice_assistant - INFO - Agent: Goodbye! Have a great day, Chirag. CONVERSATION_END
+2025-07-18 09:26:58,876 - voice_assistant - INFO - Ending conversation as requested...
+2025-07-18 09:26:59,155 - voice_assistant - INFO - Session ended gracefully.
+2025-07-18 09:26:59,226 - voice_assistant - INFO - Voice assistant stopped.
+2025-07-18 09:27:03,232 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:27:03,250 - __main__ - INFO - Stopping voice assistant for user d4be53f4-5658-4836-b83d-f0807e8a2618
+2025-07-18 09:27:03,252 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:27:03] "POST /api/voice/stop HTTP/1.1" 200 -
+2025-07-18 09:27:04,371 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-18 09:27:05,687 - werkzeug - INFO - 127.0.0.1 - - [18/Jul/2025 09:27:05] "GET /health HTTP/1.1" 200 -

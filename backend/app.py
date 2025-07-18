@@ -10,6 +10,7 @@ import time
 from datetime import datetime
 import uuid
 import traceback
+import webbrowser
 
 # Import configuration
 from config import config
@@ -65,8 +66,8 @@ def create_app(config_name=None):
     
     # Rate limiting
     limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+        key_func=get_remote_address,
+        default_limits=["200 per day", "50 per hour"]
     )
     limiter.init_app(app)
     
@@ -108,7 +109,7 @@ def create_app(config_name=None):
             success=True,
             data={
                 'service': 'Voice Assistant Backend',
-                'version': '1.0.0',
+                'version': '1.0.1',
                 'status': 'running',
                 'user': 'Chirag Gupta',
                 'endpoints': {
@@ -157,7 +158,7 @@ def create_app(config_name=None):
             data={
                 'user_id': user_id,
                 'session_active': True,
-                'voice_active': user_id in app.state['voice_sessions'],
+                'voice_active': user_id in app.state['voice_sessions'] and app.state['voice_sessions'][user_id].get('active', False),
                 'user_name': 'Chirag'
             }
         )
@@ -316,13 +317,15 @@ def create_app(config_name=None):
         """Start voice assistant"""
         user_id = require_auth()
         
-        if user_id in app.state['voice_sessions']:
-            return create_response(
-                success=False,
-                error="Voice assistant already active for this session"
-            ), 400
-        
         try:
+            # Check if already active
+            if user_id in app.state['voice_sessions']:
+                if app.state['voice_sessions'][user_id].get('active', False):
+                    return jsonify({
+                        'success': False,
+                        'error': "Voice assistant already active for this session"
+                    }), 400
+            
             logger.info(f"Starting voice assistant for user {user_id}")
             
             # Create voice session
@@ -357,28 +360,31 @@ def create_app(config_name=None):
                         'error': str(e),
                         'timestamp': datetime.utcnow().isoformat()
                     }, room=f"user_{user_id}")
-                finally:
+                    
                     # Clean up session
                     if user_id in app.state['voice_sessions']:
-                        del app.state['voice_sessions'][user_id]
+                        app.state['voice_sessions'][user_id]['active'] = False
             
             thread = threading.Thread(target=voice_worker, daemon=True)
             thread.start()
             session_data['thread'] = thread
             
-            return create_response(
-                success=True,
-                data={'status': 'started', 'user_id': user_id},
-                message="Voice assistant started successfully"
-            )
-            
+            # Make sure we return valid JSON
+            return jsonify({
+                'success': True,
+                'data': {'status': 'started', 'user_id': user_id},
+                'message': "Voice assistant started successfully"
+            })
+                
         except Exception as e:
             logger.error(f"Error starting voice assistant: {e}")
             logger.error(traceback.format_exc())
-            return create_response(
-                success=False,
-                error=str(e)
-            ), 500
+            
+            # Always return valid JSON
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
     
     @app.route('/api/voice/stop', methods=['POST'])
     @limiter.limit("10 per minute")
@@ -386,11 +392,15 @@ def create_app(config_name=None):
         """Stop voice assistant"""
         user_id = require_auth()
         
-        if user_id not in app.state['voice_sessions']:
-            return create_response(
-                success=False,
-                error="Voice assistant not active for this session"
-            ), 400
+        # Set JSON content type for all responses from this route
+        response_headers = {"Content-Type": "application/json"}
+        
+        # Check if session exists
+        if user_id not in app.state['voice_sessions'] or not app.state['voice_sessions'][user_id].get('active', False):
+            return jsonify({
+                'success': False,
+                'error': "Voice assistant not active for this session"
+            }), 400, response_headers
         
         try:
             logger.info(f"Stopping voice assistant for user {user_id}")
@@ -405,46 +415,53 @@ def create_app(config_name=None):
                 'timestamp': datetime.utcnow().isoformat()
             }, room=f"user_{user_id}")
             
-            return create_response(
-                success=True,
-                data={'status': 'stopped', 'user_id': user_id},
-                message="Voice assistant stopped successfully"
-            )
+            return jsonify({
+                'success': True,
+                'data': {'status': 'stopped', 'user_id': user_id},
+                'message': "Voice assistant stopped successfully"
+            }), 200, response_headers
             
         except Exception as e:
             logger.error(f"Error stopping voice assistant: {e}")
             logger.error(traceback.format_exc())
-            return create_response(
-                success=False,
-                error=str(e)
-            ), 500
+            
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500, response_headers
     
     @app.route('/api/voice/status', methods=['GET'])
     def api_voice_status():
         """Get voice assistant status"""
         user_id = require_auth()
         
-        session_data = app.state['voice_sessions'].get(user_id)
+        # Set JSON content type for all responses from this route
+        response_headers = {"Content-Type": "application/json"}
         
-        if session_data:
-            return create_response(
-                success=True,
-                data={
-                    'active': session_data['active'],
-                    'started_at': session_data['started_at'].isoformat(),
-                    'status': 'active' if session_data['active'] else 'inactive',
-                    'user_id': user_id
+        session_data = app.state['voice_sessions'].get(user_id, {})
+        
+        if session_data and session_data.get('active', False):
+            started_at = session_data.get('started_at', datetime.utcnow())
+            return jsonify({
+                'success': True,
+                'data': {
+                    'active': True,
+                    'started_at': started_at.isoformat(),
+                    'status': 'active',
+                    'user_id': user_id,
+                    'is_listening': True
                 }
-            )
+            }), 200, response_headers
         else:
-            return create_response(
-                success=True,
-                data={
+            return jsonify({
+                'success': True,
+                'data': {
                     'active': False,
                     'status': 'inactive',
-                    'user_id': user_id
+                    'user_id': user_id,
+                    'is_listening': False
                 }
-            )
+            }), 200, response_headers
     
     # Static file serving routes
     @app.route('/static/<path:filename>')
@@ -487,25 +504,25 @@ def create_app(config_name=None):
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
-        return create_response(
-            success=False,
-            error="Endpoint not found"
-        ), 404
-    
+        return jsonify({
+            'success': False,
+            'error': "Endpoint not found"
+        }), 404, {"Content-Type": "application/json"}
+
     @app.errorhandler(500)
     def internal_error(error):
         logger.error(f"Internal server error: {error}")
-        return create_response(
-            success=False,
-            error="Internal server error"
-        ), 500
-    
+        return jsonify({
+            'success': False,
+            'error': "Internal server error"
+        }), 500, {"Content-Type": "application/json"}
+
     @app.errorhandler(429)
     def ratelimit_handler(e):
-        return create_response(
-            success=False,
-            error=f"Rate limit exceeded: {e.description}"
-        ), 429
+        return jsonify({
+            'success': False,
+            'error': f"Rate limit exceeded: {e.description}"
+        }), 429, {"Content-Type": "application/json"}
     
     # Return app and socketio for external use
     app.socketio = socketio
@@ -514,6 +531,19 @@ def create_app(config_name=None):
 # Create the app instance
 app = create_app()
 
+def open_browser(port):
+    """Opens the browser on the test page URL."""
+    def _open():
+        # A short delay to allow the server to start up
+        time.sleep(1.5)
+        webbrowser.open_new_tab(f"http://127.0.0.1:{port}/static/index.html")
+        logger.info(f"🌍 Opened browser to http://127.0.0.1:{port}/static/index.html")
+    
+    # Run in a separate thread so it doesn't block the server
+    thread = threading.Thread(target=_open)
+    thread.daemon = True
+    thread.start()
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     host = os.getenv('HOST', '0.0.0.0')
@@ -521,11 +551,15 @@ if __name__ == '__main__':
     logger.info(f"🚀 Starting Voice Assistant Backend on {host}:{port}")
     logger.info(f"🔧 Debug mode: {app.config['DEBUG']}")
     logger.info(f"👤 User: Chirag Gupta")
+
+    # Open browser only in development mode and when not reloading
+    if app.config['DEBUG'] and not os.environ.get('WERKZEUG_RUN_MAIN'):
+        open_browser(port)
     
     app.socketio.run(
         app, 
         host=host, 
         port=port, 
         debug=app.config['DEBUG'],
-        use_reloader=False
+        use_reloader=True # Enabled reloader for better dev experience
     )

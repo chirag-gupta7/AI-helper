@@ -1,0 +1,178 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.App-header {
+  position: relative;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.App-header h1 {
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  background-image: linear-gradient(to right, #646cff, #9c5fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.status-indicator {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  display: inline-block;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.status-inactive {
+  background-color: rgba(150, 150, 150, 0.15);
+  color: var(--muted-color);
+  border: 1px solid var(--border-color);
+}
+
+.status-active {
+  background-color: rgba(100, 255, 100, 0.15);
+  color: #4ade80;
+  border: 1px solid #4ade8080;
+}
+
+.status-error {
+  background-color: rgba(255, 100, 100, 0.15);
+  color: #f87171;
+  border: 1px solid #f8717180;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+}
+
+.controls button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.controls button.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.controls button.disabled {
+  background-color: var(--hover-color);
+  color: var(--muted-color);
+  cursor: not-allowed;
+}
+
+.log-container {
+  flex: 1;
+  margin-bottom: 1.5rem;
+}
+
+.log-container h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.log-box {
+  background-color: var(--secondary-background);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  height: 300px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+.log-entry {
+  padding: 0.25rem 0;
+  line-height: 1.4;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+
+.log-timestamp {
+  color: var(--muted-color);
+  margin-right: 0.5rem;
+}
+
+.log-message {
+  word-break: break-word;
+}
+
+.log-info {
+  color: var(--text-color);
+}
+
+.log-success {
+  color: #4ade80;
+}
+
+.log-error {
+  color: #f87171;
+}
+
+.log-status {
+  color: #60a5fa;
+}
+
+.log-placeholder {
+  color: var(--muted-color);
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.App-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--muted-color);
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+}
+
+.connected {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.disconnected {
+  color: #f87171;
+  font-weight: 600;
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  color: var(--primary-color);
+}
+
+@media (max-width: 640px) {
+  .controls {
+    flex-direction: column;
+  }
+  
+  .controls button {
+    width: 100%;
+  }
+}

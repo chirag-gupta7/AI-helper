@@ -1,0 +1,86 @@
+:root {
+  --font-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+  
+  --primary-color: #646cff;
+  --success-color: #4ade80;
+  --error-color: #f87171;
+  
+  --light-background: #f8f9fa;
+  --light-secondary-background: #ffffff;
+  --light-text: #212529;
+  --light-muted: #6c757d;
+  --light-border: #dee2e6;
+  --light-hover: #e9ecef;
+
+  --dark-background: #1a1a1a;
+  --dark-secondary-background: #242424;
+  --dark-text: rgba(255, 255, 255, 0.87);
+  --dark-muted: #9ca3af;
+  --dark-border: #444;
+  --dark-hover: #3a3a3a;
+}
+
+[data-theme='light'] {
+  --background-color: var(--light-background);
+  --secondary-background: var(--light-secondary-background);
+  --text-color: var(--light-text);
+  --muted-color: var(--light-muted);
+  --border-color: var(--light-border);
+  --hover-color: var(--light-hover);
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --background-color: var(--dark-background);
+  --secondary-background: var(--dark-secondary-background);
+  --text-color: var(--dark-text);
+  --muted-color: var(--dark-muted);
+  --border-color: var(--dark-border);
+  --hover-color: var(--dark-hover);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+button:hover {
+  opacity: 0.8;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+button:disabled {
+    background-color: var(--muted-color);
+    cursor: not-allowed;
+    opacity: 0.5;
+}

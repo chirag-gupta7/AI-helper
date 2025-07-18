@@ -18,8 +18,8 @@ google-auth-oauthlib==1.1.0
 google-api-python-client==2.108.0
 python-dateutil==2.8.2
 
-# ElevenLabs Voice API
-elevenlabs==0.2.26
+# ElevenLabs Voice API (Updated)
+elevenlabs==2.7.1
 
 # HTTP Requests
 requests==2.31.0
