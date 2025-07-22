@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { socket } from "./services/socket.js";
+import { rescheduleEvent, cancelEvent, findMeetingSlots, setEventReminder } from './services/api.js';
 import './App.css';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Calendar, X, Search, Bell, Send } from 'lucide-react';
 
 const App = () => {
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -10,6 +11,14 @@ const App = () => {
     const [isListening, setIsListening] = useState(false);
     const [theme, setTheme] = useState('dark');
     const logBoxRef = useRef(null);
+
+    // State for new calendar features
+    const [calendarActionFeedback, setCalendarActionFeedback] = useState({ message: '', type: '', data: null });
+    const [rescheduleData, setRescheduleData] = useState({ eventId: '', newTime: '' });
+    const [cancelData, setCancelData] = useState({ eventId: '' });
+    const [findSlotsData, setFindSlotsData] = useState({ duration: '30', participants: 'primary', days: '7' });
+    const [reminderData, setReminderData] = useState({ eventId: '', minutes: '30' });
+
 
     useEffect(() => {
         const onConnect = () => {
@@ -187,6 +196,61 @@ const App = () => {
         setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
     };
 
+    // Handlers for new calendar features
+    const handleCalendarInputChange = (setter) => (e) => {
+        const { name, value } = e.target;
+        setter(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleReschedule = async (e) => {
+        e.preventDefault();
+        setCalendarActionFeedback({ message: 'Rescheduling...', type: 'loading' });
+        try {
+            const response = await rescheduleEvent(rescheduleData.eventId, rescheduleData.newTime);
+            setCalendarActionFeedback({ message: response.data.message || 'Event rescheduled!', type: 'success', data: response.data.data });
+        } catch (error) {
+            const errorMessage = error.response?.data?.error || error.message;
+            setCalendarActionFeedback({ message: `Error: ${errorMessage}`, type: 'error' });
+        }
+    };
+
+    const handleCancel = async (e) => {
+        e.preventDefault();
+        setCalendarActionFeedback({ message: 'Canceling...', type: 'loading' });
+        try {
+            const response = await cancelEvent(cancelData.eventId);
+            setCalendarActionFeedback({ message: response.data.message || 'Event canceled!', type: 'success', data: response.data.data });
+        } catch (error) {
+            const errorMessage = error.response?.data?.error || error.message;
+            setCalendarActionFeedback({ message: `Error: ${errorMessage}`, type: 'error' });
+        }
+    };
+
+    const handleFindSlots = async (e) => {
+        e.preventDefault();
+        setCalendarActionFeedback({ message: 'Finding slots...', type: 'loading' });
+        try {
+            const response = await findMeetingSlots(findSlotsData.duration, findSlotsData.participants, findSlotsData.days);
+            setCalendarActionFeedback({ message: response.data.message || 'Slots found!', type: 'success', data: response.data.data.slots });
+        } catch (error) {
+            const errorMessage = error.response?.data?.error || error.message;
+            setCalendarActionFeedback({ message: `Error: ${errorMessage}`, type: 'error' });
+        }
+    };
+
+    const handleSetReminder = async (e) => {
+        e.preventDefault();
+        setCalendarActionFeedback({ message: 'Setting reminder...', type: 'loading' });
+        try {
+            const response = await setEventReminder(reminderData.eventId, parseInt(reminderData.minutes, 10));
+            setCalendarActionFeedback({ message: response.data.message || 'Reminder set!', type: 'success', data: response.data.data });
+        } catch (error) {
+            const errorMessage = error.response?.data?.error || error.message;
+            setCalendarActionFeedback({ message: `Error: ${errorMessage}`, type: 'error' });
+        }
+    };
+
+
     const getStatusClass = () => {
         if (status === 'Listening...') return 'status-active';
         if (status === 'Error') return 'status-error';
@@ -205,34 +269,83 @@ const App = () => {
                 </button>
             </header>
 
-            <div className="controls">
-                <button 
-                    onClick={handleStart} 
-                    disabled={isListening}
-                    className={isListening ? 'disabled' : 'active'}
-                >
-                    Start Conversation
-                </button>
-                <button 
-                    onClick={handleStop} 
-                    disabled={!isListening}
-                    className={!isListening ? 'disabled' : 'active'}
-                >
-                    Stop Conversation
-                </button>
-            </div>
-
-            <div className="log-container">
-                <h2>Conversation Log</h2>
-                <div className="log-box" ref={logBoxRef}>
-                    {logs.length > 0 ? logs.map((log, index) => (
-                        <div key={index} className={`log-entry log-${log.level}`}>
-                            <span className="log-timestamp">{log.timestamp}</span>
-                            <span className="log-message">{log.message}</span>
-                        </div>
-                    )) : <p className="log-placeholder">No logs yet. Start a conversation!</p>}
+            <main className="main-content">
+                <div className="voice-controls-container">
+                    <h2>Voice Controls</h2>
+                    <div className="controls">
+                        <button 
+                            onClick={handleStart} 
+                            disabled={isListening}
+                            className={`control-button ${isListening ? 'disabled' : 'start'}`}
+                        >
+                            Start Conversation
+                        </button>
+                        <button 
+                            onClick={handleStop} 
+                            disabled={!isListening}
+                            className={`control-button ${!isListening ? 'disabled' : 'stop'}`}
+                        >
+                            Stop Conversation
+                        </button>
+                    </div>
                 </div>
-            </div>
+
+                <div className="calendar-actions-container">
+                    <h2>Calendar Actions</h2>
+                    <div className="action-forms">
+                        {/* Reschedule Event */}
+                        <form onSubmit={handleReschedule} className="action-form">
+                            <label><Calendar size={16} /> Reschedule Event</label>
+                            <input type="text" name="eventId" placeholder="Event ID" value={rescheduleData.eventId} onChange={handleCalendarInputChange(setRescheduleData)} required />
+                            <input type="text" name="newTime" placeholder="New ISO Start Time" value={rescheduleData.newTime} onChange={handleCalendarInputChange(setRescheduleData)} required />
+                            <button type="submit"><Send size={14} /></button>
+                        </form>
+
+                        {/* Cancel Event */}
+                        <form onSubmit={handleCancel} className="action-form">
+                            <label><X size={16} /> Cancel Event</label>
+                            <input type="text" name="eventId" placeholder="Event ID" value={cancelData.eventId} onChange={handleCalendarInputChange(setCancelData)} required />
+                            <button type="submit"><Send size={14} /></button>
+                        </form>
+
+                        {/* Find Slots */}
+                        <form onSubmit={handleFindSlots} className="action-form">
+                            <label><Search size={16} /> Find Meeting Slots</label>
+                            <input type="number" name="duration" placeholder="Duration (mins)" value={findSlotsData.duration} onChange={handleCalendarInputChange(setFindSlotsData)} required />
+                            <input type="text" name="participants" placeholder="Participants (comma-sep)" value={findSlotsData.participants} onChange={handleCalendarInputChange(setFindSlotsData)} />
+                            <button type="submit"><Send size={14} /></button>
+                        </form>
+
+                        {/* Set Reminder */}
+                        <form onSubmit={handleSetReminder} className="action-form">
+                            <label><Bell size={16} /> Set Reminder</label>
+                            <input type="text" name="eventId" placeholder="Event ID" value={reminderData.eventId} onChange={handleCalendarInputChange(setReminderData)} required />
+                            <input type="number" name="minutes" placeholder="Minutes Before" value={reminderData.minutes} onChange={handleCalendarInputChange(setReminderData)} required />
+                            <button type="submit"><Send size={14} /></button>
+                        </form>
+                    </div>
+                    {calendarActionFeedback.message && (
+                        <div className={`feedback-box feedback-${calendarActionFeedback.type}`}>
+                            <p>{calendarActionFeedback.message}</p>
+                            {calendarActionFeedback.data && (
+                                <pre>{JSON.stringify(calendarActionFeedback.data, null, 2)}</pre>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="log-container">
+                    <h2>Conversation Log</h2>
+                    <div className="log-box" ref={logBoxRef}>
+                        {logs.length > 0 ? logs.map((log, index) => (
+                            <div key={index} className={`log-entry log-${log.level}`}>
+                                <span className="log-timestamp">{log.timestamp}</span>
+                                <span className="log-message">{log.message}</span>
+                            </div>
+                        )) : <p className="log-placeholder">No logs yet. Start a conversation!</p>}
+                    </div>
+                </div>
+            </main>
             <footer className="App-footer">
                 <p>Connection status: <span className={isConnected ? 'connected' : 'disconnected'}>
                     {isConnected ? 'Connected' : 'Disconnected'}

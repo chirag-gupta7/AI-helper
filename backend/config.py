@@ -3,13 +3,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# --- START OF FIX: Ensure instance folder exists ---
+# The instance folder is the standard place for databases and other instance-specific files.
+instance_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
+os.makedirs(instance_path, exist_ok=True)
+# --- END OF FIX ---
+
 class Config:
     # Flask Configuration
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
 
+    # --- START OF FIX: Correct the database URI to point to the instance folder ---
     # Database Configuration
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'assistant.db'))
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(instance_path, 'assistant.db'))
+    # --- END OF FIX ---
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Server Configuration
@@ -17,8 +25,8 @@ class Config:
     PORT = int(os.getenv('PORT', 5000))
     
     # ElevenLabs Configuration
-    AGENT_ID = os.getenv('AGENT_ID')
-    API_KEY = os.getenv('API_KEY')
+    AGENT_ID = os.getenv('ELEVENLABS_AGENT_ID')
+    API_KEY = os.getenv('ELEVENLABS_API_KEY')
     
     # CORS Configuration
     ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', '*').split(',')
@@ -38,7 +46,7 @@ class Config:
     @staticmethod
     def validate_required_env_vars():
         """Validate that required environment variables are set"""
-        required_vars = ['AGENT_ID', 'API_KEY']
+        required_vars = ['ELEVENLABS_AGENT_ID', 'ELEVENLABS_API_KEY']
         missing_vars = []
         
         for var in required_vars:

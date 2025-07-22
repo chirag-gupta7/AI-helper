@@ -2,9 +2,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 2rem;
 }
 
 .App-header {
@@ -20,6 +20,29 @@
   background-image: linear-gradient(to right, #646cff, #9c5fff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  flex: 1;
+}
+
+.voice-controls-container, .calendar-actions-container {
+  background-color: var(--secondary-background);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.voice-controls-container h2, .calendar-actions-container h2, .log-container h2 {
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
 }
 
 .status-indicator {
@@ -52,31 +75,134 @@
 .controls {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.5rem;
   justify-content: center;
 }
 
-.controls button {
+.control-button {
+  flex: 1;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.controls button.active {
+.control-button.start {
   background-color: var(--primary-color);
   color: white;
 }
 
-.controls button.disabled {
+.control-button.stop {
+  background-color: #f87171;
+  color: white;
+}
+
+.control-button.disabled {
   background-color: var(--hover-color);
   color: var(--muted-color);
   cursor: not-allowed;
 }
 
+.calendar-actions-container .action-forms {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.action-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.action-form label {
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.action-form input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: border-color 0.2s;
+}
+
+.action-form input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.action-form button {
+  align-self: flex-end;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.action-form button:hover {
+  background-color: #5a64ff;
+}
+
+.feedback-box {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid;
+}
+
+.feedback-box p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.feedback-box pre {
+  margin-top: 0.5rem;
+  background-color: rgba(0,0,0,0.2);
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.feedback-loading {
+  border-color: #60a5fa80;
+  background-color: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+}
+
+.feedback-success {
+  border-color: #4ade8080;
+  background-color: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+}
+
+.feedback-error {
+  border-color: #f8717180;
+  background-color: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+}
+
 .log-container {
-  flex: 1;
+  grid-column: span 2;
   margin-bottom: 1.5rem;
+  background-color: var(--secondary-background);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
 }
 
 .log-container h2 {
@@ -167,12 +293,24 @@
   color: var(--primary-color);
 }
 
+@media (max-width: 768px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+  .log-container {
+    grid-column: span 1;
+  }
+}
+
 @media (max-width: 640px) {
+  .App {
+    padding: 1rem;
+  }
   .controls {
     flex-direction: column;
   }
   
-  .controls button {
+  .control-button {
     width: 100%;
   }
 }

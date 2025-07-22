@@ -24,8 +24,10 @@ class VoiceAssistantAPI {
             const data = await response.json();
             
             if (statusDiv) {
-                if (data.success) {
-                    statusDiv.textContent = `🟢 Server Online - Calendar Connected: ${data.data.calendar_connected ? 'Yes' : 'No'}`;
+                // Check for a successful HTTP response and the 'status' field in the JSON
+                if (response.ok && data.status === 'healthy') { 
+                    // Use the 'calendar_connected' value from the response
+                    statusDiv.textContent = `🟢 Server Online - Calendar Connected: ${data.calendar_connected ? 'Yes' : 'No'}`;
                     statusDiv.className = 'status-indicator status-online';
                 } else {
                     statusDiv.textContent = '🔴 Server Error';
@@ -155,46 +157,41 @@ class VoiceAssistantAPI {
         eventInput.value = '';
     }
 
-    async runAllTests() {
-        console.log('🧪 Running all tests...');
-        
-        const tests = [
-            { url: '/health', method: 'GET', id: 'health' },
-            { url: '/api/auth/session', method: 'GET', id: 'session' },
-            { url: '/api/calendar/today', method: 'GET', id: 'today' },
-            { url: '/api/calendar/upcoming?days=7', method: 'GET', id: 'upcoming' },
-            { url: '/api/calendar/next-meeting', method: 'GET', id: 'next-meeting' },
-            { url: '/api/calendar/free-time', method: 'GET', id: 'free-time' },
-            { url: '/api/voice/status', method: 'GET', id: 'voice-status' }
-        ];
-
-        // Run tests sequentially with delay
-        for (const test of tests) {
-            await this.testEndpoint(test.url, test.method, test.id);
-            await this.sleep(500); // 500ms delay between tests
+    testRescheduleEvent() {
+        const eventId = document.getElementById('reschedule-event-id').value.trim();
+        const newTime = document.getElementById('reschedule-new-time').value.trim();
+        if (!eventId || !newTime) {
+            alert('Please enter both an Event ID and a new start time');
+            return;
         }
-        
-        console.log('✅ All tests completed!');
-        this.showNotification('All tests completed!', 'success');
+        this.testEndpoint(`/api/calendar/reschedule/${eventId}`, 'POST', 'reschedule-event', { new_start_time: newTime });
     }
 
-    clearAllResults() {
-        const results = document.querySelectorAll('.result');
-        results.forEach(result => {
-            result.style.display = 'none';
-            result.innerHTML = '';
-            result.className = 'result';
-        });
-        
-        console.log('🧹 All results cleared');
-        this.showNotification('All results cleared!', 'info');
+    testCancelEvent() {
+        const eventId = document.getElementById('cancel-event-id').value.trim();
+        if (!eventId) {
+            alert('Please enter an Event ID');
+            return;
+        }
+        this.testEndpoint(`/api/calendar/cancel/${eventId}`, 'POST', 'cancel-event');
     }
 
-    // Utility methods
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    testFindMeetingSlots() {
+        const duration = document.getElementById('find-slots-duration').value;
+        const participants = document.getElementById('find-slots-participants').value;
+        this.testEndpoint(`/api/calendar/find-slots?duration=${duration}&participants=${encodeURIComponent(participants)}`, 'GET', 'find-slots');
     }
 
+    testSetEventReminder() {
+        const eventId = document.getElementById('reminder-event-id').value.trim();
+        const minutes = parseInt(document.getElementById('reminder-minutes').value, 10);
+        if (!eventId || !minutes) {
+            alert('Please enter an Event ID and the number of minutes');
+            return;
+        }
+        this.testEndpoint(`/api/calendar/reminders/${eventId}`, 'POST', 'set-reminder', { minutes_before: minutes });
+    }
+    
     showNotification(message, type = 'info') {
         // Create notification element
         const notification = document.createElement('div');

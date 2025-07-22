@@ -78,15 +78,62 @@
             <code>/api/calendar/create</code>
             <div class="input-group">
                 <input type="text" id="event-text" placeholder="e.g., 'Meeting with John tomorrow at 2pm'" />
-                <button class="test-button" onclick="testCreateEvent()">Create Event</button>
+                <button class="test-button" onclick="apiClient.testCreateEvent()">Create Event</button>
             </div>
             <div id="result-create-event" class="result" style="display: none;"></div>
         </div>
 
         <div class="endpoint">
+            <h3>🔄 Reschedule Event</h3>
+            <span class="method post">POST</span>
+            <code>/api/calendar/reschedule/&lt;event_id&gt;</code>
+            <div class="input-group">
+                <input type="text" id="reschedule-event-id" placeholder="Event ID" />
+                <input type="text" id="reschedule-new-time" placeholder="New Start Time (ISO format)" />
+                <button class="test-button" onclick="apiClient.testRescheduleEvent()">Reschedule</button>
+            </div>
+            <div id="result-reschedule-event" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>❌ Cancel Event</h3>
+            <span class="method post">POST</span>
+            <code>/api/calendar/cancel/&lt;event_id&gt;</code>
+            <div class="input-group">
+                <input type="text" id="cancel-event-id" placeholder="Event ID" />
+                <button class="test-button" onclick="apiClient.testCancelEvent()">Cancel Event</button>
+            </div>
+            <div id="result-cancel-event" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>🔍 Find Meeting Slots</h3>
+            <span class="method get">GET</span>
+            <code>/api/calendar/find-slots</code>
+            <div class="input-group">
+                <input type="number" id="find-slots-duration" placeholder="Duration (mins)" value="30" />
+                <input type="text" id="find-slots-participants" placeholder="Participants (comma-sep)" value="primary" />
+                <button class="test-button" onclick="apiClient.testFindMeetingSlots()">Find Slots</button>
+            </div>
+            <div id="result-find-slots" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>🔔 Set Reminder</h3>
+            <span class="method post">POST</span>
+            <code>/api/calendar/reminders/&lt;event_id&gt;</code>
+            <div class="input-group">
+                <input type="text" id="reminder-event-id" placeholder="Event ID" />
+                <input type="number" id="reminder-minutes" placeholder="Minutes before" value="30" />
+                <button class="test-button" onclick="apiClient.testSetEventReminder()">Set Reminder</button>
+            </div>
+            <div id="result-set-reminder" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="endpoint">
             <h3>🎛️ Voice Assistant Controls</h3>
-            <button class="test-button" onclick="testEndpoint('/api/voice/start', 'POST', 'voice-controls')">🎤 Start Voice</button>
-            <button class="test-button" onclick="testEndpoint('/api/voice/stop', 'POST', 'voice-controls')">🔇 Stop Voice</button>
+            <button class="test-button" onclick="apiClient.testEndpoint('/api/voice/start', 'POST', 'voice-controls')">🎤 Start Voice</button>
+            <button class="test-button" onclick="apiClient.testEndpoint('/api/voice/stop', 'POST', 'voice-controls')">🔇 Stop Voice</button>
             <div id="result-voice-controls" class="result" style="display: none;"></div>
         </div>
 

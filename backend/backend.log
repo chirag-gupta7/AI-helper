@@ -1228,3 +1228,496 @@ with app.app_context(). See the documentation for more information.
 This typically means that you attempted to use functionality that needed
 the current application. To solve this, set up an application context
 with app.app_context(). See the documentation for more information.
+2025-07-19 19:25:28,891 - flask_migrate - ERROR - Error: Directory migrations already exists and is not empty
+2025-07-19 20:46:52,972 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-19 20:46:52,973 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-19 20:46:52,973 - werkzeug - INFO -  * Restarting with stat
+2025-07-19 20:46:56,899 - werkzeug - WARNING -  * Debugger is active!
+2025-07-19 20:46:56,907 - werkzeug - INFO -  * Debugger PIN: 759-422-013
+2025-07-19 20:46:57,233 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:46:57] "GET /static/index.html HTTP/1.1" 200 -
+2025-07-19 20:46:57,354 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:46:57] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-19 20:46:57,390 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:46:57] "GET /static/app.js HTTP/1.1" 200 -
+2025-07-19 20:46:57,782 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:46:57] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-19 20:47:01,942 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:47:01] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:47:32,294 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:47:32] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:48:02,291 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:48:02] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:48:32,311 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:48:32] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:49:02,290 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:49:02] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:49:32,303 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:49:32] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:50:02,272 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:50:02] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:50:32,302 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:50:32] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:51:03,284 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:51:03] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:51:32,847 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:51:32] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:52:02,314 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:52:02] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:52:32,311 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:52:32] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:53:03,274 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:53:03] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:54:03,275 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:54:03] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:55:03,286 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:55:03] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:56:03,299 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:56:03] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-19 20:57:03,295 - werkzeug - INFO - 127.0.0.1 - - [19/Jul/2025 20:57:03] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 09:01:13,571 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-20 09:01:13,573 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-20 09:01:13,573 - werkzeug - INFO -  * Restarting with stat
+2025-07-20 09:01:17,838 - werkzeug - WARNING -  * Debugger is active!
+2025-07-20 09:01:17,846 - werkzeug - INFO -  * Debugger PIN: 616-856-868
+2025-07-20 09:01:18,325 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:01:18] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-20 09:01:18,430 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:01:18] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-20 09:01:18,478 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:01:18] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-20 09:01:18,832 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:01:18] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-20 09:01:19,589 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:01:20,804 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:01:21,870 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:01:21] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:01:48,514 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:01:49,559 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:01:50,657 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:01:50] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:01:57,323 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:01:58,436 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:01:59,506 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:01:59] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:02:01,682 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:01] "[35m[1mGET /api/auth/session HTTP/1.1[0m" 500 -
+2025-07-20 09:02:05,780 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:05] "[35m[1mGET /api/auth/session HTTP/1.1[0m" 500 -
+2025-07-20 09:02:06,920 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:06] "[35m[1mGET /api/calendar/today HTTP/1.1[0m" 500 -
+2025-07-20 09:02:08,351 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:08] "[35m[1mGET /api/calendar/upcoming?days=7 HTTP/1.1[0m" 500 -
+2025-07-20 09:02:09,085 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:09] "[35m[1mGET /api/calendar/upcoming?days=14 HTTP/1.1[0m" 500 -
+2025-07-20 09:02:10,355 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:10] "[35m[1mGET /api/calendar/next-meeting HTTP/1.1[0m" 500 -
+2025-07-20 09:02:11,348 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:11] "[35m[1mGET /api/calendar/free-time HTTP/1.1[0m" 500 -
+2025-07-20 09:02:12,674 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:12] "[35m[1mGET /api/voice/status HTTP/1.1[0m" 500 -
+2025-07-20 09:02:18,504 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:02:19,617 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:02:19,852 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:19] "[35m[1mGET /api/calendar/find-slots?duration=30&participants=primary HTTP/1.1[0m" 500 -
+2025-07-20 09:02:20,678 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:20] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:02:49,294 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:02:50,432 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:02:51,497 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:02:51] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:03:19,308 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:03:20,381 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:03:21,803 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:03:21] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:03:49,326 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:03:50,503 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:03:51,533 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:03:51] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:04:19,341 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:04:20,381 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:04:21,407 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:04:21] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:04:49,302 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:04:50,454 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:04:51,496 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:04:51] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:06:13,103 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-20 09:06:13,103 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-20 09:06:13,104 - werkzeug - INFO -  * Restarting with stat
+2025-07-20 09:06:17,373 - werkzeug - WARNING -  * Debugger is active!
+2025-07-20 09:06:17,379 - werkzeug - INFO -  * Debugger PIN: 616-856-868
+2025-07-20 09:06:17,524 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:06:17] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-20 09:06:17,584 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:06:17] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-20 09:06:17,586 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:06:17] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-20 09:06:17,944 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:06:19,078 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:06:20,208 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:06:20] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:06:26,475 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:06:26] "[35m[1mGET /api/auth/session HTTP/1.1[0m" 500 -
+2025-07-20 09:06:29,195 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:06:29] "[35m[1mGET /api/calendar/today HTTP/1.1[0m" 500 -
+2025-07-20 09:06:48,301 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:06:49,381 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:06:50,520 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:06:50] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:07:18,297 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:07:19,311 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:07:20,358 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:07:20] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:07:48,300 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:07:49,502 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:07:50,558 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:07:50] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:08:18,311 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:08:19,337 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:08:20,375 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:08:20] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:08:48,306 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:08:49,511 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:08:50,579 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:08:50] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:09:18,320 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:09:19,814 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:09:21,694 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:09:21] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:09:48,304 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:09:49,390 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:09:50,507 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:09:50] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:10:49,298 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:10:50,358 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:10:51,393 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:10:51] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:11:50,296 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:11:51,294 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:11:52,336 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:11:52] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:15:25,411 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-20 09:15:25,413 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-20 09:15:25,413 - werkzeug - INFO -  * Restarting with stat
+2025-07-20 09:15:29,577 - werkzeug - WARNING -  * Debugger is active!
+2025-07-20 09:15:29,584 - werkzeug - INFO -  * Debugger PIN: 616-856-868
+2025-07-20 09:15:29,769 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:15:29] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-20 09:15:29,903 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:15:29] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-20 09:15:29,907 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:15:29] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-20 09:15:30,352 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:15:31,410 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:15:32,573 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:15:32] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:15:40,771 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:15:40] "[35m[1mGET /api/auth/session HTTP/1.1[0m" 500 -
+2025-07-20 09:15:42,255 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:15:42] "[35m[1mGET /api/calendar/today HTTP/1.1[0m" 500 -
+2025-07-20 09:15:53,304 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:15:54,334 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:15:55,671 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:15:55] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:16:00,300 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:16:01,401 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:16:02,442 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:16:02] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:16:30,304 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:16:31,304 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:16:32,372 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:16:32] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:27:12,301 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-20 09:27:12,302 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-20 09:27:12,303 - werkzeug - INFO -  * Restarting with stat
+2025-07-20 09:27:16,373 - werkzeug - WARNING -  * Debugger is active!
+2025-07-20 09:27:16,381 - werkzeug - INFO -  * Debugger PIN: 616-856-868
+2025-07-20 09:27:16,528 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:16] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-20 09:27:16,585 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:16] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-20 09:27:16,586 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:16] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-20 09:27:16,962 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:27:18,099 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:27:19,157 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:19] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:27:20,706 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:20] "[35m[1mGET /api/auth/session HTTP/1.1[0m" 500 -
+2025-07-20 09:27:22,081 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:22] "[35m[1mGET /api/calendar/today HTTP/1.1[0m" 500 -
+2025-07-20 09:27:24,220 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:24] "[35m[1mGET /api/calendar/upcoming?days=14 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:25,134 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:25] "[35m[1mGET /api/calendar/upcoming?days=7 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:25,607 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:25] "[35m[1mGET /api/calendar/upcoming?days=14 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:26,203 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:26] "[35m[1mGET /api/calendar/upcoming?days=7 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:26,731 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:26] "[35m[1mGET /api/calendar/upcoming?days=14 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:27,193 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:27] "[35m[1mGET /api/calendar/upcoming?days=7 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:27,445 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:27] "[35m[1mGET /api/calendar/upcoming?days=14 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:27,729 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:27] "[35m[1mGET /api/calendar/upcoming?days=7 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:28,043 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:28] "[35m[1mGET /api/calendar/upcoming?days=7 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:28,305 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:28] "[35m[1mGET /api/calendar/upcoming?days=7 HTTP/1.1[0m" 500 -
+2025-07-20 09:27:47,298 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:27:48,422 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:27:49,438 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:27:49] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:28:17,301 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:28:18,348 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:28:19,442 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:28:19] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:28:47,305 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:28:48,303 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:28:49,332 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:28:49] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:29:17,305 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:29:18,334 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:29:19,395 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:29:19] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:29:47,295 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:29:48,315 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:29:49,366 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:29:49] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:30:12,040 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:30:12] "[35m[1mGET /api/calendar/next-meeting HTTP/1.1[0m" 500 -
+2025-07-20 09:30:14,254 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:30:14] "[35m[1mGET /api/calendar/free-time HTTP/1.1[0m" 500 -
+2025-07-20 09:30:16,915 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:30:18,048 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:30:19,164 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:30:19] "GET /health HTTP/1.1" 200 -
+2025-07-20 09:30:47,303 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:30:48,677 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 09:30:50,047 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 09:30:50] "GET /health HTTP/1.1" 200 -
+2025-07-20 10:57:54,872 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-20 10:57:54,874 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-20 10:57:54,874 - werkzeug - INFO -  * Restarting with stat
+2025-07-20 10:57:58,971 - werkzeug - WARNING -  * Debugger is active!
+2025-07-20 10:57:58,979 - werkzeug - INFO -  * Debugger PIN: 616-856-868
+2025-07-20 10:57:59,325 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:57:59] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-20 10:57:59,389 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:57:59] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-20 10:57:59,391 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:57:59] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-20 10:58:00,827 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 10:58:01,929 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 10:58:03,007 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:58:03] "GET /health HTTP/1.1" 200 -
+2025-07-20 10:58:05,722 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:58:05] "[35m[1mGET /api/calendar/today HTTP/1.1[0m" 500 -
+2025-07-20 10:58:07,473 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:58:07] "[35m[1mGET /api/auth/session HTTP/1.1[0m" 500 -
+2025-07-20 10:58:09,272 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:58:09] "[35m[1mGET /api/calendar/upcoming?days=7 HTTP/1.1[0m" 500 -
+2025-07-20 10:58:09,895 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:58:09] "[35m[1mGET /api/calendar/upcoming?days=14 HTTP/1.1[0m" 500 -
+2025-07-20 10:58:29,749 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 10:58:30,968 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 10:58:32,165 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:58:32] "GET /health HTTP/1.1" 200 -
+2025-07-20 10:58:59,753 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 10:59:00,852 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 10:59:02,038 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:02] "GET /health HTTP/1.1" 200 -
+2025-07-20 10:59:30,588 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 10:59:34,795 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 10:59:37,871 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:37] "GET /health HTTP/1.1" 200 -
+2025-07-20 10:59:54,387 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:54] "GET /socket.io/?EIO=4&transport=polling&t=8mh6yy77 HTTP/1.1" 200 -
+2025-07-20 10:59:54,501 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:54] "[35m[1mGET /api/voice/status HTTP/1.1[0m" 500 -
+2025-07-20 10:59:54,578 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:54] "[35m[1mGET /api/voice/status HTTP/1.1[0m" 500 -
+2025-07-20 10:59:55,389 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:55] "GET /socket.io/?EIO=4&transport=polling&t=8mi7qca2 HTTP/1.1" 200 -
+2025-07-20 10:59:55,580 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:55] "[35m[1mGET /api/voice/status HTTP/1.1[0m" 500 -
+2025-07-20 10:59:55,672 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:55] "[35m[1mGET /api/voice/status HTTP/1.1[0m" 500 -
+2025-07-20 10:59:55,795 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:55] "GET /socket.io/?EIO=4&transport=polling&t=8mi9xg4x&sid=GKh9cCOd6zg-r0RVAAAB HTTP/1.1" 200 -
+2025-07-20 10:59:55,787 - engineio.server - ERROR - message handler error
+Traceback (most recent call last):
+  File "D:\colledge notes\python\Lib\site-packages\flask_socketio\__init__.py", line 823, in _handle_event
+    ret = handler(auth)
+TypeError: create_app.<locals>.handle_connect() takes 0 positional arguments but 1 was given
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\engine\base.py", line 1963, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\engine\default.py", line 943, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: datatype mismatch
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\colledge notes\python\Lib\site-packages\engineio\server.py", line 450, in run_handler
+    return self.handlers[event](*args)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "D:\colledge notes\python\Lib\site-packages\socketio\server.py", line 652, in _handle_eio_message
+    self._handle_connect(eio_sid, pkt.namespace, pkt.data)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\colledge notes\python\Lib\site-packages\socketio\server.py", line 538, in _handle_connect
+    success = self._trigger_event(
+        'connect', namespace, sid, self.environ[eio_sid])
+  File "D:\colledge notes\python\Lib\site-packages\socketio\server.py", line 617, in _trigger_event
+    return handler(*args)
+  File "D:\colledge notes\python\Lib\site-packages\flask_socketio\__init__.py", line 282, in _handler
+    return self._handle_event(handler, message, namespace, sid,
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              *args)
+                              ^^^^^^
+  File "D:\colledge notes\python\Lib\site-packages\flask_socketio\__init__.py", line 825, in _handle_event
+    ret = handler()
+  File "D:\coding\Python coding\AI helper\backend\app.py", line 706, in handle_connect
+    user_id = require_auth()
+  File "D:\coding\Python coding\AI helper\backend\app.py", line 152, in require_auth
+    db.session.commit()
+    ~~~~~~~~~~~~~~~~~^^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\scoping.py", line 599, in commit
+    return self._proxied.commit()
+           ~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\session.py", line 1313, in commit
+    self._prepare_impl()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "<string>", line 2, in _prepare_impl
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\session.py", line 1288, in _prepare_impl
+    self.session.flush()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\session.py", line 4345, in flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\session.py", line 4480, in _flush
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\session.py", line 4441, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\orm\persistence.py", line 1048, in _emit_insert_statements
+    result = connection.execute(
+        statement, multiparams, execution_options=execution_options
+    )
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\engine\base.py", line 1415, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\sql\elements.py", line 523, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\engine\base.py", line 1637, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\engine\base.py", line 1842, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\engine\base.py", line 1982, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\engine\base.py", line 2351, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\engine\base.py", line 1963, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\colledge notes\python\Lib\site-packages\sqlalchemy\engine\default.py", line 943, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) datatype mismatch
+[SQL: INSERT INTO user (id, username, email, password_hash) VALUES (?, ?, ?, ?)]
+[parameters: ('7ca8f0fb-e3b1-4690-b9b6-0cd01f61144f', 'user_7ca8f0fb', '7ca8f0fb@example.com', None)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-07-20 10:59:55,892 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 10:59:55] "POST /socket.io/?EIO=4&transport=polling&t=8mi9r5oe&sid=GKh9cCOd6zg-r0RVAAAB HTTP/1.1" 200 -
+2025-07-20 11:00:00,309 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 11:00:01,347 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 11:00:02,390 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 11:00:02] "GET /health HTTP/1.1" 200 -
+2025-07-20 11:00:30,299 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 11:00:31,335 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 11:00:32,375 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 11:00:32] "GET /health HTTP/1.1" 200 -
+2025-07-20 11:01:00,302 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 11:01:01,435 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 11:01:02,498 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 11:01:02] "GET /health HTTP/1.1" 200 -
+2025-07-20 11:01:19,884 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 11:01:19] "[35m[1mPOST /api/voice/start HTTP/1.1[0m" 500 -
+2025-07-20 11:01:30,306 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 11:01:31,871 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 11:01:33,099 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 11:01:33] "GET /health HTTP/1.1" 200 -
+2025-07-20 12:01:16,282 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-20 12:01:16,283 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-20 12:01:16,284 - werkzeug - INFO -  * Restarting with stat
+2025-07-20 12:01:20,788 - werkzeug - WARNING -  * Debugger is active!
+2025-07-20 12:01:20,804 - werkzeug - INFO -  * Debugger PIN: 616-856-868
+2025-07-20 12:01:21,105 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:01:21] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-20 12:01:21,211 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:01:21] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-20 12:01:21,215 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:01:21] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-20 12:01:25,689 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:01:25] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:01:42,136 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:01:42] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:01:56,405 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:01:56] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:02:26,363 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:02:26] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:02:56,342 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:02:56] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:03:26,358 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:03:26] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:03:56,392 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:03:56] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:04:26,384 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:04:26] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:04:56,346 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:04:56] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:05:57,380 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:05:57] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:06:57,408 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:06:57] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:48:17,170 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-20 12:48:17,172 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-20 12:48:17,172 - werkzeug - INFO -  * Restarting with stat
+2025-07-20 12:48:21,905 - werkzeug - WARNING -  * Debugger is active!
+2025-07-20 12:48:21,918 - werkzeug - INFO -  * Debugger PIN: 616-856-868
+2025-07-20 12:48:22,154 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:48:22] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-20 12:48:22,242 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:48:22] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-20 12:48:22,244 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:48:22] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-20 12:48:26,396 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:48:26] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:48:56,464 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:48:56] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:49:26,378 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:49:26] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:49:56,401 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:49:56] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:50:26,323 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:50:26] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:50:56,373 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:50:56] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:51:26,347 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:51:26] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 12:51:56,382 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 12:51:56] "[35m[1mGET /health HTTP/1.1[0m" 500 -
+2025-07-20 13:28:16,200 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.29.121:5000
+2025-07-20 13:28:16,201 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-20 13:28:16,203 - werkzeug - INFO -  * Restarting with stat
+2025-07-20 13:28:20,415 - werkzeug - WARNING -  * Debugger is active!
+2025-07-20 13:28:20,422 - werkzeug - INFO -  * Debugger PIN: 616-856-868
+2025-07-20 13:28:20,788 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:20] "[36mGET /static/index.html HTTP/1.1[0m" 304 -
+2025-07-20 13:28:20,902 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:20] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+2025-07-20 13:28:20,904 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:20] "[36mGET /static/app.js HTTP/1.1[0m" 304 -
+2025-07-20 13:28:22,473 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:23,657 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:24,845 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:24] "GET /health HTTP/1.1" 200 -
+2025-07-20 13:28:27,326 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:27] "GET /api/auth/session HTTP/1.1" 200 -
+2025-07-20 13:28:28,364 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:29,425 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:30,492 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:30] "GET /health HTTP/1.1" 200 -
+2025-07-20 13:28:44,656 - __main__ - INFO - User 012f952c-3741-40bf-9316-b6045779855c requested today's schedule
+2025-07-20 13:28:44,671 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:45,805 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:45] "GET /api/calendar/today HTTP/1.1" 200 -
+2025-07-20 13:28:47,117 - __main__ - INFO - User 012f952c-3741-40bf-9316-b6045779855c requested upcoming events for 14 days
+2025-07-20 13:28:47,133 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:48,258 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:48] "GET /api/calendar/upcoming?days=14 HTTP/1.1" 200 -
+2025-07-20 13:28:50,060 - __main__ - INFO - User 012f952c-3741-40bf-9316-b6045779855c requested next meeting
+2025-07-20 13:28:50,077 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:51,215 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:51] "GET /api/calendar/next-meeting HTTP/1.1" 200 -
+2025-07-20 13:28:51,372 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:52,332 - __main__ - INFO - User 012f952c-3741-40bf-9316-b6045779855c requested free time
+2025-07-20 13:28:52,349 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:52,419 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:28:53,742 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:53] "GET /api/calendar/free-time HTTP/1.1" 200 -
+2025-07-20 13:28:53,798 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:53] "GET /health HTTP/1.1" 200 -
+2025-07-20 13:28:55,405 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:28:55] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-20 13:29:21,387 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:29:22,424 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:29:23,480 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:29:23] "GET /health HTTP/1.1" 200 -
+2025-07-20 13:29:29,601 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:29:29] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-20 13:29:29,657 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:29:29] "GET /socket.io/?EIO=4&transport=polling&t=dyuk1kgg HTTP/1.1" 200 -
+2025-07-20 13:29:29,673 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:29:29] "GET /api/voice/status HTTP/1.1" 200 -
+2025-07-20 13:29:29,917 - __main__ - INFO - Client connected: 7197b1b2-04db-4a50-91ce-27174e77ee66
+2025-07-20 13:29:29,929 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:29:29] "POST /socket.io/?EIO=4&transport=polling&t=dyutmwoi&sid=xYX6y00vlrunUpLSAAAA HTTP/1.1" 200 -
+2025-07-20 13:29:29,996 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:29:29] "GET /socket.io/?EIO=4&transport=polling&t=dyutrv5n&sid=xYX6y00vlrunUpLSAAAA HTTP/1.1" 200 -
+2025-07-20 13:29:30,017 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:29:30] "GET /socket.io/?EIO=4&transport=polling&t=dyv2wdpu&sid=xYX6y00vlrunUpLSAAAA HTTP/1.1" 200 -
+2025-07-20 13:29:52,299 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:29:53,326 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:29:54,399 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:29:54] "GET /health HTTP/1.1" 200 -
+2025-07-20 13:30:22,299 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:30:23,347 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:30:24,465 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:30:24] "GET /health HTTP/1.1" 200 -
+2025-07-20 13:30:52,305 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:30:53,331 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:30:54,413 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:30:54] "GET /health HTTP/1.1" 200 -
+2025-07-20 13:31:22,293 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:31:23,306 - googleapiclient.discovery_cache - INFO - file_cache is only supported with oauth2client<4.0.0
+2025-07-20 13:31:24,460 - werkzeug - INFO - 127.0.0.1 - - [20/Jul/2025 13:31:24] "GET /health HTTP/1.1" 200 -

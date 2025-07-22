@@ -15,7 +15,7 @@ python-dotenv==1.0.0
 # Google Calendar Integration 
 google-auth==2.23.4
 google-auth-oauthlib==1.1.0
-google-api-python-client==2.108.0
+google-api-python-client==2.134.0
 python-dateutil==2.8.2
 
 # ElevenLabs Voice API (Updated)
@@ -32,3 +32,25 @@ pyttsx3==2.90
 
 # Development/Testing (optional - can be removed for production)
 pytest-flask==1.2.0
+
+# Security
+Flask-Talisman==1.1.0
+
+# Enhanced Voice Command Dependencies
+# Weather API support
+openweathermap==1.0.0  # Alternative: use requests directly with OpenWeatherMap API
+
+# News API support  
+newsapi-python==0.2.6  # Alternative: use requests directly with NewsAPI
+
+# Background task processing (for reminders and timers)
+APScheduler==3.10.4
+
+# UUID support (built-in with Python 3.7+)
+# uuid is built-in
+
+# JSON handling (built-in)
+# json is built-in
+
+# Threading (built-in)
+# threading is built-in
