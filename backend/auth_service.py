@@ -7,7 +7,7 @@ import secrets
 import re
 from .models import db, User, UserSession, APIToken # Ensure models are correctly imported
 import logging
-import uuid
+import uuid # Ensure uuid is imported
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class AuthService:
     @staticmethod
     def validate_email(email):
         """Validate email format"""
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'
         return re.match(pattern, email) is not None
 
     @staticmethod
@@ -34,10 +34,10 @@ class AuthService:
         if not re.search(r'[a-z]', password):
             errors.append("Password must contain at least one lowercase letter")
 
-        if not re.search(r'\d', password):
+        if not re.search(r'\\d', password):
             errors.append("Password must contain at least one digit")
 
-        if not re.search(r'[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]', password): # Added ? for common special chars
+        if not re.search(r'[!@#$%^&*()_+\-=\\[\]{};\':"\\|,.<>\\/?]', password):
             errors.append("Password must contain at least one special character")
 
         return errors
@@ -236,7 +236,7 @@ class AuthService:
         except Exception as e:
             logger.error(f"Session cleanup error: {str(e)}")
 
-# --- START OF FIX: Modified require_auth decorator ---
+# --- START OF CRITICAL FIX: Modified require_auth decorator ---
 def require_auth(f):
     """Decorator to require authentication, with a fallback for development."""
     @wraps(f)
@@ -256,17 +256,23 @@ def require_auth(f):
                 user = AuthService.get_user_from_api_token(token)
 
         # If still no user and we are in DEBUG mode, create/get a test user
+        # This block is often the source of subtle syntax errors due to copy-pasting or manual edits.
+        # Ensure indentation and all characters are correct.
         if not user and current_app.config.get('DEBUG'):
             logger.warning("No user authenticated. Using debug fallback user.")
             user = User.query.filter_by(email='testuser@example.com').first()
             if not user:
                 logger.info("Creating debug fallback user.")
-                # Use a fixed UUID for consistency in testing
-                test_user_id = uuid.UUID('00000000-0000-0000-0000-000000000001')
-                user = User(id=test_user_id, username='testuser', email='testuser@example.com')
-                user.set_password('TestPassword123!')
+                # Ensure UUID object is passed, or its string representation if directly assigning to a String column.
+                # With the custom UUIDType, passing a uuid.UUID object is now the correct way.
+                test_user_uuid = uuid.UUID('00000000-0000-0000-0000-000000000001')
+                user = User(id=test_user_uuid, username='testuser', email='testuser@example.com')
+                user.set_password('TestPassword123!') # Set password BEFORE adding and committing
                 db.session.add(user)
                 db.session.commit()
+                # After commit, refresh the user object to ensure its ID is correctly loaded
+                db.session.refresh(user)
+
 
         if not user:
             return jsonify({
@@ -279,7 +285,7 @@ def require_auth(f):
         return f(*args, **kwargs)
 
     return decorated_function
-# --- END OF FIX ---
+# --- END OF CRITICAL FIX ---
 
 
 def require_verified(f):
@@ -292,9 +298,7 @@ def require_verified(f):
                 'code': 'VERIFICATION_REQUIRED'
             }), 403
 
-        return f(*args, **kwargs)
-
-    return decorated_function
+        return decorated_function
 
 def optional_auth(f):
     """Decorator for optional authentication"""

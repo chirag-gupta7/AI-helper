@@ -9,6 +9,9 @@ from googleapiclient.errors import HttpError
 import re
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Define the scope for read-only access to calendar
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -19,28 +22,39 @@ TOKEN_PATH = os.path.join(BASE_DIR, 'token.pickle')
 CREDENTIALS_PATH = os.path.join(BASE_DIR, 'credentials.json')
 # ---
 
+# Global variable to hold the authenticated service object
+# This will be managed by the Flask app context for efficiency
+_cached_calendar_service = None
+
 def authenticate_google_calendar():
     """
     Authenticate and return Google Calendar service object.
     This handles the OAuth flow and token management.
+    This function should ideally be called once and its result cached.
     """
     creds = None
     
     # Check if we have stored credentials using the absolute path
     if os.path.exists(TOKEN_PATH):
-        with open(TOKEN_PATH, 'rb') as token:
-            creds = pickle.load(token)
-    
+        try:
+            with open(TOKEN_PATH, 'rb') as token:
+                creds = pickle.load(token)
+        except Exception as e:
+            logger.error(f"Error loading token.pickle: {e}")
+            creds = None # Force re-authentication
+
     # If there are no valid credentials available, authenticate
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
+                logger.info("Google Calendar credentials refreshed.")
             except Exception as e:
-                print(f"Error refreshing credentials: {e}")
+                logger.error(f"Error refreshing Google Calendar credentials: {e}")
                 # Delete the token file and re-authenticate
                 if os.path.exists(TOKEN_PATH):
                     os.remove(TOKEN_PATH)
+                    logger.warning("Deleted expired/invalid token.pickle to force re-authentication.")
                 creds = None
         
         if not creds:
@@ -50,16 +64,34 @@ def authenticate_google_calendar():
                     "credentials.json not found. Please place it in the 'backend' directory."
                 )
             
+            logger.info("Initiating full Google Calendar OAuth flow...")
             # Load credentials from the absolute path
             flow = InstalledAppFlow.from_client_secrets_file(
                 CREDENTIALS_PATH, SCOPES)
             creds = flow.run_local_server(port=0)
+            logger.info("Google Calendar OAuth flow completed successfully.")
         
         # Save credentials for future use using the absolute path
-        with open(TOKEN_PATH, 'wb') as token:
-            pickle.dump(creds, token)
-    
+        try:
+            with open(TOKEN_PATH, 'wb') as token:
+                pickle.dump(creds, token)
+            logger.info("Google Calendar token saved to token.pickle.")
+        except Exception as e:
+            logger.error(f"Error saving token.pickle: {e}")
+
     return build('calendar', 'v3', credentials=creds)
+
+def get_calendar_service():
+    """
+    Provides the authenticated Google Calendar service object.
+    Caches the service object for efficiency.
+    """
+    global _cached_calendar_service
+    if _cached_calendar_service is None:
+        logger.info("Google Calendar service not cached, authenticating now...")
+        _cached_calendar_service = authenticate_google_calendar()
+        logger.info("Google Calendar service cached.")
+    return _cached_calendar_service
 
 def get_today_schedule():
     """
@@ -67,7 +99,8 @@ def get_today_schedule():
     Returns a formatted string with today's events.
     """
     try:
-        service = authenticate_google_calendar()
+        # Use the cached service
+        service = get_calendar_service()
         
         now = datetime.utcnow()
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -105,10 +138,10 @@ def get_today_schedule():
         return "; ".join(schedule_items)
     
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        logger.error(f"An HTTP error occurred with Google Calendar API: {error}")
         return "Unable to fetch calendar events"
     except Exception as error:
-        print(f"An unexpected error occurred: {error}")
+        logger.error(f"An unexpected error occurred while fetching calendar events: {error}")
         return "Unable to fetch calendar events"
 
 def get_upcoming_events(days_ahead=7):
@@ -116,7 +149,7 @@ def get_upcoming_events(days_ahead=7):
     Get upcoming events for the next specified number of days.
     """
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         
         now = datetime.utcnow()
         end_time = now + timedelta(days=days_ahead)
@@ -150,13 +183,13 @@ def get_upcoming_events(days_ahead=7):
         return "; ".join(schedule_items)
     
     except Exception as error:
-        print(f"An error occurred: {error}")
+        logger.error(f"An error occurred while fetching upcoming events: {error}")
         return "Unable to fetch upcoming events"
 
 def get_next_meeting():
     """Get the next upcoming meeting."""
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         now = datetime.utcnow()
         
         events_result = service.events().list(
@@ -185,12 +218,13 @@ def get_next_meeting():
         return f"Next meeting: {summary} at {time_str}"
     
     except Exception as error:
+        logger.error(f"An error occurred while fetching next meeting: {error}")
         return "Unable to fetch next meeting"
 
 def get_free_time_today():
     """Find free time slots in today's schedule."""
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         
         now = datetime.utcnow()
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -230,16 +264,25 @@ def get_free_time_today():
         for start, end in busy_times:
             if current_time < start:
                 duration = start - current_time
-                if duration.total_seconds() > 3600:
+                if duration.total_seconds() > 3600: # Only consider slots longer than 1 hour
                     free_slots.append(f"{current_time.strftime('%H:%M')} - {start.strftime('%H:%M')}")
             current_time = max(current_time, end)
         
+        # Check for free time after the last event until end of day (e.g., 5 PM work day end)
+        end_of_work_day = today_start.replace(hour=17, minute=0, second=0, microsecond=0)
+        if current_time < end_of_work_day:
+            duration = end_of_work_day - current_time
+            if duration.total_seconds() > 3600:
+                free_slots.append(f"{current_time.strftime('%H:%M')} - {end_of_work_day.strftime('%H:%M')}")
+
+
         if free_slots:
             return f"Free time slots: {'; '.join(free_slots)}"
         else:
             return "No significant free time slots found today"
     
     except Exception as error:
+        logger.error(f"An error occurred while getting free time: {error}")
         return "Unable to calculate free time"
 
 def parse_natural_language_datetime(text):
@@ -297,12 +340,55 @@ def parse_natural_language_datetime(text):
     
     return base_date
 
+# --- NEW FUNCTION: create_event_manual_parse ---
+def create_event_manual_parse(conversation_text):
+    """
+    Manually parses conversation text to create a calendar event.
+    This is a fallback if quickAdd fails.
+    """
+    logger.info(f"Attempting manual parse for event: {conversation_text}")
+    summary = "Untitled Event"
+    start_time = datetime.utcnow() + timedelta(hours=1) # Default to 1 hour from now
+    end_time = start_time + timedelta(hours=1) # Default duration 1 hour
+    
+    # Simple regex to find common patterns for event summary
+    # This regex is improved to be more robust
+    summary_match = re.search(r'(?:schedule|create|add)\s+(?:a\s+)?(.+?)(?:\s+(?:on|at|for|from)\s+.*|$)', conversation_text, re.IGNORECASE)
+    if summary_match:
+        summary = summary_match.group(1).strip()
+        # Clean up summary if it contains time/date phrases that were part of the summary extraction
+        # This is a heuristic and might need further refinement based on user input patterns
+        summary = re.sub(r'(?:tomorrow|today|next week|next month|at \d{1,2}(?::\d{2})?\s*(?:am|pm)?|on \w+ \d{1,2}(?:st|nd|rd|th)?|\d{1,2}(?::\d{2})?\s*(?:am|pm)?).*', '', summary, flags=re.IGNORECASE).strip()
+        if not summary: # Fallback if regex removed everything
+            summary = "New Event"
+    else:
+        # If no clear summary found, use the whole text or a default
+        summary = conversation_text.split(' for ')[0].strip() if ' for ' in conversation_text else "New Event"
+        if len(summary) > 100: # Prevent very long summaries
+            summary = summary[:100] + "..."
+
+
+    # Try to parse date/time from the text
+    try:
+        parsed_datetime = parse_natural_language_datetime(conversation_text)
+        start_time = parsed_datetime
+        end_time = start_time + timedelta(hours=1) # Default to 1 hour duration
+        logger.info(f"Manually parsed start time: {start_time}")
+    except Exception as dt_error:
+        logger.warning(f"Could not parse date/time from '{conversation_text}': {dt_error}. Using default times.")
+
+    # Call the existing create_event function
+    return create_event(summary, start_time, end_time, description=conversation_text)
+
+# --- END NEW FUNCTION ---
+
+# --- Moved create_event_from_conversation here (before __main__ block) ---
 def create_event_from_conversation(conversation_text):
     """
     Create a calendar event from natural language conversation text.
     """
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         text = conversation_text.strip()
         
         try:
@@ -326,48 +412,22 @@ def create_event_from_conversation(conversation_text):
                 
         except HttpError as error:
             if error.resp.status == 400:
+                logger.warning(f"Google QuickAdd failed, attempting manual parse: {error}")
                 return create_event_manual_parse(text)
             else:
                 raise error
                 
     except Exception as error:
+        logger.error(f"Error creating event from conversation: {error}")
         return f"❌ Error creating event: {error}"
-
-def create_event_manual_parse(text):
-    """
-    Manual parsing when Google's quick add fails.
-    """
-    try:
-        service = authenticate_google_calendar()
-        
-        title_match = re.match(r'^([^0-9]+?)(?:\s+(?:on|at|tomorrow|today|next|this))', text, re.IGNORECASE)
-        if title_match:
-            title = title_match.group(1).strip()
-        else:
-            title = ' '.join(text.split()[0:3])
-        
-        event_datetime = parse_natural_language_datetime(text)
-        end_datetime = event_datetime + timedelta(hours=1)
-        
-        event = {
-            'summary': title,
-            'start': {'dateTime': event_datetime.isoformat(), 'timeZone': 'UTC'},
-            'end': {'dateTime': end_datetime.isoformat(), 'timeZone': 'UTC'},
-        }
-        
-        event_result = service.events().insert(calendarId='primary', body=event).execute()
-        time_str = event_datetime.strftime('%B %d, %Y at %I:%M %p')
-        return f"✅ Event created: '{title}' on {time_str}"
-        
-    except Exception as error:
-        return f"❌ Error with manual parsing: {error}"
+# --- End of moved create_event_from_conversation ---
 
 def create_event(summary, start_time, end_time, description=None, location=None):
     """
     Create a new calendar event.
     """
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         
         event = {
             'summary': summary,
@@ -384,6 +444,7 @@ def create_event(summary, start_time, end_time, description=None, location=None)
         return f"Event created successfully: {event_result.get('htmlLink')}"
     
     except Exception as error:
+        logger.error(f"Error creating event: {error}")
         return f"Error creating event: {error}"
 
 def reschedule_event(event_id, new_start_time_iso):
@@ -391,7 +452,7 @@ def reschedule_event(event_id, new_start_time_iso):
     Reschedule an existing event to a new time.
     """
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         event = service.events().get(calendarId='primary', eventId=event_id).execute()
         
         new_start_time = parser.isoparse(new_start_time_iso)
@@ -409,6 +470,7 @@ def reschedule_event(event_id, new_start_time_iso):
         time_str = new_start_time.strftime('%B %d, %Y at %I:%M %p')
         return f"✅ Event '{updated_event['summary']}' rescheduled to {time_str}."
     except Exception as error:
+        logger.error(f"Error rescheduling event: {error}")
         return f"❌ Error rescheduling event: {error}"
 
 def cancel_event(event_id):
@@ -416,7 +478,7 @@ def cancel_event(event_id):
     Cancel a calendar event.
     """
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         event = service.events().get(calendarId='primary', eventId=event_id).execute()
         summary = event.get('summary', 'Unknown Event')
 
@@ -426,8 +488,10 @@ def cancel_event(event_id):
     except HttpError as error:
         if error.resp.status == 410:
             return "✅ Event has already been canceled."
+        logger.error(f"HTTP error canceling event: {error}")
         return f"❌ Error canceling event: {error}"
     except Exception as error:
+        logger.error(f"An unexpected error occurred canceling event: {error}")
         return f"❌ Error canceling event: {error}"
 
 def find_meeting_slots(duration_minutes, participants_str, days_ahead=7):
@@ -435,7 +499,7 @@ def find_meeting_slots(duration_minutes, participants_str, days_ahead=7):
     Find available meeting slots considering all participants' calendars.
     """
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         
         now = datetime.utcnow()
         time_min_dt = now.replace(hour=8, minute=0, second=0, microsecond=0)
@@ -478,28 +542,30 @@ def find_meeting_slots(duration_minutes, participants_str, days_ahead=7):
         duration = timedelta(minutes=duration_minutes)
 
         while search_time < time_max_dt and len(free_slots) < 5:
-            if search_time.hour >= 17:
-                search_time = (search_time + timedelta(days=1)).replace(hour=9, minute=0)
+            if search_time.hour >= 17: # End searching at 5 PM
+                search_time = (search_time + timedelta(days=1)).replace(hour=9, minute=0) # Start next day at 9 AM
                 continue
-            if search_time.hour < 9:
+            if search_time.hour < 9: # Start searching from 9 AM
                 search_time = search_time.replace(hour=9, minute=0)
                 continue
 
             potential_end_time = search_time + duration
             is_free = True
             for busy_start, busy_end in merged_busy:
+                # Check for overlap
                 if max(search_time, busy_start) < min(potential_end_time, busy_end):
                     is_free = False
-                    search_time = busy_end
+                    search_time = busy_end # Move search time past the busy slot
                     break
             
             if is_free:
                 free_slots.append(search_time.strftime('%A, %b %d at %I:%M %p'))
-                search_time += timedelta(minutes=30)
+                search_time += timedelta(minutes=30) # Move to next potential slot
             
         return free_slots if free_slots else ["No common slots found."]
 
     except Exception as error:
+        logger.error(f"Error finding meeting slots: {error}")
         return [f"❌ Error finding slots: {error}"]
 
 def set_event_reminder(event_id, minutes_before):
@@ -507,7 +573,7 @@ def set_event_reminder(event_id, minutes_before):
     Set a custom reminder for an event.
     """
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         event = service.events().get(calendarId='primary', eventId=event_id).execute()
 
         event['reminders'] = {
@@ -524,6 +590,7 @@ def set_event_reminder(event_id, minutes_before):
 
         return f"✅ Reminder set for '{updated_event['summary']}' ({minutes_before} minutes before)."
     except Exception as error:
+        logger.error(f"Error setting reminder: {error}")
         return f"❌ Error setting reminder: {error}"
 
 def test_calendar_connection():
@@ -531,17 +598,17 @@ def test_calendar_connection():
     Test the calendar connection and print some basic info.
     """
     try:
-        service = authenticate_google_calendar()
+        service = get_calendar_service() # Use the cached service
         
         calendar = service.calendars().get(calendarId='primary').execute()
-        print(f"Successfully connected to calendar: {calendar.get('summary', 'Primary Calendar')}")
+        logger.info(f"Successfully connected to calendar: {calendar.get('summary', 'Primary Calendar')}")
         
-        today_schedule = get_today_schedule()
-        print(f"Today's schedule: {today_schedule}")
+        # No need to get today's schedule here, as it's a separate API call.
+        # This function just confirms the *connection* is possible.
         
         return True
     except Exception as error:
-        print(f"Connection test failed: {error}")
+        logger.error(f"Calendar connection test failed: {error}")
         return False
 
 if __name__ == "__main__":
@@ -558,3 +625,4 @@ if __name__ == "__main__":
     for event_text in test_events:
         result = create_event_from_conversation(event_text)
         print(f"'{event_text}' -> {result}")
+

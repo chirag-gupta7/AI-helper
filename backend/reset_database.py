@@ -9,8 +9,8 @@ import sqlite3
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from models import db
-from config import config
+from .models import db
+from .config import config
 
 def reset_database():
     """Reset the database by dropping and recreating all tables."""

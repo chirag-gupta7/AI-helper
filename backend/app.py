@@ -2,7 +2,7 @@
 import os
 import sys
 import logging
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, g # Import g for global request context
 from flask_sqlalchemy import SQLAlchemy
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -79,8 +79,9 @@ limiter = Limiter(
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 def log_to_database(user_id, level, message, conversation_id=None, commit=True):
+    # This function is called from routes, which already have an app context.
+    # So, no need to push app context here, it's handled by the request context.
     try:
-        # This function is called from routes, which already have an app context.
         user_id_str = str(user_id) if isinstance(user_id, uuid.UUID) else user_id
         new_log = Log(
             user_id=user_id_str,
@@ -94,6 +95,7 @@ def log_to_database(user_id, level, message, conversation_id=None, commit=True):
             db.session.commit()
     except Exception as e:
         logger.error(f"Failed to log to database: {e}")
+        logger.error(traceback.format_exc()) # Log traceback for debugging
         try:
             db.session.rollback()
         except Exception as rollback_e:
@@ -104,7 +106,6 @@ def log_to_database(user_id, level, message, conversation_id=None, commit=True):
 def before_request_func():
     # Using a global flag g to ensure this runs only once per application context
     # This is more robust than a simple global variable in some deployment scenarios.
-    from flask import g
     if not getattr(g, 'db_initialized', False):
         with app.app_context():
             from sqlalchemy import inspect
@@ -117,6 +118,10 @@ def before_request_func():
                 logger.info("Database tables already exist.")
         g.db_initialized = True
 # --- END OF CRITICAL FIX ---
+
+# FIX: Import and set the Flask app instance in voice_assistant module
+from . import voice_assistant
+voice_assistant.set_flask_app(app)
 
 
 # --- ALL YOUR ROUTES (Authentication, Calendar, Voice, etc.) GO HERE ---
@@ -404,13 +409,11 @@ def api_get_upcoming_events():
     
     try:
         logger.info(f"User {user_id} requested upcoming events for {days} days")
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Requested upcoming events for {days} days")
+        log_to_database(user_id, 'INFO', f"Requested upcoming events for {days} days")
         
         events = get_upcoming_events(days)
         
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Successfully retrieved {len(events) if isinstance(events, list) else 'upcoming'} events for {days} days")
+        log_to_database(user_id, 'INFO', f"Successfully retrieved {len(events) if isinstance(events, list) else 'upcoming'} events for {days} days")
         
         return jsonify(
             success=True,
@@ -420,8 +423,7 @@ def api_get_upcoming_events():
     except Exception as e:
         logger.error(f"Error getting upcoming events: {e}")
         logger.error(traceback.format_exc())
-        with app.app_context():
-            log_to_database(user_id, 'ERROR', f"Failed to retrieve upcoming events: {str(e)}")
+        log_to_database(user_id, 'ERROR', f"Failed to retrieve upcoming events: {str(e)}")
         return jsonify(
             success=False,
             error=str(e)
@@ -451,13 +453,11 @@ def api_create_event():
     
     try:
         logger.info(f"User {user_id} creating event: {event_text}")
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Creating calendar event: {event_text}")
+        log_to_database(user_id, 'INFO', f"Creating calendar event: {event_text}")
         
         result = create_event_from_conversation(event_text)
         
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Successfully created calendar event: {event_text} - Result: {result}")
+        log_to_database(user_id, 'INFO', f"Successfully created calendar event: {event_text} - Result: {result}")
         
         socketio.emit('calendar_update', {
             'type': 'event_created',
@@ -474,8 +474,7 @@ def api_create_event():
     except Exception as e:
         logger.error(f"Error creating event: {e}")
         logger.error(traceback.format_exc())
-        with app.app_context():
-            log_to_database(user_id, 'ERROR', f"Failed to create calendar event '{event_text}': {str(e)}")
+        log_to_database(user_id, 'ERROR', f"Failed to create calendar event '{event_text}': {str(e)}")
         return jsonify(
             success=False,
             error=str(e)
@@ -490,13 +489,11 @@ def api_get_next_meeting():
     
     try:
         logger.info(f"User {user_id} requested next meeting")
-        with app.app_context():
-            log_to_database(user_id, 'INFO', "Requested next meeting information")
+        log_to_database(user_id, 'INFO', "Requested next meeting information")
         
         meeting = get_next_meeting()
         
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Successfully retrieved next meeting: {meeting.get('summary', 'No meeting') if isinstance(meeting, dict) else 'meeting data'}")
+        log_to_database(user_id, 'INFO', f"Successfully retrieved next meeting: {meeting.get('summary', 'No meeting') if isinstance(meeting, dict) else 'meeting data'}")
         
         return jsonify(
             success=True,
@@ -506,8 +503,7 @@ def api_get_next_meeting():
     except Exception as e:
         logger.error(f"Error getting next meeting: {e}")
         logger.error(traceback.format_exc())
-        with app.app_context():
-            log_to_database(user_id, 'ERROR', f"Failed to retrieve next meeting: {str(e)}")
+        log_to_database(user_id, 'ERROR', f"Failed to retrieve next meeting: {str(e)}")
         return jsonify(
             success=False,
             error=str(e)
@@ -522,13 +518,11 @@ def api_get_free_time():
     
     try:
         logger.info(f"User {user_id} requested free time")
-        with app.app_context():
-            log_to_database(user_id, 'INFO', "Requested free time slots")
+        log_to_database(user_id, 'INFO', "Requested free time slots")
         
         free_time = get_free_time_today()
         
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Successfully retrieved free time slots: {len(free_time) if isinstance(free_time, list) else 'free time data'} slots")
+        log_to_database(user_id, 'INFO', f"Successfully retrieved free time slots: {len(free_time) if isinstance(free_time, list) else 'free time data'} slots")
         
         return jsonify(
             success=True,
@@ -538,8 +532,7 @@ def api_get_free_time():
     except Exception as e:
         logger.error(f"Error getting free time: {e}")
         logger.error(traceback.format_exc())
-        with app.app_context():
-            log_to_database(user_id, 'ERROR', f"Failed to retrieve free time: {str(e)}")
+        log_to_database(user_id, 'ERROR', f"Failed to retrieve free time: {str(e)}")
         return jsonify(
             success=False,
             error=str(e)
@@ -561,21 +554,18 @@ def api_reschedule_event(event_id):
         
     try:
         logger.info(f"User {user_id} rescheduling event {event_id} to {new_start_time}")
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Rescheduling event {event_id}")
+        log_to_database(user_id, 'INFO', f"Rescheduling event {event_id}")
         
         result = reschedule_event(event_id, new_start_time)
         
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Event {event_id} rescheduled. Result: {result}")
+        log_to_database(user_id, 'INFO', f"Event {event_id} rescheduled. Result: {result}")
         socketio.emit('calendar_update', {'type': 'event_rescheduled', 'event_id': event_id, 'result': result}, room=f"user_{str(user_id)}")
         
         return jsonify(success=True, data={'result': result}, message="Event rescheduled successfully")
     except Exception as e:
         logger.error(f"Error rescheduling event {event_id}: {e}")
         logger.error(traceback.format_exc())
-        with app.app_context():
-            log_to_database(user_id, 'ERROR', f"Failed to reschedule event {event_id}: {str(e)}")
+        log_to_database(user_id, 'ERROR', f"Failed to reschedule event {event_id}: {str(e)}")
         return jsonify(success=False, error=str(e)), 500
 
 @app.route('/api/calendar/cancel/<event_id>', methods=['POST'])
@@ -586,21 +576,18 @@ def api_cancel_event(event_id):
     user_id = request.current_user.id
     try:
         logger.info(f"User {user_id} canceling event {event_id}")
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Canceling event {event_id}")
+        log_to_database(user_id, 'INFO', f"Canceling event {event_id}")
         
         result = cancel_event(event_id)
         
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Event {event_id} canceled. Result: {result}")
+        log_to_database(user_id, 'INFO', f"Event {event_id} canceled. Result: {result}")
         socketio.emit('calendar_update', {'type': 'event_canceled', 'event_id': event_id, 'result': result}, room=f"user_{str(user_id)}")
         
         return jsonify(success=True, data={'result': result}, message="Event canceled successfully")
     except Exception as e:
         logger.error(f"Error canceling event {event_id}: {e}")
         logger.error(traceback.format_exc())
-        with app.app_context():
-            log_to_database(user_id, 'ERROR', f"Failed to cancel event {event_id}: {str(e)}")
+        log_to_database(user_id, 'ERROR', f"Failed to cancel event {event_id}: {str(e)}")
         return jsonify(success=False, error=str(e)), 500
 
 @app.route('/api/calendar/find-slots', methods=['GET'])
@@ -615,20 +602,17 @@ def api_find_meeting_slots():
 
     try:
         logger.info(f"User {user_id} finding slots for a {duration}min meeting with {participants}")
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Finding {duration}min meeting slots")
+        log_to_database(user_id, 'INFO', f"Finding {duration}min meeting slots")
         
         slots = find_meeting_slots(duration, participants, days)
         
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Found {len(slots)} meeting slots.")
+        log_to_database(user_id, 'INFO', f"Found {len(slots)} meeting slots.")
         
         return jsonify(success=True, data={'slots': slots}, message="Meeting slots retrieved successfully")
     except Exception as e:
         logger.error(f"Error finding meeting slots: {e}")
         logger.error(traceback.format_exc())
-        with app.app_context():
-            log_to_database(user_id, 'ERROR', f"Failed to find meeting slots: {str(e)}")
+        log_to_database(user_id, 'ERROR', f"Failed to find meeting slots: {str(e)}")
         return jsonify(success=False, error=str(e)), 500
 
 @app.route('/api/calendar/reminders/<event_id>', methods=['POST'])
@@ -647,20 +631,17 @@ def api_set_event_reminder(event_id):
 
     try:
         logger.info(f"User {user_id} setting reminder for event {event_id}, {minutes_before} minutes before.")
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Setting reminder for event {event_id}")
+        log_to_database(user_id, 'INFO', f"Setting reminder for event {event_id}")
         
         result = set_event_reminder(event_id, minutes_before)
         
-        with app.app_context():
-            log_to_database(user_id, 'INFO', f"Reminder set for event {event_id}. Result: {result}")
+        log_to_database(user_id, 'INFO', f"Reminder set for event {event_id}. Result: {result}")
         
         return jsonify(success=True, data={'result': result}, message="Reminder set successfully")
     except Exception as e:
         logger.error(f"Error setting reminder for event {event_id}: {e}")
         logger.error(traceback.format_exc())
-        with app.app_context():
-            log_to_database(user_id, 'ERROR', f"Failed to set reminder for event {event_id}: {str(e)}")
+        log_to_database(user_id, 'ERROR', f"Failed to set reminder for event {event_id}: {str(e)}")
         return jsonify(success=False, error=str(e)), 500
 
 # Voice assistant API endpoints
@@ -683,18 +664,18 @@ def api_start_voice():
         app.state['voice_sessions'][user_id] = session_data
         
         def voice_worker():
-            with app.app_context():
-                try:
-                    from .voice_assistant import start_voice_assistant_with_retry
-                    socketio.emit('voice_status', {'status': 'started', 'message': 'Voice assistant is now active'}, room=f"user_{str(user_id)}")
-                    start_voice_assistant_with_retry(user_id=user_id)
-                except Exception as e:
-                    logger.error(f"Voice assistant error: {e}")
-                    logger.error(traceback.format_exc())
-                    log_to_database(user_id, 'ERROR', f"Voice assistant error: {str(e)}")
-                    socketio.emit('voice_error', {'error': str(e), 'timestamp': datetime.utcnow().isoformat()}, room=f"user_{str(user_id)}")
-                    if user_id in app.state['voice_sessions']:
-                        app.state['voice_sessions'][user_id]['active'] = False
+            # The voice_assistant.start_voice_assistant function now handles app_context internally
+            try:
+                from .voice_assistant import start_voice_assistant # Import the public function
+                socketio.emit('voice_status', {'status': 'started', 'message': 'Voice assistant is now active'}, room=f"user_{str(user_id)}")
+                start_voice_assistant(user_id=user_id, app_instance=app) # Pass app instance
+            except Exception as e:
+                logger.error(f"Voice assistant error in worker: {e}")
+                logger.error(traceback.format_exc())
+                log_to_database(user_id, 'ERROR', f"Voice assistant error in worker: {str(e)}")
+                socketio.emit('voice_error', {'error': str(e), 'timestamp': datetime.utcnow().isoformat()}, room=f"user_{str(user_id)}")
+                if user_id in app.state['voice_sessions']:
+                    app.state['voice_sessions'][user_id]['active'] = False
         
         thread = threading.Thread(target=voice_worker, daemon=True)
         thread.start()
@@ -722,7 +703,8 @@ def api_stop_voice():
         logger.info(f"Stopping voice assistant for user {user_id}")
         log_to_database(user_id, 'INFO', "Voice assistant stopped")
         
-        app.state['voice_sessions'][user_id]['active'] = False
+        # This flag will be checked by the voice_assistant's internal loop
+        voice_assistant.conversation_active = False 
         
         socketio.emit('voice_status', {'status': 'stopped', 'message': 'Voice assistant has been stopped', 'timestamp': datetime.utcnow().isoformat()}, room=f"user_{str(user_id)}")
         
@@ -745,7 +727,11 @@ def api_voice_status():
 
     session_data = app.state['voice_sessions'].get(user_id, {})
     
-    if session_data and session_data.get('active', False):
+    # Check the global conversation_active flag from voice_assistant module
+    # This reflects the actual state of the voice session thread
+    is_active_globally = voice_assistant.conversation_active and voice_assistant.current_user_id == user_id
+    
+    if is_active_globally and session_data.get('active', False):
         return jsonify({'success': True, 'data': {'active': True, 'started_at': session_data.get('started_at').isoformat(), 'status': 'active', 'user_id': str(user_id), 'is_listening': True}})
     else:
         return jsonify({'success': True, 'data': {'active': False, 'status': 'inactive', 'user_id': str(user_id), 'is_listening': False}})
@@ -764,11 +750,14 @@ def test_page():
 @optional_auth
 def handle_connect():
     """Handle client connection"""
+    # user_id is now retrieved from request.current_user, set by optional_auth
     user_id = request.current_user.id if hasattr(request, 'current_user') and request.current_user else None
     
     if user_id:
-        join_room(f"user_{str(user_id)}")
-        logger.info(f"Client connected: {user_id}")
+        # Ensure user_id is a string for room name
+        room_name = f"user_{str(user_id)}"
+        join_room(room_name)
+        logger.info(f"Client connected: {user_id}, joined room: {room_name}")
         log_to_database(user_id, 'INFO', "WebSocket client connected")
     else:
         logger.info("Client connected (unauthenticated)")
@@ -779,15 +768,23 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     """Handle client disconnection"""
-    user_id_from_session = session.get('user_id')
+    # user_id is retrieved from request.current_user if available, or session
+    user_id = request.current_user.id if hasattr(request, 'current_user') and request.current_user else session.get('user_id')
     
-    if user_id_from_session:
-        logger.info(f"Client disconnected: {user_id_from_session}")
-        log_to_database(user_id_from_session, 'INFO', "WebSocket client disconnected")
-        leave_room(f"user_{user_id_from_session}")
+    if user_id:
+        logger.info(f"Client disconnected: {user_id}")
+        log_to_database(user_id, 'INFO', "WebSocket client disconnected")
         
-        if user_id_from_session in app.state['voice_sessions']:
-            app.state['voice_sessions'][user_id_from_session]['active'] = False
+        # Ensure user_id is a string for room name
+        room_name = f"user_{str(user_id)}"
+        leave_room(room_name)
+        
+        # Mark voice session inactive if the user disconnects
+        if user_id in app.state['voice_sessions']:
+            app.state['voice_sessions'][user_id]['active'] = False
+            # Also tell the voice_assistant module to stop its session
+            if voice_assistant.current_user_id == user_id:
+                voice_assistant.conversation_active = False
     else:
         logger.info("Unauthenticated client disconnected.")
         log_to_database(None, 'INFO', "Unauthenticated WebSocket client disconnected")
@@ -800,6 +797,7 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     logger.error(f"Internal server error: {error}")
+    logger.error(traceback.format_exc()) # Log traceback for debugging
     return jsonify({'success': False, 'error': "Internal server error. Please check server logs for details."}), 500
 
 @app.errorhandler(429)
@@ -808,7 +806,7 @@ def ratelimit_handler(e):
 
 # Global state management
 app.state = {
-    'voice_sessions': {},
+    'voice_sessions': {}, # Tracks active voice sessions by user_id
     'calendar_cache': {},
     'last_cache_update': None
 }
@@ -832,5 +830,11 @@ if __name__ == '__main__':
         host=host,
         port=port,
         debug=app.config['DEBUG'],
-        use_reloader=True
+        use_reloader=True # Use reloader for development convenience
     )
+
+    logger.info("🎙️ Voice Assistant Backend is running!")
+else:
+    logger.info("🎙️ Voice Assistant Backend module loaded, ready to serve requests.")
+    # This allows the app to be imported without running the server immediately.
+    # You can import this module in other parts of your application without executing the Flask app.

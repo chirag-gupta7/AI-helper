@@ -3,11 +3,34 @@ import uuid
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import UUID 
-from sqlalchemy import String, DateTime, Boolean, Text, Integer, Enum as SQLEnum
+# Removed from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy import String, DateTime, Boolean, Text, Integer, Enum as SQLEnum, TypeDecorator, CHAR
 import secrets
 import hashlib
 from enum import Enum
+
+# Custom TypeDecorator for UUIDs to store them as VARCHAR(36) in SQLite
+# and convert them to/from uuid.UUID objects in Python.
+class UUIDType(TypeDecorator):
+    impl = CHAR(36)
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        return str(value) # Convert uuid.UUID object to string for storage
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        # Ensure value is a string before passing to uuid.UUID
+        if isinstance(value, str):
+            return uuid.UUID(value)
+        # Handle cases where it might be bytes (e.g., from some DB drivers)
+        if isinstance(value, bytes):
+            return uuid.UUID(value.decode('utf-8'))
+        return value # Should ideally be a string or None
+
 
 db = SQLAlchemy()
 
@@ -49,7 +72,8 @@ class AuditAction(Enum):
 class User(db.Model):
     __tablename__ = 'users'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Use custom UUIDType
+    id = db.Column(UUIDType, primary_key=True, default=uuid.uuid4)
     username = db.Column(String(80), unique=True, nullable=False, index=True)
     email = db.Column(String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(String(255), nullable=False)
@@ -95,6 +119,7 @@ class User(db.Model):
         return self.username
 
     def to_dict(self):
+        # Ensure ID is converted to string for dictionary representation
         return {
             'id': str(self.id),
             'username': self.username,
@@ -119,8 +144,8 @@ class User(db.Model):
 
 class UserSession(db.Model):
     __tablename__ = 'user_sessions'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, index=True)
+    id = db.Column(UUIDType, primary_key=True, default=uuid.uuid4)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, index=True)
     session_token = db.Column(String(255), unique=True, nullable=False, index=True)
     ip_address = db.Column(String(45), nullable=True)
     user_agent = db.Column(Text, nullable=True)
@@ -156,8 +181,8 @@ class UserSession(db.Model):
 
 class APIToken(db.Model):
     __tablename__ = 'api_tokens'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, index=True)
+    id = db.Column(UUIDType, primary_key=True, default=uuid.uuid4)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, index=True)
     token_hash = db.Column(String(255), unique=True, nullable=False, index=True)
     token_name = db.Column(String(100), nullable=False)
     scopes = db.Column(Text, nullable=True)
@@ -190,8 +215,8 @@ class APIToken(db.Model):
 
 class Conversation(db.Model):
     __tablename__ = 'conversation'
-    id = db.Column(Integer, primary_key=True)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, index=True)
+    id = db.Column(Integer, primary_key=True) # Keep as Integer, as it's not a UUID
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, index=True)
     session_id = db.Column(String(100), nullable=False, index=True)
     title = db.Column(String(200), nullable=True)
     started_at = db.Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -207,9 +232,7 @@ class Conversation(db.Model):
     feedback = db.relationship('UserFeedback', back_populates='conversation', lazy='dynamic', cascade='all, delete-orphan')
     audit_logs = db.relationship('AuditLog', back_populates='conversation_rel', lazy='dynamic', cascade='all, delete-orphan', foreign_keys='[AuditLog.conversation_id]')
     
-    # --- THIS IS THE FIX ---
     logs = db.relationship('Log', back_populates='conversation', lazy='dynamic', cascade='all, delete-orphan')
-    # --- END OF FIX ---
 
     def __repr__(self):
         return f"<Conversation {self.id}: {self.title or 'Untitled'}>"
@@ -233,7 +256,7 @@ class Message(db.Model):
 class Note(db.Model):
     __tablename__ = 'note'
     id = db.Column(Integer, primary_key=True)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False)
     content = db.Column(Text, nullable=False)
     created_at = db.Column(DateTime, default=datetime.utcnow)
     updated_at = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -245,7 +268,7 @@ class Note(db.Model):
 class Log(db.Model):
     __tablename__ = 'log'
     id = db.Column(Integer, primary_key=True)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=True, index=True)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=True, index=True)
     conversation_id = db.Column(Integer, db.ForeignKey('conversation.id'), nullable=True, index=True)
     timestamp = db.Column(DateTime, nullable=False, default=datetime.utcnow)
     level = db.Column(String(10), nullable=False)
@@ -258,11 +281,10 @@ class Log(db.Model):
     def __repr__(self):
         return f"<Log {self.id} [{self.level}] {self.message[:50]}>"
 
-# ... (The rest of the models remain unchanged) ...
 class APIUsage(db.Model):
     __tablename__ = 'api_usage'
     id = db.Column(Integer, primary_key=True)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, index=True)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, index=True)
     endpoint = db.Column(String(100), nullable=False)
     method = db.Column(String(10), nullable=False)
     timestamp = db.Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -285,7 +307,7 @@ class AssistantCapability(db.Model):
 class UserPreference(db.Model):
     __tablename__ = 'user_preference'
     id = db.Column(Integer, primary_key=True)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, index=True)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, index=True)
     category = db.Column(String(50), nullable=False)
     key = db.Column(String(100), nullable=False)
     value = db.Column(db.JSON, nullable=False)
@@ -304,7 +326,7 @@ class SystemMetrics(db.Model):
 class UserNotification(db.Model):
     __tablename__ = 'user_notification'
     id = db.Column(Integer, primary_key=True)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, index=True)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, index=True)
     title = db.Column(String(200), nullable=False)
     message = db.Column(Text, nullable=False)
     level = db.Column(SQLEnum(NotificationLevel), default=NotificationLevel.INFO, nullable=False)
@@ -319,9 +341,9 @@ class UserNotification(db.Model):
 class AuditLog(db.Model):
     __tablename__ = 'audit_log'
     id = db.Column(Integer, primary_key=True)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=True, index=True)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=True, index=True)
     conversation_id = db.Column(Integer, db.ForeignKey('conversation.id'), nullable=True, index=True)
-    session_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user_sessions.id'), nullable=True, index=True)
+    session_id = db.Column(UUIDType, db.ForeignKey('user_sessions.id'), nullable=True, index=True)
     action = db.Column(SQLEnum(AuditAction), nullable=False)
     resource_type = db.Column(String(50), nullable=True)
     resource_id = db.Column(String(100), nullable=True)
@@ -340,8 +362,8 @@ class ConversationShare(db.Model):
     __tablename__ = 'conversation_share'
     id = db.Column(Integer, primary_key=True)
     conversation_id = db.Column(Integer, db.ForeignKey('conversation.id'), nullable=False, index=True)
-    owner_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, index=True)
-    shared_with_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=True, index=True)
+    owner_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, index=True)
+    shared_with_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=True, index=True)
     share_token = db.Column(String(64), unique=True, nullable=False, index=True)
     is_public = db.Column(Boolean, default=False, nullable=False)
     can_edit = db.Column(Boolean, default=False, nullable=False)
@@ -361,7 +383,7 @@ class ConversationShare(db.Model):
 class UserFeedback(db.Model):
     __tablename__ = 'user_feedback'
     id = db.Column(Integer, primary_key=True)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, index=True)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, index=True)
     conversation_id = db.Column(Integer, db.ForeignKey('conversation.id'), nullable=True, index=True)
     message_id = db.Column(Integer, db.ForeignKey('message.id'), nullable=True, index=True)
     feedback_type = db.Column(String(20), nullable=False)
@@ -387,13 +409,13 @@ class SystemAlert(db.Model):
     start_time = db.Column(DateTime, default=datetime.utcnow, nullable=False)
     end_time = db.Column(DateTime, nullable=True)
     is_active = db.Column(Boolean, default=True, nullable=False)
-    created_by = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=True)
+    created_by = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=True)
     created_by_user = db.relationship('User', back_populates='system_alerts_created')
 
 class ConversationHistory(db.Model):
     __tablename__ = 'conversation_history_log'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, index=True)
+    id = db.Column(UUIDType, primary_key=True, default=uuid.uuid4)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, index=True)
     message = db.Column(Text, nullable=False)
     response = db.Column(Text, nullable=True)
     message_type = db.Column(String(20), default='text')
@@ -402,8 +424,8 @@ class ConversationHistory(db.Model):
 
 class UserPreferences(db.Model):
     __tablename__ = 'user_preferences_settings'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False, unique=True)
+    id = db.Column(UUIDType, primary_key=True, default=uuid.uuid4)
+    user_id = db.Column(UUIDType, db.ForeignKey('users.id'), nullable=False, unique=True)
     response_style = db.Column(String(20), default='friendly')
     default_reminder_time = db.Column(Integer, default=15)
     auto_transcribe = db.Column(Boolean, default=True)

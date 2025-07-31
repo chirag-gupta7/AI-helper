@@ -5,17 +5,25 @@ import threading
 import time
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
-import json
-from flask import current_app
+from flask import current_app, Flask # Import Flask for type hinting
+import uuid # FIX: Import the uuid module here
 
 logger = logging.getLogger(__name__)
+
+# Global reference to the Flask app instance, to be set by app.py
+_flask_app_instance_cp = None
+
+def set_flask_app_for_command_processor(app_instance: Flask):
+    """Sets the Flask app instance for use in command processor background tasks."""
+    global _flask_app_instance_cp
+    _flask_app_instance_cp = app_instance
 
 class VoiceCommandProcessor:
     """
     Enhanced voice command processor with real API integrations.
     Supports weather, news, reminders, timers, notes, and more.
     """
-    def __init__(self, user_id: Optional[int] = None):
+    def __init__(self, user_id: Optional[uuid.UUID] = None): # user_id is now a UUID object
         self.user_id = user_id
         self.commands = {
             'weather': self.get_weather,
@@ -63,28 +71,44 @@ class VoiceCommandProcessor:
                 error_msg = f"Error processing command '{command}': {str(e)}"
                 logger.error(error_msg)
                 self._log_command_to_database('ERROR', error_msg, {'error': str(e)})
-                return {'success': False, 'error': str(e), 'user_message': 'Sorry, I encountered an error processing that command.'}
+                return {'success': False, 'error': error_msg, 'user_message': 'Sorry, I encountered an error processing that command.'}
         else:
             error_msg = f"Unknown command: {command}"
             logger.warning(error_msg)
             self._log_command_to_database('WARNING', error_msg, {'command': command})
             return {'success': False, 'error': error_msg, 'user_message': f"I don't recognize the command '{command}'. Try asking for weather, news, or setting a reminder."}
 
-    def _log_command_to_database(self, level: str, message: str, extra_data: Dict = None): # Renamed metadata to extra_data
-        """Log command events to database."""
-        try:
-            from .models import db, Log
-            new_log = Log(
-                user_id=str(self.user_id) if self.user_id else None,
-                level=level,
-                message=message,
-                source='voice_command_processor',
-                extra_data=extra_data or {} # Updated reference
-            )
-            db.session.add(new_log)
-            db.session.commit()
-        except Exception as e:
-            logger.error(f"Failed to log to database: {e}")
+    def _log_command_to_database(self, level: str, message: str, extra_data: Dict = None):
+        """Log command events to database, ensuring application context."""
+        if _flask_app_instance_cp:
+            with _flask_app_instance_cp.app_context():
+                try:
+                    from .models import db, Log
+                    new_log = Log(
+                        user_id=str(self.user_id) if self.user_id else None,
+                        level=level,
+                        message=message,
+                        source='voice_command_processor',
+                        extra_data=extra_data or {}
+                    )
+                    db.session.add(new_log)
+                    db.session.commit()
+                except Exception as e:
+                    _flask_app_instance_cp.logger.error(f"Failed to log to database from command processor: {e}")
+                    try:
+                        if db.session.is_active:
+                            db.session.rollback()
+                    except Exception as rollback_e:
+                        _flask_app_instance_cp.logger.error(f"Error during rollback for command processor logging: {rollback_e}")
+                finally:
+                    # Ensure session is cleaned up after each DB operation
+                    try:
+                        db.session.remove()
+                    except Exception as cleanup_e:
+                        _flask_app_instance_cp.logger.error(f"Error cleaning up DB session in command processor log: {cleanup_e}")
+        else:
+            logger.error("Flask app instance not set for command processor logging. Cannot log to DB.")
+
 
     def get_weather(self, location: str = "New York") -> Dict[str, Any]:
         """
@@ -236,78 +260,104 @@ class VoiceCommandProcessor:
                 'user_message': 'I need to know who you are to set a reminder.'
             }
         
-        try:
-            from .models import db, UserNotification, NotificationLevel
-            
-            # Calculate reminder time
-            remind_at = datetime.utcnow() + timedelta(minutes=remind_in_minutes)
-            
-            # Create notification
-            notification = UserNotification(
-                user_id=str(self.user_id),
-                title=f"Reminder: {reminder_text}",
-                message=f"You asked me to remind you: {reminder_text}",
-                level=NotificationLevel.INFO,
-                expires_at=remind_at + timedelta(hours=24),  # Expire after 24 hours
-                extra_info={ # Updated reference from metadata to extra_info
-                    'type': 'reminder',
-                    'reminder_text': reminder_text,
-                    'set_at': datetime.utcnow().isoformat(),
-                    'remind_at': remind_at.isoformat()
-                }
-            )
-            
-            db.session.add(notification)
-            db.session.commit()
-            
-            # Schedule the reminder (in a real system, you'd use Celery or similar)
-            threading.Thread(
-                target=self._process_reminder,
-                args=(notification.id, remind_in_minutes),
-                daemon=True
-            ).start()
-            
-            user_message = f"I'll remind you to {reminder_text} in {remind_in_minutes} minutes."
-            
-            return {
-                'success': True,
-                'data': {
-                    'reminder_id': notification.id,
-                    'reminder_text': reminder_text,
-                    'remind_in_minutes': remind_in_minutes,
-                    'remind_at': remind_at.isoformat()
-                },
-                'user_message': user_message
-            }
-            
-        except Exception as e:
-            error_msg = f"Failed to set reminder: {str(e)}"
-            logger.error(error_msg)
+        if _flask_app_instance_cp:
+            with _flask_app_instance_cp.app_context():
+                try:
+                    from .models import db, UserNotification, NotificationLevel
+                    
+                    # Calculate reminder time
+                    remind_at = datetime.utcnow() + timedelta(minutes=remind_in_minutes)
+                    
+                    # Create notification
+                    notification = UserNotification(
+                        user_id=self.user_id,
+                        title=f"Reminder: {reminder_text}",
+                        message=f"You asked me to remind you: {reminder_text}",
+                        level=NotificationLevel.INFO,
+                        expires_at=remind_at + timedelta(hours=24),
+                        extra_info={
+                            'type': 'reminder',
+                            'reminder_text': reminder_text,
+                            'set_at': datetime.utcnow().isoformat(),
+                            'remind_at': remind_at.isoformat()
+                        }
+                    )
+                    
+                    db.session.add(notification)
+                    db.session.commit()
+                    
+                    # Schedule the reminder (in a real system, you'd use Celery or similar)
+                    threading.Thread(
+                        target=self._process_reminder,
+                        args=(notification.id, remind_in_minutes),
+                        daemon=True
+                    ).start()
+                    
+                    user_message = f"I'll remind you to {reminder_text} in {remind_in_minutes} minutes."
+                    
+                    return {
+                        'success': True,
+                        'data': {
+                            'reminder_id': notification.id,
+                            'reminder_text': reminder_text,
+                            'remind_in_minutes': remind_in_minutes,
+                            'remind_at': remind_at.isoformat()
+                        },
+                        'user_message': user_message
+                    }
+                    
+                except Exception as e:
+                    _flask_app_instance_cp.logger.error(f"Failed to set reminder in command processor: {e}")
+                    try:
+                        if db.session.is_active:
+                            db.session.rollback()
+                    except Exception as rollback_e:
+                        _flask_app_instance_cp.logger.error(f"Error during rollback for reminder: {rollback_e}")
+                    return {
+                        'success': False,
+                        'error': str(e),
+                        'user_message': 'Sorry, I couldn\'t set that reminder. Please try again.'
+                    }
+                finally:
+                    try:
+                        db.session.remove()
+                    except Exception as cleanup_e:
+                        _flask_app_instance_cp.logger.error(f"Error cleaning up DB session in reminder: {cleanup_e}")
+        else:
+            logger.error("Flask app instance not set for reminder. Cannot set reminder in DB.")
             return {
                 'success': False,
-                'error': error_msg,
-                'user_message': 'Sorry, I couldn\'t set that reminder. Please try again.'
+                'error': 'Internal error: App context not available.',
+                'user_message': 'Sorry, I encountered an internal error. Please try again.'
             }
+
 
     def _process_reminder(self, notification_id: int, delay_minutes: int):
         """Process reminder after delay (background thread)."""
-        try:
-            time.sleep(delay_minutes * 60)  # Wait for the specified time
-            
-            with current_app.app_context():
-                from .models import db, UserNotification
-                notification = UserNotification.query.get(notification_id)
-                if notification and not notification.is_dismissed:
-                    # Mark as needing attention (in a real system, you'd send push notification, email, etc.)
-                    notification.extra_info['triggered'] = True # Updated reference
-                    notification.extra_info['triggered_at'] = datetime.utcnow().isoformat() # Updated reference
-                    db.session.commit()
+        if _flask_app_instance_cp:
+            with _flask_app_instance_cp.app_context():
+                try:
+                    time.sleep(delay_minutes * 60)
                     
-                    logger.info(f"Reminder triggered: {notification.title}")
-                    self._log_command_to_database('INFO', f"Reminder triggered: {notification.title}")
-                    
-        except Exception as e:
-            logger.error(f"Error processing reminder {notification_id}: {e}")
+                    from .models import db, UserNotification
+                    notification = UserNotification.query.get(notification_id)
+                    if notification and not notification.is_dismissed:
+                        notification.extra_info['triggered'] = True
+                        notification.extra_info['triggered_at'] = datetime.utcnow().isoformat()
+                        db.session.commit()
+                        
+                        logger.info(f"Reminder triggered: {notification.title}")
+                        self._log_command_to_database('INFO', f"Reminder triggered: {notification.title}")
+                        
+                except Exception as e:
+                    logger.error(f"Error processing reminder {notification_id}: {e}")
+                finally:
+                    try:
+                        db.session.remove()
+                    except Exception as cleanup_e:
+                        _flask_app_instance_cp.logger.error(f"Error cleaning up DB session in reminder processing: {cleanup_e}")
+        else:
+            logger.error(f"Flask app instance not set for reminder processing. Cannot process reminder {notification_id}.")
 
     def set_timer(self, duration_seconds: int = 300, timer_name: str = "Timer") -> Dict[str, Any]:
         """
@@ -399,7 +449,6 @@ class VoiceCommandProcessor:
         """
         Take a note and save it with enhanced metadata.
         """
-        from .models import db, Note
         logger.info(f"Taking note for user {self.user_id}: '{note_text}'")
         
         if not self.user_id:
@@ -409,36 +458,55 @@ class VoiceCommandProcessor:
                 'user_message': 'I need to know who you are to save a note.'
             }
             
-        try:
-            new_note = Note(
-                user_id=self.user_id,
-                content=note_text
-            )
-            db.session.add(new_note)
-            db.session.commit()
-            
-            logger.info(f"Note saved successfully with ID {new_note.id}")
-            user_message = f"Note saved: {note_text[:50]}{'...' if len(note_text) > 50 else ''}"
-            
-            return {
-                'success': True,
-                'data': {
-                    'note_id': new_note.id,
-                    'content': new_note.content,
-                    'created_at': new_note.created_at.isoformat(),
-                    'message': 'Note saved successfully.'
-                },
-                'user_message': user_message
-            }
-        except Exception as e:
-            db.session.rollback()
-            error_msg = f"Failed to save note to database: {e}"
-            logger.error(error_msg)
+        if _flask_app_instance_cp:
+            with _flask_app_instance_cp.app_context():
+                try:
+                    from .models import db, Note
+                    new_note = Note(
+                        user_id=self.user_id,
+                        content=note_text
+                    )
+                    db.session.add(new_note)
+                    db.session.commit()
+                    
+                    logger.info(f"Note saved successfully with ID {new_note.id}")
+                    user_message = f"Note saved: {note_text[:50]}{'...' if len(note_text) > 50 else ''}"
+                    
+                    return {
+                        'success': True,
+                        'data': {
+                            'note_id': new_note.id,
+                            'content': new_note.content,
+                            'created_at': new_note.created_at.isoformat(),
+                            'message': 'Note saved successfully.'
+                        },
+                        'user_message': user_message
+                    }
+                except Exception as e:
+                    _flask_app_instance_cp.logger.error(f"Failed to save note to database from command processor: {e}")
+                    try:
+                        if db.session.is_active:
+                            db.session.rollback()
+                    except Exception as rollback_e:
+                        _flask_app_instance_cp.logger.error(f"Error during rollback for note: {rollback_e}")
+                    return {
+                        'success': False,
+                        'error': str(e),
+                        'user_message': 'Sorry, I couldn\'t save that note. Please try again.'
+                    }
+                finally:
+                    try:
+                        db.session.remove()
+                    except Exception as cleanup_e:
+                        _flask_app_instance_cp.logger.error(f"Error cleaning up DB session in note: {cleanup_e}")
+        else:
+            logger.error("Flask app instance not set for note taking. Cannot save note to DB.")
             return {
                 'success': False,
-                'error': error_msg,
-                'user_message': 'Sorry, I couldn\'t save that note. Please try again.'
+                'error': 'Internal error: App context not available.',
+                'user_message': 'Sorry, I encountered an internal error. Please try again.'
             }
+
 
     def web_search(self, query: str) -> Dict[str, Any]:
         """
@@ -554,7 +622,7 @@ class VoiceCommandProcessor:
             "What do you call a fake noodle? An impasta!",
             "Why did the math book look so sad? Because it had too many problems!",
             "What do you call a bear with no teeth? A gummy bear!"
-        ]
+        ]\
         
         import random
         joke = random.choice(jokes)
@@ -570,7 +638,7 @@ class VoiceCommandProcessor:
         Get list of active timers for the current user.
         """
         user_timers = {tid: timer for tid, timer in self.active_timers.items() 
-                      if timer.get('user_id') == self.user_id and timer.get('status') == 'running'}
+                      if timer.get('user_id') == self.user_id and timer.get('status') == 'running'}\
         
         return {
             'success': True,
