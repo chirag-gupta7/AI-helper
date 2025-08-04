@@ -11,20 +11,20 @@ import requests
 import uuid
 import traceback
 import pyttsx3
-
+from flask import Flask  # FIX: Add this import
 
 # Import for ElevenLabs SDK
 try:
     import elevenlabs
     from elevenlabs.client import ElevenLabs
     from elevenlabs import generate, play, stream, Voice, VoiceSettings
-    
+
     # Check if we have the modern API
     if hasattr(elevenlabs, '__version__'):
         print(f"ElevenLabs SDK version: {elevenlabs.__version__}")
-    
+
     ELEVENLABS_IMPORTS_SUCCESS = True
-    
+
 except ImportError as e:
     ELEVENLABS_IMPORTS_SUCCESS = False
     logging.error(f"CRITICAL: ElevenLabs imports failed: {e}. Voice functionality will be disabled.")
@@ -75,7 +75,7 @@ current_conversation_id = None
 # ElevenLabs API setup
 ELEVENLABS_CLIENT = None
 
-ELEVENLABS_AVAILABLE = False 
+ELEVENLABS_AVAILABLE = False
 
 AGENT_ID = os.getenv("ELEVENLABS_AGENT_ID")
 API_KEY = os.getenv("ELEVENLABS_API_KEY")
@@ -141,43 +141,43 @@ current_conversation_id = None
 # Simple voice processing implementation using direct API calls
 class SimpleVoiceAssistant:
     """Simple voice assistant using direct ElevenLabs API calls"""
-    
+
     def __init__(self, user_id, conversation_id):
         self.user_id = user_id
         self.conversation_id = conversation_id
         self.is_listening = False
-        
+
     def speak(self, text):
         """Speak the given text using ElevenLabs TTS"""
         _play_text_via_client(text, self.user_id, self.conversation_id)
-        
+
     def process_voice_input(self, text_input):
         """Process voice input and generate response"""
         try:
             # Log user input
             _log_and_commit(self.user_id, 'USER', f"User said: {text_input}", self.conversation_id)
-            
+
             # Process the command using the existing command processor
             response = self._generate_response(text_input)
-            
+
             # Log agent response
             _log_and_commit(self.user_id, 'AGENT', f"Agent response: {response}", self.conversation_id)
-            
+
             # Speak the response
             self.speak(response)
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"Error processing voice input: {e}")
             error_response = "I'm sorry, I encountered an error processing your request."
             self.speak(error_response)
             return error_response
-    
+
     def _generate_response(self, text_input):
         """Generate response based on user input"""
         text_lower = text_input.lower()
-        
+
         # Handle common commands
         if "schedule" in text_lower and ("meeting" in text_lower or "event" in text_lower):
             try:
@@ -186,7 +186,7 @@ class SimpleVoiceAssistant:
                 return f"I've created that event for you: {result}"
             except Exception as e:
                 return f"I had trouble creating that event: {str(e)}"
-                
+
         elif "weather" in text_lower:
             from .command_processor import VoiceCommandProcessor
             processor = VoiceCommandProcessor(user_id=self.user_id)
@@ -195,7 +195,7 @@ class SimpleVoiceAssistant:
                 location = text_lower.split("in")[-1].strip()
             result = processor.process_command('weather', location=location)
             return result.get('user_message', 'Weather information is not available right now.')
-            
+
         elif "calendar" in text_lower or "schedule" in text_lower:
             try:
                 from .google_calendar_integration import get_today_schedule
@@ -203,10 +203,10 @@ class SimpleVoiceAssistant:
                 return f"Here's your schedule: {schedule}"
             except Exception as e:
                 return f"I couldn't access your calendar right now: {str(e)}"
-                
+
         elif any(phrase in text_lower for phrase in ["goodbye", "bye", "end chat", "stop", "that's all"]):
             return "Goodbye! Have a great day. CONVERSATION_END"
-            
+
         else:
             # Default helpful response
             return f"I heard you say: {text_input}. I can help you with scheduling events, checking weather, viewing your calendar, and more. What would you like me to do?"
@@ -217,11 +217,11 @@ current_voice_assistant = None
 # Helper to play text using the modern ElevenLabs API
 def _play_text_via_client(text_to_speak, user_id, conversation_id):
     global ELEVENLABS_CLIENT, VOICE_ID
-    
+
     if not ELEVENLABS_CLIENT:
         logger.error("ElevenLabs client is not initialized. Cannot play text via ElevenLabs.")
         _log_and_commit(user_id, 'ERROR', "ElevenLabs client not ready for playback.", conversation_id)
-        
+
         # Fallback to pyttsx3 if available
         if PYTTSX3_AVAILABLE:
             try:
@@ -237,7 +237,7 @@ def _play_text_via_client(text_to_speak, user_id, conversation_id):
 
     try:
         logger.info(f"Attempting to play text via ElevenLabs: {text_to_speak}")
-        
+
         # Use modern ElevenLabs API
         audio_generator = generate(
             text=text_to_speak,
@@ -246,17 +246,17 @@ def _play_text_via_client(text_to_speak, user_id, conversation_id):
             stream=True,
             api_key=API_KEY
         )
-        
+
         # Play the audio stream
         play(audio_generator)
-        
+
         _log_and_commit(user_id, 'INFO', f"Agent spoke via ElevenLabs: {text_to_speak}", conversation_id)
-        
+
     except Exception as e:
         logger.error(f"Error playing text via ElevenLabs: {e}")
         logger.error(traceback.format_exc())
         _log_and_commit(user_id, 'ERROR', f"Failed to speak via ElevenLabs: {str(e)}", conversation_id)
-        
+
         # Fallback to pyttsx3 if available
         if PYTTSX3_AVAILABLE:
             try:
@@ -270,6 +270,15 @@ def _play_text_via_client(text_to_speak, user_id, conversation_id):
                 _log_and_commit(user_id, 'ERROR', f"Both ElevenLabs and pyttsx3 failed: {str(fallback_e)}", conversation_id)
 
 
+# FIX: Define the missing function
+def log_voice_to_database(user_id, level, message, conversation_id):
+    """
+    A standalone function to log to the database using the global callback.
+    This resolves the 'log_voice_to_database' undefined variable errors.
+    """
+    if _on_log_to_db:
+        _on_log_to_db(user_id, level, message, conversation_id)
+
 def _log_and_commit(user_id, level, message, conversation_id):
     """Helper to log and commit within an app context."""
     log_voice_to_database(user_id, level, message, conversation_id=conversation_id)
@@ -277,22 +286,22 @@ def _log_and_commit(user_id, level, message, conversation_id):
 def process_voice_command(text_input):
     """Process voice command with the simple voice assistant"""
     global current_voice_assistant, conversation_active, current_user_id, current_conversation_id
-    
+
     if not current_voice_assistant:
         logger.error("Voice assistant not active")
         return "Voice assistant is not active"
-    
+
     try:
         response = current_voice_assistant.process_voice_input(text_input)
-        
+
         if "CONVERSATION_END" in response:
             logger.info("Ending conversation as requested...")
             _log_and_commit(current_user_id, 'INFO', "Voice conversation ended by user request", current_conversation_id)
             conversation_active = False
             current_voice_assistant = None
-            
+
         return response
-        
+
     except Exception as e:
         logger.error(f"Error processing voice command: {e}")
         logger.error(traceback.format_exc())
@@ -313,10 +322,10 @@ def _start_voice_assistant_internal(user_id: uuid.UUID):
     Assumes an app context is already pushed.
     """
     global conversation_active, current_voice_assistant, current_user_id, current_conversation_id, ELEVENLABS_CLIENT, ELEVENLABS_AVAILABLE
-    
+
     current_user_id = user_id
     conversation_active = True
-    
+
     ELEVENLABS_CLIENT = None
     ELEVENLABS_AVAILABLE = False
 
@@ -353,10 +362,10 @@ def _start_voice_assistant_internal(user_id: uuid.UUID):
 
         # Create voice assistant instance
         current_voice_assistant = SimpleVoiceAssistant(user_id, current_conversation_id)
-        
+
         logger.info("Starting simplified voice assistant...")
         _log_and_commit(current_user_id, 'INFO', "Voice assistant session starting", current_conversation_id)
-        
+
         # Initial greeting
         initial_greeting = f"Hello {user_name}! I'm your voice assistant. I can help you with calendar events, weather, and more. What can I do for you?"
         current_voice_assistant.speak(initial_greeting)
@@ -364,13 +373,13 @@ def _start_voice_assistant_internal(user_id: uuid.UUID):
         # Start auto-shutdown timer
         timer_thread = threading.Thread(target=auto_shutdown_timer, daemon=True)
         timer_thread.start()
-        
+
         _log_and_commit(current_user_id, 'INFO', "Voice assistant session initialized successfully", current_conversation_id)
-        
+
         # Keep the session alive
         while conversation_active:
             time.sleep(1)
-        
+
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt detected. Ending conversation...")
         _log_and_commit(current_user_id, 'INFO', "Voice conversation interrupted by keyboard", current_conversation_id)
@@ -395,7 +404,10 @@ def start_voice_assistant(user_id: uuid.UUID, app_instance: Flask, retries: int 
     Ensures the Flask app context is pushed for the internal function.
     """
     global _flask_app_instance
-    set_flask_app(app_instance)
+    # FIX: Replace the undefined function call
+    _flask_app_instance = app_instance
+    set_flask_app_for_command_processor(app_instance)
+
 
     for attempt in range(retries):
         try:
@@ -411,6 +423,7 @@ def start_voice_assistant(user_id: uuid.UUID, app_instance: Flask, retries: int 
                 time.sleep(delay)
             else:
                 logger.error(f"All {retries} attempts failed to start voice assistant for user {user_id}.")
+                # FIX: Call the newly defined function
                 log_voice_to_database(user_id, 'CRITICAL', f"Voice assistant failed to start after {retries} attempts: {str(e)}", conversation_id=None)
                 raise
 
@@ -493,7 +506,7 @@ class VoiceAssistant:
     def _process_llm_response(self, response_text, user_id, user_name):
         """Processes an agent's text response, executes commands, and plays audio."""
         global conversation_active
-        
+
         self._log_to_frontend(f"Agent: {response_text}", 'info')
         self._log_to_database(user_id, 'AGENT', response_text, self.conversation_id)
 
@@ -501,7 +514,7 @@ class VoiceAssistant:
         command_executed_message = None
 
         response_lower = response_text.lower()
-        
+
         # --- Command Processing Logic ---
         if "i'll create that event for you:" in response_lower:
             event_description = response_text.split("i'll create that event for you:")[1].strip()
@@ -542,7 +555,7 @@ class VoiceAssistant:
     def _simulate_llm_response(self, transcript):
         """Simulates a dynamic LLM response based on the transcript."""
         transcript_lower = transcript.lower()
-        
+
         if "schedule" in transcript_lower and "meeting" in transcript_lower:
             return f"I'll create that event for you: {transcript}"
         if "today's schedule" in transcript_lower or "my schedule today" in transcript_lower:
@@ -562,13 +575,13 @@ class VoiceAssistant:
 
         if "goodbye" in transcript_lower or "end chat" in transcript_lower:
             return "Goodbye! Have a great day, Chirag. CONVERSATION_END"
-        
+
         return "I'm not sure how to respond to that. You can ask about your schedule, weather, or news."
 
     def _listening_loop(self):
         """The main listening and processing loop."""
         global conversation_active
-        
+
         with _flask_app_instance.app_context():
             user = User.query.get(self.user_id)
             user_name = user.username if user else "Chirag"
@@ -583,10 +596,10 @@ class VoiceAssistant:
         while self.is_listening:
             try:
                 transcript = self.user_transcript_queue.get(timeout=1)
-                
+
                 self._log_to_frontend(f"User: {transcript}", 'info')
                 self._log_to_database(self.user_id, 'USER', transcript, self.conversation_id)
-                
+
                 response_text = self._simulate_llm_response(transcript)
                 self._process_llm_response(response_text, self.user_id, user_name)
 
@@ -622,14 +635,14 @@ class VoiceAssistant:
 
         self.listening_thread = threading.Thread(target=self._listening_loop, daemon=True)
         self.listening_thread.start()
-        
+
         return True, "Voice assistant started successfully."
 
     def stop_listening(self):
         """Stops the voice assistant."""
         if not self.is_listening:
             return False, "Voice assistant is not active."
-        
+
         self.is_listening = False
         self.status = "Inactive"
         self._log_to_frontend("Voice assistant stopped.", 'info')
@@ -642,5 +655,3 @@ class VoiceAssistant:
             "is_listening": self.is_listening,
             "user_id": str(self.user_id) if self.user_id else None
         }
-
-
