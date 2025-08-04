@@ -736,6 +736,59 @@ def api_voice_status():
     else:
         return jsonify({'success': True, 'data': {'active': False, 'status': 'inactive', 'user_id': str(user_id), 'is_listening': False}})
 
+@app.route('/api/voice/input', methods=['POST'])
+@limiter.limit("30 per minute")
+@require_auth
+def api_voice_input():
+    """Process voice/text input for the voice assistant"""
+    user_id = request.current_user.id
+    
+    if not request.is_json:
+        return jsonify({'success': False, 'error': "Request must be JSON"}), 400
+    
+    data = request.json
+    text_input = data.get('text', '').strip()
+    
+    if not text_input:
+        return jsonify({'success': False, 'error': "text is required"}), 400
+    
+    # Check if voice assistant is active for this user
+    if user_id not in app.state['voice_sessions'] or not app.state['voice_sessions'][user_id].get('active', False):
+        return jsonify({'success': False, 'error': "Voice assistant not active for this session"}), 400
+    
+    if not voice_assistant.conversation_active or voice_assistant.current_user_id != user_id:
+        return jsonify({'success': False, 'error': "Voice assistant session not ready"}), 400
+    
+    try:
+        logger.info(f"Processing voice input from user {user_id}: {text_input}")
+        log_to_database(user_id, 'INFO', f"Voice input received: {text_input}")
+        
+        # Process the voice command
+        response = voice_assistant.process_voice_command(text_input)
+        
+        log_to_database(user_id, 'INFO', f"Voice response sent: {response}")
+        
+        # Emit to the user's room for real-time updates
+        socketio.emit('voice_response', {
+            'input': text_input,
+            'response': response,
+            'timestamp': datetime.utcnow().isoformat()
+        }, room=f"user_{str(user_id)}")
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'input': text_input,
+                'response': response
+            },
+            'message': "Voice input processed successfully"
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing voice input: {e}")
+        logger.error(traceback.format_exc())
+        log_to_database(user_id, 'ERROR', f"Failed to process voice input: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 # Static file serving routes
 @app.route('/static/<path:filename>')
 def serve_static(filename):
