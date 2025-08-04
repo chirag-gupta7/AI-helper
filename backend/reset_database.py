@@ -5,12 +5,12 @@ This script will drop all tables and recreate them with the correct schema.
 """
 
 import os
-import sqlite3
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from .models import db
 from .config import config
+from sqlalchemy import inspect
 
 def reset_database():
     """Reset the database by dropping and recreating all tables."""
@@ -32,9 +32,6 @@ def reset_database():
         
         print(f"📍 Database location: {db_path}")
         
-        # Close any existing connections
-        db.session.close()
-        
         # Drop all tables
         print("🔥 Dropping all existing tables...")
         db.drop_all()
@@ -44,7 +41,6 @@ def reset_database():
         db.create_all()
         
         print("✅ Database reset complete!")
-        print("🎯 All tables recreated with UUID support")
         
         # Verify tables were created
         inspector = db.inspect(db.engine)

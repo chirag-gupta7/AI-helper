@@ -30,7 +30,8 @@ def reset_and_create_database():
             print("✅ Tables created successfully!")
 
             # Verify tables were created
-            inspector = db.inspect(db.engine)
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
             tables = inspector.get_table_names()
             print(f"Verified tables: {', '.join(tables)}")
             print("--- Database Reset Complete ---")

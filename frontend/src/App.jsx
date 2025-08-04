@@ -3,6 +3,7 @@ import { socket } from "./services/socket.js";
 import { rescheduleEvent, cancelEvent, findMeetingSlots, setEventReminder } from './services/api.js';
 import './App.css';
 import { Moon, Sun, Calendar, X, Search, Bell, Send } from 'lucide-react';
+import axios from 'axios';
 
 const App = () => {
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -18,7 +19,9 @@ const App = () => {
     const [cancelData, setCancelData] = useState({ eventId: '' });
     const [findSlotsData, setFindSlotsData] = useState({ duration: '30', participants: 'primary', days: '7' });
     const [reminderData, setReminderData] = useState({ eventId: '', minutes: '30' });
-
+    
+    // State for the new simulated voice input
+    const [simulatedTranscript, setSimulatedTranscript] = useState('');
 
     useEffect(() => {
         const onConnect = () => {
@@ -126,15 +129,6 @@ const App = () => {
                 }
             });
             
-            // Check if response is JSON
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                const text = await response.text();
-                addLog(`Server returned non-JSON response: ${text.substring(0, 100)}...`, 'error');
-                setStatus('Error');
-                return;
-            }
-            
             const data = await response.json();
             
             if (response.ok) {
@@ -164,16 +158,6 @@ const App = () => {
                 } 
             });
             
-            // Check if response is JSON
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                const text = await response.text();
-                addLog(`Server returned non-JSON response: ${text.substring(0, 100)}...`, 'error');
-                setStatus('Inactive');  // Set to inactive anyway
-                setIsListening(false);
-                return;
-            }
-            
             const data = await response.json();
             
             if (response.ok) {
@@ -182,13 +166,13 @@ const App = () => {
                 setIsListening(false);
             } else {
                 addLog(`Error: ${data.error || 'Unknown error'}`, 'error');
-                setStatus('Inactive');  // Set to inactive anyway
+                setStatus('Inactive');
                 setIsListening(false);
             }
         } catch (error) {
             addLog(`Network error: ${error.message}`, 'error');
             setStatus('Error');
-            setIsListening(false);  // Set to inactive anyway
+            setIsListening(false);
         }
     };
     
@@ -250,6 +234,18 @@ const App = () => {
         }
     };
 
+    const handleSimulateTranscript = async (e) => {
+        e.preventDefault();
+        addLog(`Sending transcript: "${simulatedTranscript}"`, 'info');
+        try {
+            const response = await axios.post('/api/voice/send-transcript', { transcript: simulatedTranscript });
+            addLog(`API Response: ${response.data.message}`, 'success');
+        } catch (error) {
+            const errorMessage = error.response?.data?.error || error.message;
+            addLog(`Error sending transcript: ${errorMessage}`, 'error');
+        }
+        setSimulatedTranscript('');
+    };
 
     const getStatusClass = () => {
         if (status === 'Listening...') return 'status-active';
@@ -288,6 +284,19 @@ const App = () => {
                             Stop Conversation
                         </button>
                     </div>
+                    
+                    <form onSubmit={handleSimulateTranscript} className="action-form" style={{ marginTop: '2rem' }}>
+                        <label><Send size={16} /> Send Simulated Transcript</label>
+                        <input
+                            type="text"
+                            placeholder={isListening ? "Type a command here..." : "Start the assistant first"}
+                            value={simulatedTranscript}
+                            onChange={(e) => setSimulatedTranscript(e.target.value)}
+                            disabled={!isListening}
+                            required
+                        />
+                        <button type="submit" disabled={!isListening}><Send size={14} /></button>
+                    </form>
                 </div>
 
                 <div className="calendar-actions-container">
