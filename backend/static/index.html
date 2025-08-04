@@ -138,6 +138,26 @@
         </div>
 
         <div class="endpoint">
+            <h3>💬 Voice Input Test</h3>
+            <span class="method post">POST</span>
+            <code>/api/voice/input</code>
+            <div class="input-group">
+                <input type="text" id="voice-input-text" placeholder="Type what you want to say to the voice assistant..." />
+                <button class="test-button" onclick="apiClient.testVoiceInput()">Send Voice Input</button>
+            </div>
+            <div id="result-voice-input" class="result" style="display: none;"></div>
+            <div class="voice-examples">
+                <p><strong>Example commands to try:</strong></p>
+                <button class="example-btn" onclick="fillVoiceInput('What\'s the weather in London?')">Weather Query</button>
+                <button class="example-btn" onclick="fillVoiceInput('Schedule a meeting with John tomorrow at 2pm')">Schedule Meeting</button>
+                <button class="example-btn" onclick="fillVoiceInput('What\'s on my calendar today?')">Check Calendar</button>
+                <button class="example-btn" onclick="fillVoiceInput('Set a reminder to call mom in 30 minutes')">Set Reminder</button>
+                <button class="example-btn" onclick="fillVoiceInput('Tell me a joke')">Tell Joke</button>
+                <button class="example-btn" onclick="fillVoiceInput('Goodbye')">End Session</button>
+            </div>
+        </div>
+
+        <div class="endpoint">
             <h3>🧪 Quick Tests</h3>
             <button class="test-button" onclick="runAllTests()">Run All Tests</button>
             <button class="test-button" onclick="clearAllResults()">Clear Results</button>
