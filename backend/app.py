@@ -2,7 +2,7 @@
 import os
 import sys
 import logging
-from flask import Flask, request, jsonify, session, g # Import g for global request context
+from flask import Flask, request, jsonify, session, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -11,11 +11,15 @@ import uuid
 import time
 import traceback
 import threading
+from flask_cors import CORS
+from flask_socketio import SocketIO, emit, join_room, leave_room
+import webbrowser
+import queue
 
-# Import configuration
+# Import configuration and other modules
 from .config import config
-
-# Import your existing modules
+from .models import db, Log, User
+from .auth_service import AuthService, require_auth, optional_auth
 from .google_calendar_integration import (
     get_today_schedule,
     get_upcoming_events,
@@ -28,6 +32,8 @@ from .google_calendar_integration import (
     find_meeting_slots,
     set_event_reminder
 )
+# Import the new VoiceAssistant class
+from .voice_assistant import VoiceAssistant
 
 # UTF-8 console fix
 if hasattr(sys.stdout, "reconfigure"):
@@ -43,69 +49,47 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def _select_rate_limit_storage():
-    url = os.getenv("REDIS_URL")
-    if not url:
-        logger.warning("No REDIS_URL found; falling back to in-memory rate limit store.")
-        return "memory://"
-    try:
-        import redis
-        r = redis.from_url(url, socket_connect_timeout=0.5)
-        r.ping()
-        logger.info(f"Successfully connected to Redis at {url}")
-        return url
-    except Exception as e:
-        logger.warning(f"Redis unreachable at {url}: {e}; falling back to in-memory rate limit store.")
-        return "memory://"
-
 # Flask app setup
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object(config['development'])
 
-# Initialize extensions
-from .models import db, Log, User
-from .auth_service import AuthService, require_auth, optional_auth
-from flask_socketio import SocketIO, emit, join_room, leave_room
+# Enable CORS for the app
+CORS(app)
 
+# Initialize extensions
 db.init_app(app)
 
 limiter = Limiter(
     key_func=get_remote_address,
-    storage_uri=_select_rate_limit_storage(),
     default_limits=["200/day", "50/hour"],
     app=app,
 )
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
-def log_to_database(user_id, level, message, conversation_id=None, commit=True):
-    # This function is called from routes, which already have an app context.
-    # So, no need to push app context here, it's handled by the request context.
+def log_to_database(user_id, level, message, conversation_id=None):
     try:
-        user_id_str = str(user_id) if isinstance(user_id, uuid.UUID) else user_id
-        new_log = Log(
-            user_id=user_id_str,
-            level=level,
-            message=message,
-            conversation_id=conversation_id,
-            source='app_backend'
-        )
-        db.session.add(new_log)
-        if commit:
+        with app.app_context():
+            user_id_str = str(user_id) if isinstance(user_id, uuid.UUID) else user_id
+            new_log = Log(
+                user_id=user_id_str,
+                level=level,
+                message=message,
+                conversation_id=conversation_id,
+                source='app_backend'
+            )
+            db.session.add(new_log)
             db.session.commit()
     except Exception as e:
         logger.error(f"Failed to log to database: {e}")
-        logger.error(traceback.format_exc()) # Log traceback for debugging
+        logger.error(traceback.format_exc())
         try:
             db.session.rollback()
         except Exception as rollback_e:
             logger.error(f"Error during rollback: {rollback_e}")
 
-# --- START OF CRITICAL FIX: Ensure DB is created before first request ---
 @app.before_request
 def before_request_func():
-    # Using a global flag g to ensure this runs only once per application context
-    # This is more robust than a simple global variable in some deployment scenarios.
     if not getattr(g, 'db_initialized', False):
         with app.app_context():
             from sqlalchemy import inspect
@@ -117,15 +101,26 @@ def before_request_func():
             else:
                 logger.info("Database tables already exist.")
         g.db_initialized = True
-# --- END OF CRITICAL FIX ---
 
-# FIX: Import and set the Flask app instance in voice_assistant module
-from . import voice_assistant
-voice_assistant.set_flask_app(app)
+# Global VoiceAssistant instance
+voice_assistant = None
+
+def on_voice_log(message, level):
+    """Callback to send log messages from the voice thread to the frontend."""
+    socketio.emit('log', {'message': message, 'level': level}, namespace='/', broadcast=True)
+
+def on_voice_status_change(status):
+    """Callback to send status updates from the voice thread to the frontend."""
+    socketio.emit('status_update', {'status': status}, namespace='/', broadcast=True)
+
+def init_voice_assistant():
+    """Initializes the global VoiceAssistant instance."""
+    global voice_assistant
+    if voice_assistant is None:
+        voice_assistant = VoiceAssistant(app, on_voice_status_change, on_voice_log, log_to_database)
 
 
-# --- ALL YOUR ROUTES (Authentication, Calendar, Voice, etc.) GO HERE ---
-# They remain exactly as they were in the previously provided correct versions.
+# --- ROUTES ---
 @app.route('/health', methods=['GET'])
 @optional_auth
 def health_check():
@@ -149,36 +144,30 @@ def health_check():
             'user': user_info,
             'database': 'connected',
             'calendar_connected': calendar_ok,
-            'voice_sessions': len(app.state.get('voice_sessions', {})),
             'config_env': os.getenv('FLASK_ENV', 'development'),
         }), 200
 
     except Exception as e:
         logger.error(f"Health check error: {str(e)}")
-        # Add traceback for better debugging
         logger.error(traceback.format_exc())
         return jsonify({
             'status': 'error',
             'error': str(e)
         }), 500
 
-# Include all your other routes here... (The full code for all routes)
 @app.route('/api/auth/register', methods=['POST'])
 @limiter.limit("5 per minute")
 def register():
     """User registration endpoint"""
     try:
         data = request.get_json()
-
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-
         username = data.get('username', '').strip()
         email = data.get('email', '').strip()
         password = data.get('password', '')
         first_name = data.get('first_name', '').strip()
         last_name = data.get('last_name', '').strip()
-
         success, result = AuthService.register_user(
             username=username,
             email=email,
@@ -186,16 +175,13 @@ def register():
             first_name=first_name if first_name else None,
             last_name=last_name if last_name else None
         )
-
         if not success:
             return jsonify({'error': result}), 400
-
         user = result
         return jsonify({
             'message': 'Registration successful',
             'user': user.to_dict()
         }), 201
-
     except Exception as e:
         logger.error(f"Registration endpoint error: {str(e)}")
         return jsonify({'error': 'Registration failed'}), 500
@@ -206,44 +192,31 @@ def login():
     """User login endpoint"""
     try:
         data = request.get_json()
-
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-
         username_or_email = data.get('username', '').strip()
         password = data.get('password', '')
-
         if not username_or_email or not password:
             return jsonify({'error': 'Username/email and password required'}), 400
-
         success, result = AuthService.authenticate_user(username_or_email, password)
-
         if not success:
             return jsonify({'error': result}), 401
-
         user = result
-
-        # Create session
         session_obj = AuthService.create_session(
             user=user,
             ip_address=request.remote_addr,
             user_agent=request.headers.get('User-Agent')
         )
-
         if not session_obj:
             return jsonify({'error': 'Failed to create session'}), 500
-
-        # Set session
         session['session_token'] = session_obj.session_token
-        session['user_id'] = str(user.id) # Store user.id as string UUID in session
+        session['user_id'] = str(user.id)
         session.permanent = True
-
         return jsonify({
             'message': 'Login successful',
             'user': user.to_dict(),
             'session_token': session_obj.session_token
         }), 200
-
     except Exception as e:
         logger.error(f"Login endpoint error: {str(e)}")
         return jsonify({'error': 'Login failed'}), 500
@@ -254,14 +227,10 @@ def logout():
     """User logout endpoint"""
     try:
         session_token = session.get('session_token')
-
         if session_token:
             AuthService.logout_user(session_token)
-
         session.clear()
-
         return jsonify({'message': 'Logout successful'}), 200
-
     except Exception as e:
         logger.error(f"Logout endpoint error: {str(e)}")
         return jsonify({'error': 'Logout failed'}), 500
@@ -274,7 +243,6 @@ def get_current_user():
         return jsonify({
             'user': request.current_user.to_dict()
         }), 200
-
     except Exception as e:
         logger.error(f"Get current user error: {str(e)}")
         return jsonify({'error': 'Failed to get user info'}), 500
@@ -306,27 +274,19 @@ def change_password():
     """Change user password"""
     try:
         data = request.get_json()
-
         current_password = data.get('current_password', '')
         new_password = data.get('new_password', '')
-
         if not current_password or not new_password:
             return jsonify({'error': 'Current and new passwords required'}), 400
-
         user = request.current_user
-
         if not user.check_password(current_password):
             return jsonify({'error': 'Current password is incorrect'}), 400
-
         password_errors = AuthService.validate_password(new_password)
         if password_errors:
             return jsonify({'error': '; '.join(password_errors)}), 400
-
         user.set_password(new_password)
         db.session.commit()
-
         return jsonify({'message': 'Password changed successfully'}), 200
-
     except Exception as e:
         logger.error(f"Change password error: {str(e)}")
         return jsonify({'error': 'Failed to change password'}), 500
@@ -424,115 +384,6 @@ def api_get_upcoming_events():
         logger.error(f"Error getting upcoming events: {e}")
         logger.error(traceback.format_exc())
         log_to_database(user_id, 'ERROR', f"Failed to retrieve upcoming events: {str(e)}")
-        return jsonify(
-            success=False,
-            error=str(e)
-        ), 500
-
-@app.route('/api/calendar/create', methods=['POST'])
-@limiter.limit("10 per minute")
-@require_auth
-def api_create_event():
-    """Create a new calendar event"""
-    user_id = request.current_user.id
-    
-    if not request.is_json:
-        return jsonify(
-            success=False,
-            error="Request must be JSON"
-        ), 400
-    
-    data = request.json
-    event_text = data.get('event_text', '').strip()
-    
-    if not event_text:
-        return jsonify(
-            success=False,
-            error="event_text is required"
-        ), 400
-    
-    try:
-        logger.info(f"User {user_id} creating event: {event_text}")
-        log_to_database(user_id, 'INFO', f"Creating calendar event: {event_text}")
-        
-        result = create_event_from_conversation(event_text)
-        
-        log_to_database(user_id, 'INFO', f"Successfully created calendar event: {event_text} - Result: {result}")
-        
-        socketio.emit('calendar_update', {
-            'type': 'event_created',
-            'event_text': event_text,
-            'result': result,
-            'timestamp': datetime.utcnow().isoformat()
-        }, room=f"user_{str(user_id)}") # Convert UUID to string for room name
-        
-        return jsonify(
-            success=True,
-            data={'result': result, 'event_text': event_text},
-            message="Event created successfully"
-        )
-    except Exception as e:
-        logger.error(f"Error creating event: {e}")
-        logger.error(traceback.format_exc())
-        log_to_database(user_id, 'ERROR', f"Failed to create calendar event '{event_text}': {str(e)}")
-        return jsonify(
-            success=False,
-            error=str(e)
-        ), 500
-
-@app.route('/api/calendar/next-meeting', methods=['GET'])
-@limiter.limit("30 per minute")
-@require_auth
-def api_get_next_meeting():
-    """Get next meeting info"""
-    user_id = request.current_user.id
-    
-    try:
-        logger.info(f"User {user_id} requested next meeting")
-        log_to_database(user_id, 'INFO', "Requested next meeting information")
-        
-        meeting = get_next_meeting()
-        
-        log_to_database(user_id, 'INFO', f"Successfully retrieved next meeting: {meeting.get('summary', 'No meeting') if isinstance(meeting, dict) else 'meeting data'}")
-        
-        return jsonify(
-            success=True,
-            data={'meeting': meeting},
-            message="Next meeting retrieved successfully"
-        )
-    except Exception as e:
-        logger.error(f"Error getting next meeting: {e}")
-        logger.error(traceback.format_exc())
-        log_to_database(user_id, 'ERROR', f"Failed to retrieve next meeting: {str(e)}")
-        return jsonify(
-            success=False,
-            error=str(e)
-        ), 500
-
-@app.route('/api/calendar/free-time', methods=['GET'])
-@limiter.limit("20 per minute")
-@require_auth
-def api_get_free_time():
-    """Get free time slots today"""
-    user_id = request.current_user.id
-    
-    try:
-        logger.info(f"User {user_id} requested free time")
-        log_to_database(user_id, 'INFO', "Requested free time slots")
-        
-        free_time = get_free_time_today()
-        
-        log_to_database(user_id, 'INFO', f"Successfully retrieved free time slots: {len(free_time) if isinstance(free_time, list) else 'free time data'} slots")
-        
-        return jsonify(
-            success=True,
-            data={'free_time': free_time},
-            message="Free time retrieved successfully"
-        )
-    except Exception as e:
-        logger.error(f"Error getting free time: {e}")
-        logger.error(traceback.format_exc())
-        log_to_database(user_id, 'ERROR', f"Failed to retrieve free time: {str(e)}")
         return jsonify(
             success=False,
             error=str(e)
@@ -645,6 +496,19 @@ def api_set_event_reminder(event_id):
         return jsonify(success=False, error=str(e)), 500
 
 # Voice assistant API endpoints
+@app.route('/api/voice/status', methods=['GET'])
+@optional_auth
+def api_voice_status():
+    """Get voice assistant status"""
+    user_id = request.current_user.id if hasattr(request, 'current_user') and request.current_user else None
+    
+    if not voice_assistant:
+        return jsonify({'success': True, 'data': {'active': False, 'status': 'inactive', 'user_id': None, 'is_listening': False}})
+    
+    status_data = voice_assistant.get_status()
+    
+    return jsonify({'success': True, 'data': status_data})
+
 @app.route('/api/voice/start', methods=['POST'])
 @limiter.limit("5 per minute")
 @require_auth
@@ -653,41 +517,15 @@ def api_start_voice():
     user = request.current_user
     user_id = user.id
     
-    try:
-        if user_id in app.state['voice_sessions'] and app.state['voice_sessions'][user_id].get('active', False):
-            return jsonify({'success': False, 'error': "Voice assistant already active for this session"}), 400
-        
-        logger.info(f"Starting voice assistant for user {user_id}")
-        log_to_database(user_id, 'INFO', "Voice assistant started")
-        
-        session_data = {'user_id': user_id, 'started_at': datetime.utcnow(), 'active': True, 'thread': None}
-        app.state['voice_sessions'][user_id] = session_data
-        
-        def voice_worker():
-            # The voice_assistant.start_voice_assistant function now handles app_context internally
-            try:
-                from .voice_assistant import start_voice_assistant # Import the public function
-                socketio.emit('voice_status', {'status': 'started', 'message': 'Voice assistant is now active'}, room=f"user_{str(user_id)}")
-                start_voice_assistant(user_id=user_id, app_instance=app) # Pass app instance
-            except Exception as e:
-                logger.error(f"Voice assistant error in worker: {e}")
-                logger.error(traceback.format_exc())
-                log_to_database(user_id, 'ERROR', f"Voice assistant error in worker: {str(e)}")
-                socketio.emit('voice_error', {'error': str(e), 'timestamp': datetime.utcnow().isoformat()}, room=f"user_{str(user_id)}")
-                if user_id in app.state['voice_sessions']:
-                    app.state['voice_sessions'][user_id]['active'] = False
-        
-        thread = threading.Thread(target=voice_worker, daemon=True)
-        thread.start()
-        session_data['thread'] = thread
-        
-        return jsonify({'success': True, 'data': {'status': 'started', 'user_id': str(user_id)}, 'message': "Voice assistant started successfully"})
-            
-    except Exception as e:
-        logger.error(f"Error starting voice assistant: {e}")
-        logger.error(traceback.format_exc())
-        log_to_database(user_id, 'ERROR', f"Failed to start voice assistant: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+    if not voice_assistant:
+        init_voice_assistant()
+
+    success, message = voice_assistant.start_listening(user_id)
+    
+    if success:
+        return jsonify({'success': True, 'message': message})
+    else:
+        return jsonify({'success': False, 'error': message}), 500
 
 @app.route('/api/voice/stop', methods=['POST'])
 @limiter.limit("10 per minute")
@@ -696,45 +534,33 @@ def api_stop_voice():
     """Stop voice assistant"""
     user_id = request.current_user.id
     
-    if user_id not in app.state['voice_sessions'] or not app.state['voice_sessions'][user_id].get('active', False):
-        return jsonify({'success': False, 'error': "Voice assistant not active for this session"}), 400
+    if not voice_assistant or not voice_assistant.is_listening:
+        return jsonify({'success': False, 'error': "Voice assistant is not active for this user."}), 400
     
-    try:
-        logger.info(f"Stopping voice assistant for user {user_id}")
-        log_to_database(user_id, 'INFO', "Voice assistant stopped")
-        
-        # This flag will be checked by the voice_assistant's internal loop
-        voice_assistant.conversation_active = False 
-        
-        socketio.emit('voice_status', {'status': 'stopped', 'message': 'Voice assistant has been stopped', 'timestamp': datetime.utcnow().isoformat()}, room=f"user_{str(user_id)}")
-        
-        return jsonify({'success': True, 'data': {'status': 'stopped', 'user_id': str(user_id)}, 'message': "Voice assistant stopped successfully"})
-        
-    except Exception as e:
-        logger.error(f"Error stopping voice assistant: {e}")
-        logger.error(traceback.format_exc())
-        log_to_database(user_id, 'ERROR', f"Failed to stop voice assistant: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/voice/status', methods=['GET'])
-@optional_auth
-def api_voice_status():
-    """Get voice assistant status"""
-    user_id = request.current_user.id if hasattr(request, 'current_user') and request.current_user else None
+    success, message = voice_assistant.stop_listening()
     
-    if not user_id:
-        return jsonify({'success': True, 'data': {'active': False, 'status': 'inactive', 'user_id': None, 'is_listening': False}})
-
-    session_data = app.state['voice_sessions'].get(user_id, {})
-    
-    # Check the global conversation_active flag from voice_assistant module
-    # This reflects the actual state of the voice session thread
-    is_active_globally = voice_assistant.conversation_active and voice_assistant.current_user_id == user_id
-    
-    if is_active_globally and session_data.get('active', False):
-        return jsonify({'success': True, 'data': {'active': True, 'started_at': session_data.get('started_at').isoformat(), 'status': 'active', 'user_id': str(user_id), 'is_listening': True}})
+    if success:
+        return jsonify({'success': True, 'message': message})
     else:
-        return jsonify({'success': True, 'data': {'active': False, 'status': 'inactive', 'user_id': str(user_id), 'is_listening': False}})
+        return jsonify({'success': False, 'error': message}), 500
+
+@app.route('/api/voice/send-transcript', methods=['POST'])
+@require_auth
+def api_send_transcript():
+    """Endpoint to simulate a user's voice transcript."""
+    user_id = request.current_user.id
+    if not voice_assistant or not voice_assistant.is_listening or not user_id:
+        return jsonify({'success': False, 'error': "Voice assistant is not active or user is not authenticated"}), 400
+
+    data = request.json
+    transcript = data.get('transcript', '').strip()
+    if not transcript:
+        return jsonify({'success': False, 'error': 'Transcript is required'}), 400
+
+    voice_assistant.user_transcript_queue.put(transcript)
+
+    return jsonify({'success': True, 'message': 'Transcript received and queued for processing'})
+
 
 @app.route('/api/voice/input', methods=['POST'])
 @limiter.limit("30 per minute")
@@ -803,11 +629,9 @@ def test_page():
 @optional_auth
 def handle_connect():
     """Handle client connection"""
-    # user_id is now retrieved from request.current_user, set by optional_auth
     user_id = request.current_user.id if hasattr(request, 'current_user') and request.current_user else None
     
     if user_id:
-        # Ensure user_id is a string for room name
         room_name = f"user_{str(user_id)}"
         join_room(room_name)
         logger.info(f"Client connected: {user_id}, joined room: {room_name}")
@@ -815,54 +639,13 @@ def handle_connect():
     else:
         logger.info("Client connected (unauthenticated)")
         log_to_database(None, 'INFO', "Unauthenticated WebSocket client connected")
-
-    emit('connection_status', {'connected': True, 'user_id': str(user_id) if user_id else None, 'server_time': datetime.utcnow().isoformat()})
+    
+    emit('log', {'message': 'Connected to server', 'level': 'success'})
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    """Handle client disconnection"""
-    # user_id is retrieved from request.current_user if available, or session
-    user_id = request.current_user.id if hasattr(request, 'current_user') and request.current_user else session.get('user_id')
-    
-    if user_id:
-        logger.info(f"Client disconnected: {user_id}")
-        log_to_database(user_id, 'INFO', "WebSocket client disconnected")
-        
-        # Ensure user_id is a string for room name
-        room_name = f"user_{str(user_id)}"
-        leave_room(room_name)
-        
-        # Mark voice session inactive if the user disconnects
-        if user_id in app.state['voice_sessions']:
-            app.state['voice_sessions'][user_id]['active'] = False
-            # Also tell the voice_assistant module to stop its session
-            if voice_assistant.current_user_id == user_id:
-                voice_assistant.conversation_active = False
-    else:
-        logger.info("Unauthenticated client disconnected.")
-        log_to_database(None, 'INFO', "Unauthenticated WebSocket client disconnected")
-
-# Error handlers
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({'success': False, 'error': "Endpoint not found"}), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    logger.error(f"Internal server error: {error}")
-    logger.error(traceback.format_exc()) # Log traceback for debugging
-    return jsonify({'success': False, 'error': "Internal server error. Please check server logs for details."}), 500
-
-@app.errorhandler(429)
-def ratelimit_handler(e):
-    return jsonify({'success': False, 'error': f"Rate limit exceeded: {e.description}"}), 429
-
-# Global state management
-app.state = {
-    'voice_sessions': {}, # Tracks active voice sessions by user_id
-    'calendar_cache': {},
-    'last_cache_update': None
-}
+    """Handle client disconnect"""
+    logger.info('Client disconnected')
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
@@ -871,23 +654,19 @@ if __name__ == '__main__':
     logger.info(f"🚀 Starting Voice Assistant Backend on {host}:{port}")
     logger.info(f"🔧 Debug mode: {app.config['DEBUG']}")
     logger.info(f"👤 User: Chirag Gupta")
-
+    
     if app.config['DEBUG'] and not os.environ.get('WERKZEUG_RUN_MAIN'):
         import webbrowser
         time.sleep(1.5)
         webbrowser.open_new_tab(f"http://127.0.0.1:{port}/static/index.html")
         logger.info(f"🌍 Opened browser to http://127.0.0.1:{port}/static/index.html")
     
+    init_voice_assistant()
+
     socketio.run(
         app,
         host=host,
         port=port,
         debug=app.config['DEBUG'],
-        use_reloader=True # Use reloader for development convenience
+        use_reloader=False
     )
-
-    logger.info("🎙️ Voice Assistant Backend is running!")
-else:
-    logger.info("🎙️ Voice Assistant Backend module loaded, ready to serve requests.")
-    # This allows the app to be imported without running the server immediately.
-    # You can import this module in other parts of your application without executing the Flask app.

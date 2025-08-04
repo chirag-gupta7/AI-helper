@@ -1,36 +1,30 @@
 # Core Flask Framework
-flask==2.3.3
-flask-cors==4.0.0
-flask-socketio==5.3.6
-werkzeug==2.3.7
 
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.6
+werkzeug==2.3.7
+Flask-Limiter==3.5.0
 # Database & Authentication
-flask-sqlalchemy==3.1.1
+Flask-SQLAlchemy==3.0.5
+SQLAlchemy==1.4.52
 flask-migrate==4.0.5
 flask-login==0.6.2
-
-# Environment Configuration
 python-dotenv==1.0.0
 
-# Google Calendar Integration 
+# Google Calendar Integration
+
 google-auth==2.23.4
 google-auth-oauthlib==1.1.0
 google-api-python-client==2.134.0
 python-dateutil==2.8.2
 
-# ElevenLabs Voice API (Updated)
+# ElevenLabs Voice API
 elevenlabs==2.7.1
 
-# HTTP Requests
-requests==2.31.0
-
-# Rate Limiting (optional - can be removed if not using Redis)
-flask-limiter==3.5.0
-
-# Text-to-Speech (lightweight, no Rust dependencies)
+# Speech recognition and audio handling
 pyttsx3==2.90
 
-# Development/Testing (optional - can be removed for production)
 pytest-flask==1.2.0
 
 # Security
@@ -51,6 +45,8 @@ APScheduler==3.10.4
 
 # JSON handling (built-in)
 # json is built-in
+# HTTP Requests
+requests==2.31.0
 
-# Threading (built-in)
-# threading is built-in
+# Logging and Helpers
+packaging
