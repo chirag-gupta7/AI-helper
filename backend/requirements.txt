@@ -38,7 +38,7 @@ Flask-Talisman==1.1.0
 
 # Enhanced Voice Command Dependencies
 # Weather API support
-openweathermap==1.0.0  # Alternative: use requests directly with OpenWeatherMap API
+pyowm==3.3.0  # Alternative: use requests directly with OpenWeatherMap API
 
 # News API support  
 newsapi-python==0.2.6  # Alternative: use requests directly with NewsAPI
