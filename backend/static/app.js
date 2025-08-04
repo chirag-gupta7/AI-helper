@@ -191,6 +191,38 @@ class VoiceAssistantAPI {
         }
         this.testEndpoint(`/api/calendar/reminders/${eventId}`, 'POST', 'set-reminder', { minutes_before: minutes });
     }
+
+    // Voice Input Test
+    testVoiceInput() {
+        const textInput = document.getElementById('voice-input-text');
+        if (!textInput) {
+            console.error('Voice input field not found');
+            return;
+        }
+        
+        const text = textInput.value.trim();
+        
+        if (!text) {
+            alert('Please enter some text to send to the voice assistant');
+            textInput.focus();
+            return;
+        }
+        
+        this.testEndpoint('/api/voice/input', 'POST', 'voice-input', { text: text });
+        
+        // Clear input after submission
+        textInput.value = '';
+    }
+    
+    showError(resultId, message) {
+        const resultDiv = document.getElementById(`result-${resultId}`);
+        if (resultDiv) {
+            resultDiv.innerHTML = `<strong>❌ Error:</strong> ${message}`;
+            resultDiv.className = 'result error';
+            resultDiv.style.display = 'block';
+        }
+    }
+    
     
     showNotification(message, type = 'info') {
         // Create notification element
@@ -284,6 +316,23 @@ function runAllTests() {
 function clearAllResults() {
     if (apiClient) {
         apiClient.clearAllResults();
+    } else {
+        console.error('API client not initialized');
+    }
+}
+
+// Voice input helper functions
+function fillVoiceInput(text) {
+    const textInput = document.getElementById('voice-input-text');
+    if (textInput) {
+        textInput.value = text;
+        textInput.focus();
+    }
+}
+
+function testVoiceInput() {
+    if (apiClient) {
+        apiClient.testVoiceInput();
     } else {
         console.error('API client not initialized');
     }

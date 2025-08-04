@@ -25,6 +25,26 @@ elevenlabs==2.7.1
 # Speech recognition and audio handling
 pyttsx3==2.90
 
+pytest-flask==1.2.0
+
+# Security
+Flask-Talisman==1.1.0
+
+# Enhanced Voice Command Dependencies
+# Weather API support
+pyowm==3.3.0  # Alternative: use requests directly with OpenWeatherMap API
+
+# News API support  
+newsapi-python==0.2.6  # Alternative: use requests directly with NewsAPI
+
+# Background task processing (for reminders and timers)
+APScheduler==3.10.4
+
+# UUID support (built-in with Python 3.7+)
+# uuid is built-in
+
+# JSON handling (built-in)
+# json is built-in
 # HTTP Requests
 requests==2.31.0
 
