@@ -11,6 +11,7 @@ import requests
 import uuid
 import traceback
 import pyttsx3
+from flask import Flask
 
 
 # Import for ElevenLabs SDK
@@ -66,6 +67,41 @@ _flask_app_instance = None
 _on_status_change: Optional[Callable] = None
 _on_log: Optional[Callable] = None
 _on_log_to_db: Optional[Callable] = None
+
+def set_flask_app(app_instance: Flask):
+    """Set the Flask app instance for use in voice assistant operations."""
+    global _flask_app_instance
+    _flask_app_instance = app_instance
+
+def log_voice_to_database(user_id, level, message, conversation_id=None):
+    """Log voice-related events to the database with proper app context."""
+    try:
+        if _flask_app_instance:
+            with _flask_app_instance.app_context():
+                from .models import Log, db
+                user_id_str = str(user_id) if isinstance(user_id, uuid.UUID) else user_id
+                new_log = Log(
+                    user_id=user_id_str,
+                    level=level,
+                    message=message,
+                    conversation_id=conversation_id,
+                    source='voice_assistant'
+                )
+                db.session.add(new_log)
+                db.session.commit()
+        else:
+            # Fallback logging when Flask app not available
+            logger.warning(f"Flask app not available for database logging: [{level}] {message}")
+    except Exception as e:
+        logger.error(f"Failed to log to database: {e}")
+        logger.error(traceback.format_exc())
+        try:
+            if _flask_app_instance:
+                with _flask_app_instance.app_context():
+                    from .models import db
+                    db.session.rollback()
+        except Exception as rollback_e:
+            logger.error(f"Error during rollback: {rollback_e}")
 
 # Global state for the voice assistant thread
 conversation_active = False
