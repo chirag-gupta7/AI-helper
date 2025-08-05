@@ -8,6 +8,7 @@ class VoiceAssistantAPI {
     init() {
         console.log('🎙️ Voice Assistant Backend Test Page - Loaded for Chirag');
         this.checkServerStatus();
+        this.checkVoiceAssistantStatus();
         this.setupAutoRefresh();
         this.setupEventListeners();
     }
@@ -51,7 +52,50 @@ class VoiceAssistantAPI {
         // Auto-refresh server status every 30 seconds
         setInterval(() => {
             this.checkServerStatus();
+            this.checkVoiceAssistantStatus();
         }, 30000);
+    }
+
+    // Voice Assistant status management
+    async checkVoiceAssistantStatus() {
+        const statusDiv = document.getElementById('voice-assistant-status');
+        if (statusDiv) {
+            statusDiv.classList.add('loading');
+        }
+        
+        try {
+            const response = await fetch(`${this.baseURL}/api/voice/status`);
+            const data = await response.json();
+            
+            if (statusDiv) {
+                if (response.ok && data.success) {
+                    const voiceData = data.data;
+                    const isActive = voiceData.is_listening;
+                    const status = voiceData.status;
+                    
+                    if (isActive) {
+                        statusDiv.textContent = `🎤 Voice Assistant: Active (${status})`;
+                        statusDiv.className = 'status-indicator status-online';
+                    } else {
+                        statusDiv.textContent = `🔇 Voice Assistant: Inactive (${status})`;
+                        statusDiv.className = 'status-indicator status-offline';
+                    }
+                } else {
+                    statusDiv.textContent = '❌ Voice Assistant: Error';
+                    statusDiv.className = 'status-indicator status-offline';
+                }
+            }
+        } catch (error) {
+            console.error('Voice status check failed:', error);
+            if (statusDiv) {
+                statusDiv.textContent = '❌ Voice Assistant: Connection Error';
+                statusDiv.className = 'status-indicator status-offline';
+            }
+        } finally {
+            if (statusDiv) {
+                statusDiv.classList.remove('loading');
+            }
+        }
     }
 
     setupEventListeners() {
@@ -121,6 +165,13 @@ class VoiceAssistantAPI {
                 responseTime: `${responseTime}ms`,
                 data: result
             });
+
+            // Auto-refresh voice status after voice-related operations
+            if (url.includes('/api/voice/')) {
+                setTimeout(() => {
+                    this.checkVoiceAssistantStatus();
+                }, 500); // Small delay to allow backend to update
+            }
 
         } catch (error) {
             console.error(`API Error: ${method} ${url}`, error);
@@ -193,7 +244,7 @@ class VoiceAssistantAPI {
     }
 
     // Voice Input Test
-    testVoiceInput() {
+    async testVoiceInput() {
         const textInput = document.getElementById('voice-input-text');
         if (!textInput) {
             console.error('Voice input field not found');
@@ -206,6 +257,21 @@ class VoiceAssistantAPI {
             alert('Please enter some text to send to the voice assistant');
             textInput.focus();
             return;
+        }
+
+        // Check voice assistant status first
+        try {
+            const statusResponse = await fetch(`${this.baseURL}/api/voice/status`);
+            const statusData = await statusResponse.json();
+            
+            if (statusData.success && !statusData.data.is_listening) {
+                const proceed = confirm('Voice assistant is not active. You may need to start it first. Continue anyway?');
+                if (!proceed) {
+                    return;
+                }
+            }
+        } catch (error) {
+            console.warn('Could not check voice status:', error);
         }
         
         this.testEndpoint('/api/voice/input', 'POST', 'voice-input', { text: text });
