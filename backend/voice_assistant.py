@@ -27,13 +27,13 @@ except ImportError:
     PYTTSX3_AVAILABLE = False
     logging.warning("pyttsx3 not found. Local TTS fallback will not be available.")
 
-from .memory import ConversationMemory, ConversationContext
+from memory import ConversationMemory, ConversationContext
 
 # Core modules from your project for data handling and commands
 
-from .models import Conversation as DBConversation, Message, MessageType, db, User, Log
-from .command_processor import VoiceCommandProcessor, set_flask_app_for_command_processor
-from .google_calendar_integration import (
+from models import Conversation as DBConversation, Message, MessageType, db, User, Log
+from command_processor import VoiceCommandProcessor, set_flask_app_for_command_processor
+from google_calendar_integration import (
     get_today_schedule,
     create_event_from_conversation,
     get_upcoming_events,
@@ -164,14 +164,14 @@ class SimpleVoiceAssistant:
         # Handle common commands
         if "schedule" in text_lower and ("meeting" in text_lower or "event" in text_lower):
             try:
-                from .google_calendar_integration import create_event_from_conversation
+                from google_calendar_integration import create_event_from_conversation
                 result = create_event_from_conversation(text_input)
                 return f"I've created that event for you: {result}"
             except Exception as e:
                 return f"I had trouble creating that event: {str(e)}"
 
         elif "weather" in text_lower:
-            from .command_processor import VoiceCommandProcessor
+            from command_processor import VoiceCommandProcessor
             processor = VoiceCommandProcessor(user_id=self.user_id)
             location = "your location"
             if "in" in text_lower:
@@ -181,7 +181,7 @@ class SimpleVoiceAssistant:
 
         elif "calendar" in text_lower or "schedule" in text_lower:
             try:
-                from .google_calendar_integration import get_today_schedule
+                from google_calendar_integration import get_today_schedule
                 schedule = get_today_schedule()
                 return f"Here's your schedule: {schedule}"
             except Exception as e:

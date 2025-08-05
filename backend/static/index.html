@@ -132,6 +132,9 @@
 
         <div class="endpoint">
             <h3>🎛️ Voice Assistant Controls</h3>
+            <div id="voice-assistant-status" class="status-indicator status-offline">
+                Voice Assistant Status: Checking...
+            </div>
             <button class="test-button" onclick="apiClient.testEndpoint('/api/voice/start', 'POST', 'voice-controls')">🎤 Start Voice</button>
             <button class="test-button" onclick="apiClient.testEndpoint('/api/voice/stop', 'POST', 'voice-controls')">🔇 Stop Voice</button>
             <div id="result-voice-controls" class="result" style="display: none;"></div>

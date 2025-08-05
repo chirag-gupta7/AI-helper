@@ -334,6 +334,70 @@ def get_logs():
         }
     )
 
+@app.route('/api/calendar/next-meeting', methods=['GET'])
+@limiter.limit("30 per minute")
+@optional_auth
+def api_get_next_meeting():
+    """Get the next upcoming meeting"""
+    user_id = request.current_user.id if hasattr(request, 'current_user') and request.current_user else None
+    
+    try:
+        if not user_id:
+            logger.warning("No user authenticated. Using debug fallback user")
+        
+        logger.info(f"User {user_id} requested next meeting")
+        if user_id:
+            log_to_database(user_id, 'INFO', "Requested next meeting")
+        
+        next_meeting = get_next_meeting()
+        
+        if user_id:
+            log_to_database(user_id, 'INFO', f"Successfully retrieved next meeting: {next_meeting}")
+        
+        return jsonify(
+            success=True,
+            data={'next_meeting': next_meeting},
+            message="Next meeting retrieved successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error getting next meeting: {e}")
+        logger.error(traceback.format_exc())
+        if user_id:
+            log_to_database(user_id, 'ERROR', f"Failed to retrieve next meeting: {str(e)}")
+        return jsonify(success=False, error=str(e)), 500
+
+@app.route('/api/calendar/free-time', methods=['GET'])
+@limiter.limit("30 per minute")
+@optional_auth
+def api_get_free_time():
+    """Get free time slots for today"""
+    user_id = request.current_user.id if hasattr(request, 'current_user') and request.current_user else None
+    
+    try:
+        if not user_id:
+            logger.warning("No user authenticated. Using debug fallback user")
+        
+        logger.info(f"User {user_id} requested free time slots")
+        if user_id:
+            log_to_database(user_id, 'INFO', "Requested free time slots")
+        
+        free_time = get_free_time_today()
+        
+        if user_id:
+            log_to_database(user_id, 'INFO', f"Successfully retrieved free time: {free_time}")
+        
+        return jsonify(
+            success=True,
+            data={'free_time': free_time},
+            message="Free time slots retrieved successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error getting free time: {e}")
+        logger.error(traceback.format_exc())
+        if user_id:
+            log_to_database(user_id, 'ERROR', f"Failed to retrieve free time: {str(e)}")
+        return jsonify(success=False, error=str(e)), 500
+
 @app.route('/api/calendar/today', methods=['GET'])
 @limiter.limit("30 per minute")
 @require_auth

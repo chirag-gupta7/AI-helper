@@ -83,7 +83,7 @@ class VoiceCommandProcessor:
         if _flask_app_instance_cp:
             with _flask_app_instance_cp.app_context():
                 try:
-                    from .models import db, Log
+                    from models import db, Log
                     new_log = Log(
                         user_id=str(self.user_id) if self.user_id else None,
                         level=level,
@@ -263,7 +263,7 @@ class VoiceCommandProcessor:
         if _flask_app_instance_cp:
             with _flask_app_instance_cp.app_context():
                 try:
-                    from .models import db, UserNotification, NotificationLevel
+                    from models import db, UserNotification, NotificationLevel
                     
                     # Calculate reminder time
                     remind_at = datetime.utcnow() + timedelta(minutes=remind_in_minutes)
@@ -339,7 +339,7 @@ class VoiceCommandProcessor:
                 try:
                     time.sleep(delay_minutes * 60)
                     
-                    from .models import db, UserNotification
+                    from models import db, UserNotification
                     notification = UserNotification.query.get(notification_id)
                     if notification and not notification.is_dismissed:
                         notification.extra_info['triggered'] = True
@@ -461,7 +461,7 @@ class VoiceCommandProcessor:
         if _flask_app_instance_cp:
             with _flask_app_instance_cp.app_context():
                 try:
-                    from .models import db, Note
+                    from models import db, Note
                     new_note = Note(
                         user_id=self.user_id,
                         content=note_text

@@ -5,7 +5,7 @@ import hashlib
 from datetime import datetime, timedelta
 import secrets
 import re
-from .models import db, User, UserSession, APIToken # Ensure models are correctly imported
+from models import db, User, UserSession, APIToken # Ensure models are correctly imported
 import logging
 import uuid # Ensure uuid is imported
 

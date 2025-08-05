@@ -1,5 +1,5 @@
 import logging # ADDED: Import logging module
-from .models import db, User, Conversation, Message, UserPreference, Log
+from models import db, User, Conversation, Message, UserPreference, Log
 from datetime import datetime, timedelta
 import uuid
 from flask import current_app # Import current_app to potentially use app_context
