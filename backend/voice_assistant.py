@@ -655,3 +655,31 @@ class VoiceAssistant:
             "is_listening": self.is_listening,
             "user_id": str(self.user_id) if self.user_id else None
         }
+
+    def process_voice_command(self, text_input):
+        """Process voice command text input and return response."""
+        if not self.is_listening:
+            return "Voice assistant is not active."
+        
+        try:
+            with _flask_app_instance.app_context():
+                user = User.query.get(self.user_id)
+                user_name = user.username if user else "Chirag"
+                
+            # Log user input
+            self._log_to_frontend(f"User: {text_input}", 'info')
+            self._log_to_database(self.user_id, 'USER', text_input, self.conversation_id)
+            
+            # Generate response
+            response_text = self._simulate_llm_response(text_input)
+            
+            # Process the response (this will also play audio and execute commands)
+            self._process_llm_response(response_text, self.user_id, user_name)
+            
+            return response_text
+            
+        except Exception as e:
+            logger.error(f"Error processing voice command: {e}")
+            error_response = "Sorry, I encountered an error processing your request."
+            self._log_to_frontend(f"Error: {error_response}", 'error')
+            return error_response
