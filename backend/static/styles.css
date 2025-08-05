@@ -280,6 +280,146 @@ html {
     transform: translateY(-1px);
 }
 
+/* Voice Assistant Status Indicator */
+.voice-status-indicator {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-weight: 600;
+    font-size: 1.1em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.voice-status-indicator.status-active {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    border: 2px solid #28a745;
+}
+
+.voice-status-indicator.status-inactive {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border: 2px solid #dc3545;
+}
+
+.voice-status-indicator.status-starting {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #856404;
+    border: 2px solid #ffc107;
+}
+
+.voice-status-indicator .status-icon {
+    font-size: 1.2em;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Voice Controls */
+.voice-controls {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.voice-start-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+}
+
+.voice-start-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+    transform: translateY(-2px);
+}
+
+.voice-stop-btn {
+    background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+    color: white;
+    border: none;
+}
+
+.voice-stop-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #c82333 0%, #e55a13 100%);
+    transform: translateY(-2px);
+}
+
+.voice-start-btn:disabled,
+.voice-stop-btn:disabled {
+    background: #6c757d !important;
+    cursor: not-allowed;
+    transform: none !important;
+    opacity: 0.6;
+}
+
+/* Voice Input Section */
+.voice-input-section {
+    border: 2px solid #28a745;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+    transition: all 0.3s ease;
+}
+
+.voice-input-section.disabled {
+    border-color: #dc3545;
+    background: rgba(248, 215, 218, 0.2);
+}
+
+.voice-input-section.disabled .voice-input-status {
+    color: #721c24;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(248, 215, 218, 0.5);
+    border-radius: 6px;
+}
+
+.voice-input-section:not(.disabled) .voice-input-status {
+    color: #155724;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(212, 237, 218, 0.5);
+    border-radius: 6px;
+}
+
+.voice-input-section input:disabled,
+.voice-input-section button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.voice-examples button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #6c757d !important;
+}
+
+/* Loading states */
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 .example-btn:active {
     transform: translateY(0);
 }

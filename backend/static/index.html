@@ -132,8 +132,14 @@
 
         <div class="endpoint">
             <h3>🎛️ Voice Assistant Controls</h3>
-            <button class="test-button" onclick="apiClient.testEndpoint('/api/voice/start', 'POST', 'voice-controls')">🎤 Start Voice</button>
-            <button class="test-button" onclick="apiClient.testEndpoint('/api/voice/stop', 'POST', 'voice-controls')">🔇 Stop Voice</button>
+            <div id="voice-status-indicator" class="voice-status-indicator status-inactive">
+                <span class="status-icon">🔴</span>
+                <span class="status-text">Voice Assistant: Inactive</span>
+            </div>
+            <div class="voice-controls">
+                <button id="start-voice-btn" class="test-button voice-start-btn" onclick="voiceAssistant.startVoice()">🎤 Start Voice Assistant</button>
+                <button id="stop-voice-btn" class="test-button voice-stop-btn" onclick="voiceAssistant.stopVoice()" disabled>🔇 Stop Voice Assistant</button>
+            </div>
             <div id="result-voice-controls" class="result" style="display: none;"></div>
         </div>
 
@@ -141,19 +147,24 @@
             <h3>💬 Voice Input Test</h3>
             <span class="method post">POST</span>
             <code>/api/voice/input</code>
-            <div class="input-group">
-                <input type="text" id="voice-input-text" placeholder="Type what you want to say to the voice assistant..." />
-                <button class="test-button" onclick="apiClient.testVoiceInput()">Send Voice Input</button>
-            </div>
-            <div id="result-voice-input" class="result" style="display: none;"></div>
-            <div class="voice-examples">
-                <p><strong>Example commands to try:</strong></p>
-                <button class="example-btn" onclick="fillVoiceInput('What\'s the weather in London?')">Weather Query</button>
-                <button class="example-btn" onclick="fillVoiceInput('Schedule a meeting with John tomorrow at 2pm')">Schedule Meeting</button>
-                <button class="example-btn" onclick="fillVoiceInput('What\'s on my calendar today?')">Check Calendar</button>
-                <button class="example-btn" onclick="fillVoiceInput('Set a reminder to call mom in 30 minutes')">Set Reminder</button>
-                <button class="example-btn" onclick="fillVoiceInput('Tell me a joke')">Tell Joke</button>
-                <button class="example-btn" onclick="fillVoiceInput('Goodbye')">End Session</button>
+            <div id="voice-input-section" class="voice-input-section disabled">
+                <div class="voice-input-status">
+                    <span id="voice-input-status-text">⚠️ Please start the voice assistant first</span>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="voice-input-text" placeholder="Type what you want to say to the voice assistant..." disabled />
+                    <button id="send-voice-btn" class="test-button" onclick="voiceAssistant.sendVoiceInput()" disabled>Send Voice Input</button>
+                </div>
+                <div id="result-voice-input" class="result" style="display: none;"></div>
+                <div class="voice-examples">
+                    <p><strong>Example commands to try:</strong></p>
+                    <button class="example-btn" onclick="voiceAssistant.fillVoiceInput('What\'s the weather in London?')" disabled>Weather Query</button>
+                    <button class="example-btn" onclick="voiceAssistant.fillVoiceInput('Schedule a meeting with John tomorrow at 2pm')" disabled>Schedule Meeting</button>
+                    <button class="example-btn" onclick="voiceAssistant.fillVoiceInput('What\'s on my calendar today?')" disabled>Check Calendar</button>
+                    <button class="example-btn" onclick="voiceAssistant.fillVoiceInput('Set a reminder to call mom in 30 minutes')" disabled>Set Reminder</button>
+                    <button class="example-btn" onclick="voiceAssistant.fillVoiceInput('Tell me a joke')" disabled>Tell Joke</button>
+                    <button class="example-btn" onclick="voiceAssistant.fillVoiceInput('Goodbye')" disabled>End Session</button>
+                </div>
             </div>
         </div>
 

@@ -579,11 +579,11 @@ def api_voice_input():
         return jsonify({'success': False, 'error': "text is required"}), 400
     
     # Check if voice assistant is active for this user
-    if user_id not in app.state['voice_sessions'] or not app.state['voice_sessions'][user_id].get('active', False):
+    if not voice_assistant or not voice_assistant.is_listening:
         return jsonify({'success': False, 'error': "Voice assistant not active for this session"}), 400
     
-    if not voice_assistant.conversation_active or voice_assistant.current_user_id != user_id:
-        return jsonify({'success': False, 'error': "Voice assistant session not ready"}), 400
+    if voice_assistant.user_id != user_id:
+        return jsonify({'success': False, 'error': "Voice assistant session not ready for this user"}), 400
     
     try:
         logger.info(f"Processing voice input from user {user_id}: {text_input}")
