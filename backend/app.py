@@ -35,6 +35,9 @@ from .google_calendar_integration import (
 # Import the new VoiceAssistant class
 from .voice_assistant import VoiceAssistant
 
+# Voice session management (replace app.state usage)
+voice_sessions = {}  # Global dictionary to track voice sessions
+
 # UTF-8 console fix
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -523,6 +526,12 @@ def api_start_voice():
     success, message = voice_assistant.start_listening(user_id)
     
     if success:
+        # FIX: Track session in voice_sessions instead of app.state
+        voice_sessions[str(user_id)] = {
+            'active': True,
+            'started_at': datetime.utcnow().isoformat(),
+            'user_id': user_id
+        }
         return jsonify({'success': True, 'message': message})
     else:
         return jsonify({'success': False, 'error': message}), 500
@@ -540,6 +549,10 @@ def api_stop_voice():
     success, message = voice_assistant.stop_listening()
     
     if success:
+        # FIX: Update voice_sessions instead of app.state
+        if str(user_id) in voice_sessions:
+            voice_sessions[str(user_id)]['active'] = False
+            voice_sessions[str(user_id)]['stopped_at'] = datetime.utcnow().isoformat()
         return jsonify({'success': True, 'message': message})
     else:
         return jsonify({'success': False, 'error': message}), 500
@@ -578,26 +591,26 @@ def api_voice_input():
     if not text_input:
         return jsonify({'success': False, 'error': "text is required"}), 400
     
-    # Check if voice assistant is active for this user
-    if user_id not in app.state['voice_sessions'] or not app.state['voice_sessions'][user_id].get('active', False):
+    # FIX: Replace app.state with voice_sessions dictionary
+    if str(user_id) not in voice_sessions or not voice_sessions[str(user_id)].get('active', False):
         return jsonify({'success': False, 'error': "Voice assistant not active for this session"}), 400
     
-    if not voice_assistant.conversation_active or voice_assistant.current_user_id != user_id:
+    if not voice_assistant or not voice_assistant.is_listening or voice_assistant.user_id != user_id:
         return jsonify({'success': False, 'error': "Voice assistant session not ready"}), 400
     
     try:
         logger.info(f"Processing voice input from user {user_id}: {text_input}")
         log_to_database(user_id, 'INFO', f"Voice input received: {text_input}")
         
-        # Process the voice command
-        response = voice_assistant.process_voice_command(text_input)
+        # Use the existing voice assistant's queue system
+        voice_assistant.user_transcript_queue.put(text_input)
         
-        log_to_database(user_id, 'INFO', f"Voice response sent: {response}")
+        log_to_database(user_id, 'INFO', f"Voice input queued for processing")
         
         # Emit to the user's room for real-time updates
         socketio.emit('voice_response', {
             'input': text_input,
-            'response': response,
+            'status': 'queued',
             'timestamp': datetime.utcnow().isoformat()
         }, room=f"user_{str(user_id)}")
         
@@ -605,9 +618,9 @@ def api_voice_input():
             'success': True,
             'data': {
                 'input': text_input,
-                'response': response
+                'status': 'queued_for_processing'
             },
-            'message': "Voice input processed successfully"
+            'message': "Voice input queued successfully"
         })
         
     except Exception as e:

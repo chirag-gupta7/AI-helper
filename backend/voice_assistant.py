@@ -216,11 +216,11 @@ current_voice_assistant = None
 
 # Helper to play text using the modern ElevenLabs API
 def _play_text_via_client(text_to_speak, user_id, conversation_id):
-    global ELEVENLABS_CLIENT, VOICE_ID
+    global ELEVENLABS_CLIENT, VOICE_ID, API_KEY
 
-    if not ELEVENLABS_CLIENT:
-        logger.error("ElevenLabs client is not initialized. Cannot play text via ElevenLabs.")
-        _log_and_commit(user_id, 'ERROR', "ElevenLabs client not ready for playback.", conversation_id)
+    if not API_KEY or API_KEY == "your_elevenlabs_api_key_here":
+        logger.error("ElevenLabs API key is not set. Cannot play text via ElevenLabs.")
+        _log_and_commit(user_id, 'ERROR', "ElevenLabs API key not configured.", conversation_id)
 
         # Fallback to pyttsx3 if available
         if PYTTSX3_AVAILABLE:
@@ -238,17 +238,16 @@ def _play_text_via_client(text_to_speak, user_id, conversation_id):
     try:
         logger.info(f"Attempting to play text via ElevenLabs: {text_to_speak}")
 
-        # Use modern ElevenLabs API
-        audio_generator = generate(
+        # FIX: Use the correct ElevenLabs API syntax
+        audio = generate(
             text=text_to_speak,
             voice=VOICE_ID,
             model="eleven_multilingual_v2",
-            stream=True,
             api_key=API_KEY
         )
 
-        # Play the audio stream
-        play(audio_generator)
+        # FIX: Play the audio using the play function
+        play(audio)
 
         _log_and_commit(user_id, 'INFO', f"Agent spoke via ElevenLabs: {text_to_speak}", conversation_id)
 
@@ -267,7 +266,7 @@ def _play_text_via_client(text_to_speak, user_id, conversation_id):
                 _log_and_commit(user_id, 'INFO', f"Used pyttsx3 fallback after ElevenLabs error", conversation_id)
             except Exception as fallback_e:
                 logger.error(f"Error with pyttsx3 fallback: {fallback_e}")
-                _log_and_commit(user_id, 'ERROR', f"Both ElevenLabs and pyttsx3 failed: {str(fallback_e)}", conversation_id)
+                _log_and_commit(user_id, 'ERROR', f"Both ElevenLabs and pyttsx3 failed: {str(e)}", conversation_id)
 
 
 # FIX: Define the missing function
@@ -473,16 +472,23 @@ class VoiceAssistant:
     def _play_text_via_stream(self, text_to_speak, voice="alloy"):
         """Generates and streams audio to the user with error handling."""
         try:
-            client = self._get_elevenlabs_client()
-            audio_stream = client.generate(
+            # FIX: Use the direct API instead of client.generate
+            logger.info(f"Playing text via ElevenLabs stream: {text_to_speak}")
+            
+            audio = generate(
                 text=text_to_speak,
                 voice=voice,
                 model="eleven_turbo_v2",
-                stream=True
+                stream=True,
+                api_key=ELEVENLABS_API_KEY
             )
-            stream(audio_stream)
+            
+            # FIX: Use play function for streaming
+            play(audio)
+            
             self._log_to_frontend(f"Agent spoke: {text_to_speak[:50]}...", 'info')
             self._log_to_database(self.user_id, 'INFO', f"Agent spoke: {text_to_speak[:50]}...", self.conversation_id)
+            
         except requests.exceptions.RequestException as e:
             logger.error(f"ElevenLabs network error: {e}")
             self._log_to_frontend(f"Network error with ElevenLabs API: {e}", 'error')
