@@ -5,35 +5,19 @@ import threading
 import time
 import queue
 from typing import Optional, Callable
-from elevenlabs.client import ElevenLabs
-from elevenlabs import stream
 import requests
 import uuid
 import traceback
-import pyttsx3
 from flask import Flask  # FIX: Add this import
 
-# Import for ElevenLabs SDK
+# Import for ElevenLabs SDK with modern API
 try:
-    import elevenlabs
     from elevenlabs.client import ElevenLabs
-    from elevenlabs import generate, play, stream, Voice, VoiceSettings
-
-    # Check if we have the modern API
-    if hasattr(elevenlabs, '__version__'):
-        print(f"ElevenLabs SDK version: {elevenlabs.__version__}")
-
-    ELEVENLABS_IMPORTS_SUCCESS = True
-
-except ImportError as e:
-    ELEVENLABS_IMPORTS_SUCCESS = False
-    logging.error(f"CRITICAL: ElevenLabs imports failed: {e}. Voice functionality will be disabled.")
-    logging.error(traceback.format_exc())
-except Exception as e:
-    ELEVENLABS_IMPORTS_SUCCESS = False
-    logging.error(f"CRITICAL: Unexpected error during ElevenLabs setup: {e}. Voice functionality will be disabled.")
-    logging.error(traceback.format_exc())
-
+    from elevenlabs import generate, play, set_api_key
+    ELEVENLABS_AVAILABLE = True
+except ImportError:
+    ELEVENLABS_AVAILABLE = False
+    # Use pyttsx3 as fallback
 
 # Attempt to import pyttsx3 for fallback audio, if available
 try:
@@ -42,7 +26,6 @@ try:
 except ImportError:
     PYTTSX3_AVAILABLE = False
     logging.warning("pyttsx3 not found. Local TTS fallback will not be available.")
-
 
 from .memory import ConversationMemory, ConversationContext
 
@@ -326,10 +309,9 @@ def _start_voice_assistant_internal(user_id: uuid.UUID):
     conversation_active = True
 
     ELEVENLABS_CLIENT = None
-    ELEVENLABS_AVAILABLE = False
 
     # Check if ElevenLabs core imports were successful
-    if not ELEVENLABS_IMPORTS_SUCCESS:
+    if not ELEVENLABS_AVAILABLE:
         error_msg = "ElevenLabs modules failed to import at startup. Voice functionality is disabled."
         _log_and_commit(current_user_id, 'CRITICAL', error_msg, current_conversation_id)
         raise ImportError(error_msg)
@@ -349,7 +331,8 @@ def _start_voice_assistant_internal(user_id: uuid.UUID):
         # Initialize ElevenLabs client
         try:
             if API_KEY and API_KEY != "your_elevenlabs_api_key_here":
-                # For the simplified version, we'll use the global functions
+                # Set the API key for the global functions
+                set_api_key(API_KEY)
                 ELEVENLABS_AVAILABLE = True
                 logger.info("ElevenLabs API key found, voice synthesis available.")
             else:

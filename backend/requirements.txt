@@ -20,7 +20,7 @@ google-api-python-client==2.134.0
 python-dateutil==2.8.2
 
 # ElevenLabs Voice API
-elevenlabs==2.7.1
+elevenlabs==2.8.1
 
 # Speech recognition and audio handling
 pyttsx3==2.90
