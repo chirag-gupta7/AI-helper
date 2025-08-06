@@ -1,158 +1,203 @@
-import logging # ADDED: Import logging module
-from models import db, User, Conversation, Message, UserPreference, Log
+# backend/memory.py - Fixed with proper relative imports
+import logging
+from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
-import uuid
-from flask import current_app # Import current_app to potentially use app_context
 
-# Custom TypeDecorator for UUIDs is defined in models.py and imported via db
+# Fix the import to use relative import with leading dot
+from .models import db, User, Conversation, Message, UserPreference, Log
 
-class ConversationMemory:
-    """
-    Manages conversation history and context for a user.
-    This class is primarily for retrieving specific, filtered contexts.
-    """
-    def __init__(self, user_id: uuid.UUID):
-        self.user_id = user_id
-        # Ensure database access is within an app context if this is called outside a request context
-        if current_app:
-            with current_app.app_context():
-                self.user = User.query.get(user_id)
-        else:
-            # Fallback if no app context is available (should ideally not happen if called correctly)
-            self.user = None
-            logging.warning("ConversationMemory initialized without Flask app context, user might be None.")
-
-
-    def get_recent_conversation_context(self, conversation_id: int, limit: int = 10) -> str:
-        """
-        Retrieves the last 'limit' messages from a specific conversation.
-        """
-        if current_app:
-            with current_app.app_context():
-                conversation = Conversation.query.get(conversation_id)
-                if not conversation or conversation.user_id != self.user_id:
-                    return ""
-
-                messages = Message.query.filter_by(conversation_id=conversation_id)\
-                    .order_by(Message.timestamp.desc())\
-                    .limit(limit).all()
-
-                context = "Recent conversation:\n"
-                for msg in reversed(messages):
-                    context += f"- {msg.message_type.value}: {msg.content}\n"
-                return context
-        else:
-            logging.warning("get_recent_conversation_context called without Flask app context.")
-            return "Error: No application context for database access."
-
-
-    def get_user_preferences_summary(self) -> str:
-        """
-        Returns a summary of the user's preferences.
-        """
-        if not self.user:
-            return "No user preferences set."
-
-        summary = "User Preferences:\n"
-        if self.user.preferences:
-            for key, value in self.user.preferences.items():
-                summary += f"- {key}: {value}\n"
-        
-        if current_app:
-            with current_app.app_context():
-                detailed_prefs = UserPreference.query.filter_by(user_id=self.user_id).all()
-                for pref in detailed_prefs:
-                    summary += f"- {pref.category}.{pref.key}: {pref.value}\n"
-        else:
-            logging.warning("get_user_preferences_summary called without Flask app context for detailed prefs.")
-
-        return summary
+logger = logging.getLogger(__name__)
 
 class ConversationContext:
     """
-    Provides structured comprehensive context from conversation history and user data.
+    Maintains context for an ongoing conversation.
     """
-    def __init__(self, user_id: uuid.UUID, conversation_id: int):
+    def __init__(self, user_id, conversation_id=None):
         self.user_id = user_id
         self.conversation_id = conversation_id
-
-    def get_full_context(self, last_n_messages: int = 10):
-        """
-        Gathers comprehensive context for a prompt, including user info,
-        conversation metadata, and recent history.
-        """
-        if current_app:
-            with current_app.app_context():
-                user = User.query.get(self.user_id)
-                conversation = Conversation.query.get(self.conversation_id)
-
-                if not user or not conversation:
-                    return None
-
-                # 1. User Information
-                user_info = {
-                    "name": user.username,
-                    "role": user.role.value,
-                    "preferences": user.preferences, # This is the JSON field
-                    "timezone": user.timezone,
-                    "language": user.language,
-                }
-                # Add detailed preferences from UserPreference table if available
-                detailed_prefs = UserPreference.query.filter_by(user_id=self.user_id).all()
-                for pref in detailed_prefs:
-                    user_info[f"pref_{pref.category}_{pref.key}"] = pref.value
-
-
-                # 2. Conversation History
-                messages = Message.query.filter_by(conversation_id=self.conversation_id)\
-                    .order_by(Message.timestamp.desc())\
-                    .limit(last_n_messages).all()
-                
-                message_history = []
-                for msg in reversed(messages):
-                    msg_dict = msg.to_dict() # Assuming Message.to_dict() exists and works
-                    message_history.append(msg_dict)
-
-                # 3. Conversation Metadata
-                conversation_meta = {
-                    "title": conversation.title,
-                    "summary": conversation.summary,
-                    "tags": conversation.tags,
-                    "started_at": conversation.started_at.isoformat() if conversation.started_at else None
-                }
-
-                return {
-                    "user": user_info,
-                    "conversation_meta": conversation_meta,
-                    "history": message_history
-                }
-        else:
-            logging.warning("get_full_context called without Flask app context.")
-            return None # Return None as context cannot be fetched without app context
-
-    def get_context_for_prompt(self, last_n_messages: int = 10) -> str:
-        """
-        Constructs a comprehensive context string for the AI prompt
-        from the structured full context.
-        """
-        full_context = self.get_full_context(last_n_messages)
-        if not full_context:
-            return "No context available."
-
-        context_str = "User Profile:\n"
-        for key, value in full_context['user'].items():
-            context_str += f"- {key}: {value}\n"
+        self.start_time = datetime.utcnow()
+        self.last_activity = self.start_time
+        self.topics = []
+        self.entities = {}
+        self.messages = []
+        self.sentiment = "neutral"
+        self.summary = ""
         
-        context_str += "\nConversation Metadata:\n"
-        for key, value in full_context['conversation_meta'].items():
-            context_str += f"- {key}: {value}\n"
+    def update_activity(self):
+        self.last_activity = datetime.utcnow()
+        
+    def add_message(self, role, content):
+        timestamp = datetime.utcnow()
+        self.messages.append({
+            "role": role,
+            "content": content,
+            "timestamp": timestamp
+        })
+        self.last_activity = timestamp
+        
+    def add_topic(self, topic):
+        if topic not in self.topics:
+            self.topics.append(topic)
             
-        context_str += "\nConversation History (most recent first):\n"
-        if not full_context['history']:
-            context_str += "(No recent messages)\n"
-        else:
-            # Displaying history in chronological order for better context flow
-            for msg in full_context['history']:
-                context_str += f"- {msg['message_type']}: {msg['content']}\n"
+    def add_entity(self, entity_type, entity_value):
+        if entity_type not in self.entities:
+            self.entities[entity_type] = []
+        if entity_value not in self.entities[entity_type]:
+            self.entities[entity_type].append(entity_value)
+            
+    def set_sentiment(self, sentiment):
+        self.sentiment = sentiment
         
-        return context_str
+    def set_summary(self, summary):
+        self.summary = summary
+        
+    def get_duration(self):
+        return (self.last_activity - self.start_time).total_seconds()
+    
+    def is_active(self, timeout_minutes=30):
+        return (datetime.utcnow() - self.last_activity).total_seconds() < (timeout_minutes * 60)
+    
+    def to_dict(self):
+        return {
+            "user_id": self.user_id,
+            "conversation_id": self.conversation_id,
+            "start_time": self.start_time.isoformat(),
+            "last_activity": self.last_activity.isoformat(),
+            "topics": self.topics,
+            "entities": self.entities,
+            "messages_count": len(self.messages),
+            "sentiment": self.sentiment,
+            "summary": self.summary,
+            "duration_seconds": self.get_duration()
+        }
+
+class ConversationMemory:
+    """
+    Manages conversation memory storage and retrieval.
+    """
+    def __init__(self):
+        self.active_conversations: Dict[str, ConversationContext] = {}
+        self.max_inactive_time = timedelta(minutes=30)
+        
+    def start_conversation(self, user_id):
+        conversation_id = self._create_db_conversation(user_id)
+        context = ConversationContext(user_id, conversation_id)
+        self.active_conversations[str(user_id)] = context
+        return context
+    
+    def _create_db_conversation(self, user_id) -> Optional[int]:
+        """Create a new conversation in the database and return its ID"""
+        try:
+            conversation = Conversation(
+                user_id=user_id,
+                session_id=str(datetime.utcnow().timestamp()),
+                is_active=True
+            )
+            db.session.add(conversation)
+            db.session.commit()
+            logger.info(f"Created new conversation {conversation.id} for user {user_id}")
+            return conversation.id
+        except Exception as e:
+            logger.error(f"Failed to create conversation: {e}")
+            return None
+        
+    def get_context(self, user_id) -> Optional[ConversationContext]:
+        """Get current conversation context for user"""
+        user_id_str = str(user_id)
+        
+        # Check if there's an active conversation
+        if user_id_str in self.active_conversations:
+            context = self.active_conversations[user_id_str]
+            if context.is_active():
+                return context
+            else:
+                # Context has expired, clean up
+                self._end_conversation_in_db(context.conversation_id)
+                del self.active_conversations[user_id_str]
+                
+        # No active conversation found
+        return None
+    
+    def add_message(self, user_id, role, content):
+        """Add a message to the conversation context and database"""
+        context = self.get_context(user_id)
+        if not context:
+            context = self.start_conversation(user_id)
+            
+        # Add to context
+        context.add_message(role, content)
+        
+        # Add to database
+        try:
+            message_type = "user" if role == "user" else "assistant"
+            message = Message(
+                conversation_id=context.conversation_id,
+                content=content,
+                message_type=message_type,
+                timestamp=datetime.utcnow()
+            )
+            db.session.add(message)
+            db.session.commit()
+        except Exception as e:
+            logger.error(f"Failed to save message to database: {e}")
+        
+        return context
+    
+    def end_conversation(self, user_id):
+        """End an active conversation"""
+        user_id_str = str(user_id)
+        if user_id_str in self.active_conversations:
+            context = self.active_conversations[user_id_str]
+            self._end_conversation_in_db(context.conversation_id)
+            del self.active_conversations[user_id_str]
+            return True
+        return False
+    
+    def _end_conversation_in_db(self, conversation_id):
+        """Mark a conversation as inactive in the database"""
+        if not conversation_id:
+            return
+            
+        try:
+            conversation = Conversation.query.get(conversation_id)
+            if conversation:
+                conversation.is_active = False
+                conversation.end_time = datetime.utcnow()
+                db.session.commit()
+                logger.info(f"Ended conversation {conversation_id}")
+        except Exception as e:
+            logger.error(f"Failed to end conversation in database: {e}")
+    
+    def cleanup_inactive(self):
+        """Clean up inactive conversations"""
+        inactive_keys = []
+        
+        for user_id, context in self.active_conversations.items():
+            if not context.is_active():
+                self._end_conversation_in_db(context.conversation_id)
+                inactive_keys.append(user_id)
+                
+        for key in inactive_keys:
+            del self.active_conversations[key]
+            
+        return len(inactive_keys)
+    
+    def get_recent_conversations(self, user_id, limit=5):
+        """Get recent conversations for a user from database"""
+        try:
+            conversations = (Conversation.query
+                            .filter_by(user_id=user_id)
+                            .order_by(Conversation.start_time.desc())
+                            .limit(limit)
+                            .all())
+            
+            return [{
+                'id': conv.id,
+                'start_time': conv.start_time,
+                'end_time': conv.end_time,
+                'is_active': conv.is_active,
+                'message_count': len(conv.messages)
+            } for conv in conversations]
+        except Exception as e:
+            logger.error(f"Failed to retrieve recent conversations: {e}")
+            return []
