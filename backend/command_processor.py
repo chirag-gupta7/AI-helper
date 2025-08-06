@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from flask import current_app, Flask # Import Flask for type hinting
 import uuid # FIX: Import the uuid module here
-
+from .models import db, User, Log
 logger = logging.getLogger(__name__)
 
 # Global reference to the Flask app instance, to be set by app.py
@@ -622,7 +622,7 @@ class VoiceCommandProcessor:
             "What do you call a fake noodle? An impasta!",
             "Why did the math book look so sad? Because it had too many problems!",
             "What do you call a bear with no teeth? A gummy bear!"
-        ]\
+        ]
         
         import random
         joke = random.choice(jokes)
@@ -638,7 +638,7 @@ class VoiceCommandProcessor:
         Get list of active timers for the current user.
         """
         user_timers = {tid: timer for tid, timer in self.active_timers.items() 
-                      if timer.get('user_id') == self.user_id and timer.get('status') == 'running'}\
+                      if timer.get('user_id') == self.user_id and timer.get('status') == 'running'}
         
         return {
             'success': True,

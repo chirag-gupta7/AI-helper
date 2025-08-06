@@ -119,8 +119,15 @@ def on_voice_status_change(status):
 def init_voice_assistant():
     """Initializes the global VoiceAssistant instance."""
     global voice_assistant
-    if voice_assistant is None:
-        voice_assistant = VoiceAssistant(app, on_voice_status_change, on_voice_log, log_to_database)
+    try:
+        if voice_assistant is None:
+            voice_assistant = VoiceAssistant(app, on_voice_status_change, on_voice_log, log_to_database)
+            logger.info("Voice assistant initialized successfully")
+        return True
+    except Exception as e:
+        logger.error(f"Error initializing voice assistant: {str(e)}")
+        logger.error(traceback.format_exc())
+        return False
 
 
 # --- ROUTES ---
@@ -584,20 +591,42 @@ def api_start_voice():
     user = request.current_user
     user_id = user.id
     
+    # Always reinitialize voice assistant if it's None
+    global voice_assistant
     if not voice_assistant:
         init_voice_assistant()
+        if not voice_assistant:
+            return jsonify({'success': False, 'error': 'Failed to initialize voice assistant'}), 500
 
-    success, message = voice_assistant.start_listening(user_id)
-    
-    if success:
-        # FIX: Track session in voice_sessions instead of app.state
+    # Check if already listening for this user
+    if voice_assistant.is_listening and voice_assistant.user_id == user_id:
+        # Already listening for this user, just confirm success
         voice_sessions[str(user_id)] = {
             'active': True,
             'started_at': datetime.utcnow().isoformat(),
             'user_id': user_id
         }
+        return jsonify({'success': True, 'message': 'Voice assistant already active'})
+    
+    # If listening for different user, stop first
+    if voice_assistant.is_listening:
+        logger.info(f"Switching voice assistant from user {voice_assistant.user_id} to user {user_id}")
+        voice_assistant.stop_listening()
+        time.sleep(1)  # Brief pause to allow cleanup
+    
+    # Start listening for this user
+    success, message = voice_assistant.start_listening(user_id)
+    
+    if success:
+        voice_sessions[str(user_id)] = {
+            'active': True,
+            'started_at': datetime.utcnow().isoformat(),
+            'user_id': user_id
+        }
+        logger.info(f"Voice assistant started successfully for user {user_id}")
         return jsonify({'success': True, 'message': message})
     else:
+        logger.error(f"Failed to start voice assistant for user {user_id}: {message}")
         return jsonify({'success': False, 'error': message}), 500
 
 @app.route('/api/voice/stop', methods=['POST'])
@@ -655,12 +684,36 @@ def api_voice_input():
     if not text_input:
         return jsonify({'success': False, 'error': "text is required"}), 400
     
-    # FIX: Replace app.state with voice_sessions dictionary
-    if str(user_id) not in voice_sessions or not voice_sessions[str(user_id)].get('active', False):
-        return jsonify({'success': False, 'error': "Voice assistant not active for this session"}), 400
+    # Initialize voice assistant if needed
+    global voice_assistant
+    if not voice_assistant:
+        init_voice_assistant()
+        if not voice_assistant:
+            return jsonify({'success': False, 'error': 'Failed to initialize voice assistant'}), 500
+        
+    # More flexible session handling - auto-create session if needed
+    if str(user_id) not in voice_sessions:
+        voice_sessions[str(user_id)] = {
+            'active': True,
+            'started_at': datetime.utcnow().isoformat(),
+            'user_id': user_id
+        }
     
-    if not voice_assistant or not voice_assistant.is_listening or voice_assistant.user_id != user_id:
-        return jsonify({'success': False, 'error': "Voice assistant session not ready"}), 400
+    # Auto-start the voice assistant if not listening for this user
+    if not voice_assistant.is_listening or voice_assistant.user_id != user_id:
+        logger.info(f"Auto-starting voice assistant for user {user_id}")
+        
+        # If listening for different user, stop first
+        if voice_assistant.is_listening:
+            voice_assistant.stop_listening()
+            time.sleep(0.5)  # Brief pause to allow cleanup
+        
+        success, message = voice_assistant.start_listening(user_id)
+        if not success:
+            return jsonify({'success': False, 'error': f"Failed to start voice assistant: {message}"}), 500
+        
+        # Update session status
+        voice_sessions[str(user_id)]['active'] = True
     
     try:
         logger.info(f"Processing voice input from user {user_id}: {text_input}")
@@ -682,7 +735,8 @@ def api_voice_input():
             'success': True,
             'data': {
                 'input': text_input,
-                'status': 'queued_for_processing'
+                'status': 'queued_for_processing',
+                'voice_assistant_status': 'listening'
             },
             'message': "Voice input queued successfully"
         })

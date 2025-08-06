@@ -8,6 +8,7 @@ import re
 from .models import db, User, UserSession, APIToken # Ensure models are correctly imported
 import logging
 import uuid
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -238,7 +239,7 @@ class AuthService:
 
 # --- START OF CRITICAL FIX: Modified require_auth decorator ---
 def require_auth(f):
-    """Decorator to require authentication, with a fallback for development."""
+    """Decorator to require authentication, with a more reliable fallback for development."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user = None
@@ -257,16 +258,28 @@ def require_auth(f):
 
         # If still no user and we are in DEBUG mode, create/get a test user
         if not user and current_app.config.get('DEBUG'):
-            logger.warning("No user authenticated. Using debug fallback user.")
-            user = User.query.filter_by(email='testuser@example.com').first()
-            if not user:
-                logger.info("Creating debug fallback user.")
-                test_user_uuid = uuid.UUID('00000000-0000-0000-0000-000000000001')
-                user = User(id=test_user_uuid, username='testuser', email='testuser@example.com')
-                user.set_password('TestPassword123!')
-                db.session.add(user)
-                db.session.commit()
-                db.session.refresh(user)
+            with current_app.app_context():
+                try:
+                    # Reduce logging noise by checking if user exists first
+                    user = User.query.filter_by(email='testuser@example.com').first()
+                    if not user:
+                        logger.info("Creating debug fallback user for development.")
+                        # Ensure UUID object is passed correctly
+                        test_user_uuid = uuid.UUID('00000000-0000-0000-0000-000000000001')
+                        user = User(id=test_user_uuid, username='testuser', email='testuser@example.com')
+                        user.set_password('TestPassword123!') 
+                        db.session.add(user)
+                        db.session.commit()
+                        # After commit, refresh the user object
+                        db.session.refresh(user)
+                        logger.info(f"Debug user created successfully: {user.username}")
+                    # Only log once per session to reduce noise
+                    elif not hasattr(request, '_debug_user_logged'):
+                        logger.debug("Using existing debug fallback user for development.")
+                        request._debug_user_logged = True
+                except Exception as e:
+                    logger.error(f"Error with debug user: {e}")
+                    logger.error(traceback.format_exc())
 
         if not user:
             return jsonify({
