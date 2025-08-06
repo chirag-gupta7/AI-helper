@@ -4,20 +4,18 @@ import logging
 import threading
 import time
 import queue
-from typing import Optional, Callable
-import requests
 import uuid
 import traceback
-from flask import Flask  # FIX: Add this import
+from typing import Optional, Callable
+from flask import Flask
 
 # Import for ElevenLabs SDK with modern API
 try:
-    from elevenlabs.client import ElevenLabs
     from elevenlabs import generate, play, set_api_key
     ELEVENLABS_AVAILABLE = True
 except ImportError:
     ELEVENLABS_AVAILABLE = False
-    # Use pyttsx3 as fallback
+    logging.warning("ElevenLabs not found. TTS functionality will be limited to pyttsx3 fallback.")
 
 # Attempt to import pyttsx3 for fallback audio, if available
 try:
@@ -27,13 +25,12 @@ except ImportError:
     PYTTSX3_AVAILABLE = False
     logging.warning("pyttsx3 not found. Local TTS fallback will not be available.")
 
-from memory import ConversationMemory, ConversationContext
+from .memory import ConversationMemory, ConversationContext
 
 # Core modules from your project for data handling and commands
-
-from models import Conversation as DBConversation, Message, MessageType, db, User, Log
-from command_processor import VoiceCommandProcessor, set_flask_app_for_command_processor
-from google_calendar_integration import (
+from .models import Conversation as DBConversation, Message, MessageType, db, User, Log
+from .command_processor import VoiceCommandProcessor, set_flask_app_for_command_processor
+from .google_calendar_integration import (
     get_today_schedule,
     create_event_from_conversation,
     get_upcoming_events,
@@ -56,15 +53,8 @@ current_user_id = None
 current_conversation_id = None
 
 # ElevenLabs API setup
-ELEVENLABS_CLIENT = None
-
-ELEVENLABS_AVAILABLE = False
-
-AGENT_ID = os.getenv("ELEVENLABS_AGENT_ID")
 API_KEY = os.getenv("ELEVENLABS_API_KEY")
 VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "alloy")  # Default voice
-
-ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
 user_name_placeholder = "Chirag"
 prompt_template = """You are {user_name}'s personal assistant with comprehensive voice command capabilities. Today's schedule: {schedule}
@@ -116,14 +106,39 @@ Respond with: "Goodbye! Have a great day, {user_name}. CONVERSATION_END"
 
 Keep responses brief and helpful. Always confirm actions before executing commands."""
 
-
-conversation_active = False
-current_user_id = None
-current_conversation_id = None
+# Modern ElevenLabs speech generation function
+def generate_speech(text: str, voice_id: str = None) -> bool:
+    """Generate and play speech using modern ElevenLabs API with pyttsx3 fallback"""
+    try:
+        if ELEVENLABS_AVAILABLE and API_KEY and API_KEY != "your_elevenlabs_api_key_here":
+            voice = voice_id or VOICE_ID
+            audio = generate(
+                text=text,
+                voice=voice,
+                model="eleven_monolingual_v1"
+            )
+            play(audio)
+            logger.info(f"Successfully played text via ElevenLabs: {text[:50]}...")
+            return True
+    except Exception as e:
+        logger.error(f"ElevenLabs TTS failed: {e}")
+        # Fallback to pyttsx3
+        if PYTTSX3_AVAILABLE:
+            try:
+                engine = pyttsx3.init()
+                engine.say(text)
+                engine.runAndWait()
+                logger.info(f"Successfully played text via pyttsx3 fallback: {text[:50]}...")
+                return True
+            except Exception as fallback_e:
+                logger.error(f"pyttsx3 fallback also failed: {fallback_e}")
+    
+    logger.error("All TTS methods failed")
+    return False
 
 # Simple voice processing implementation using direct API calls
 class SimpleVoiceAssistant:
-    """Simple voice assistant using direct ElevenLabs API calls"""
+    """Simple voice assistant using modern ElevenLabs API"""
 
     def __init__(self, user_id, conversation_id):
         self.user_id = user_id
@@ -131,8 +146,12 @@ class SimpleVoiceAssistant:
         self.is_listening = False
 
     def speak(self, text):
-        """Speak the given text using ElevenLabs TTS"""
-        _play_text_via_client(text, self.user_id, self.conversation_id)
+        """Speak the given text using modern ElevenLabs TTS"""
+        success = generate_speech(text)
+        if success:
+            _log_and_commit(self.user_id, 'INFO', f"Agent spoke: {text[:50]}...", self.conversation_id)
+        else:
+            _log_and_commit(self.user_id, 'ERROR', f"Failed to speak: {text[:50]}...", self.conversation_id)
 
     def process_voice_input(self, text_input):
         """Process voice input and generate response"""
@@ -164,14 +183,12 @@ class SimpleVoiceAssistant:
         # Handle common commands
         if "schedule" in text_lower and ("meeting" in text_lower or "event" in text_lower):
             try:
-                from google_calendar_integration import create_event_from_conversation
                 result = create_event_from_conversation(text_input)
                 return f"I've created that event for you: {result}"
             except Exception as e:
                 return f"I had trouble creating that event: {str(e)}"
 
         elif "weather" in text_lower:
-            from command_processor import VoiceCommandProcessor
             processor = VoiceCommandProcessor(user_id=self.user_id)
             location = "your location"
             if "in" in text_lower:
@@ -181,7 +198,6 @@ class SimpleVoiceAssistant:
 
         elif "calendar" in text_lower or "schedule" in text_lower:
             try:
-                from google_calendar_integration import get_today_schedule
                 schedule = get_today_schedule()
                 return f"Here's your schedule: {schedule}"
             except Exception as e:
@@ -197,62 +213,6 @@ class SimpleVoiceAssistant:
 # Global voice assistant instance
 current_voice_assistant = None
 
-# Helper to play text using the modern ElevenLabs API
-def _play_text_via_client(text_to_speak, user_id, conversation_id):
-    global ELEVENLABS_CLIENT, VOICE_ID, API_KEY
-
-    if not API_KEY or API_KEY == "your_elevenlabs_api_key_here":
-        logger.error("ElevenLabs API key is not set. Cannot play text via ElevenLabs.")
-        _log_and_commit(user_id, 'ERROR', "ElevenLabs API key not configured.", conversation_id)
-
-        # Fallback to pyttsx3 if available
-        if PYTTSX3_AVAILABLE:
-            try:
-                engine = pyttsx3.init()
-                engine.say(text_to_speak)
-                engine.runAndWait()
-                logger.info(f"Played text via pyttsx3 fallback: {text_to_speak}")
-                _log_and_commit(user_id, 'INFO', f"Played text via pyttsx3 fallback: {text_to_speak}", conversation_id)
-            except Exception as e:
-                logger.error(f"Error with pyttsx3 fallback: {e}")
-                _log_and_commit(user_id, 'ERROR', f"pyttsx3 fallback failed: {str(e)}", conversation_id)
-        return
-
-    try:
-        logger.info(f"Attempting to play text via ElevenLabs: {text_to_speak}")
-
-        # FIX: Use the correct ElevenLabs API syntax
-        audio = generate(
-            text=text_to_speak,
-            voice=VOICE_ID,
-            model="eleven_multilingual_v2",
-            api_key=API_KEY
-        )
-
-        # FIX: Play the audio using the play function
-        play(audio)
-
-        _log_and_commit(user_id, 'INFO', f"Agent spoke via ElevenLabs: {text_to_speak}", conversation_id)
-
-    except Exception as e:
-        logger.error(f"Error playing text via ElevenLabs: {e}")
-        logger.error(traceback.format_exc())
-        _log_and_commit(user_id, 'ERROR', f"Failed to speak via ElevenLabs: {str(e)}", conversation_id)
-
-        # Fallback to pyttsx3 if available
-        if PYTTSX3_AVAILABLE:
-            try:
-                engine = pyttsx3.init()
-                engine.say(text_to_speak)
-                engine.runAndWait()
-                logger.info(f"Played text via pyttsx3 fallback after ElevenLabs error: {text_to_speak}")
-                _log_and_commit(user_id, 'INFO', f"Used pyttsx3 fallback after ElevenLabs error", conversation_id)
-            except Exception as fallback_e:
-                logger.error(f"Error with pyttsx3 fallback: {fallback_e}")
-                _log_and_commit(user_id, 'ERROR', f"Both ElevenLabs and pyttsx3 failed: {str(e)}", conversation_id)
-
-
-# FIX: Define the missing function
 def log_voice_to_database(user_id, level, message, conversation_id):
     """
     A standalone function to log to the database using the global callback.
@@ -303,12 +263,10 @@ def _start_voice_assistant_internal(user_id: uuid.UUID):
     Internal function to start the simplified voice assistant.
     Assumes an app context is already pushed.
     """
-    global conversation_active, current_voice_assistant, current_user_id, current_conversation_id, ELEVENLABS_CLIENT, ELEVENLABS_AVAILABLE
+    global conversation_active, current_voice_assistant, current_user_id, current_conversation_id
 
     current_user_id = user_id
     conversation_active = True
-
-    ELEVENLABS_CLIENT = None
 
     # Check if ElevenLabs core imports were successful
     if not ELEVENLABS_AVAILABLE:
@@ -328,19 +286,15 @@ def _start_voice_assistant_internal(user_id: uuid.UUID):
         db.session.commit()
         current_conversation_id = new_db_conversation.id
 
-        # Initialize ElevenLabs client
+        # Initialize ElevenLabs
         try:
             if API_KEY and API_KEY != "your_elevenlabs_api_key_here":
-                # Set the API key for the global functions
                 set_api_key(API_KEY)
-                ELEVENLABS_AVAILABLE = True
                 logger.info("ElevenLabs API key found, voice synthesis available.")
             else:
                 logger.warning("ElevenLabs API key is not set. Using text-only mode.")
-                ELEVENLABS_AVAILABLE = False
         except Exception as e:
             logger.error(f"Error setting up ElevenLabs: {e}")
-            ELEVENLABS_AVAILABLE = False
 
         # Create voice assistant instance
         current_voice_assistant = SimpleVoiceAssistant(user_id, current_conversation_id)
@@ -386,10 +340,8 @@ def start_voice_assistant(user_id: uuid.UUID, app_instance: Flask, retries: int 
     Ensures the Flask app context is pushed for the internal function.
     """
     global _flask_app_instance
-    # FIX: Replace the undefined function call
     _flask_app_instance = app_instance
     set_flask_app_for_command_processor(app_instance)
-
 
     for attempt in range(retries):
         try:
@@ -405,7 +357,6 @@ def start_voice_assistant(user_id: uuid.UUID, app_instance: Flask, retries: int 
                 time.sleep(delay)
             else:
                 logger.error(f"All {retries} attempts failed to start voice assistant for user {user_id}.")
-                # FIX: Call the newly defined function
                 log_voice_to_database(user_id, 'CRITICAL', f"Voice assistant failed to start after {retries} attempts: {str(e)}", conversation_id=None)
                 raise
 
@@ -423,7 +374,7 @@ class VoiceAssistant:
         self.status = "Inactive"
         self.user_id = None
         self.conversation_id = None
-        self.user_transcript_queue = queue.Queue() # Queue is now an instance attribute
+        self.user_transcript_queue = queue.Queue()
 
     def _log_to_frontend(self, message, level):
         """Logs a message to the console and sends it to the frontend via callback."""
@@ -438,59 +389,25 @@ class VoiceAssistant:
         if _on_log_to_db:
             _on_log_to_db(user_id, level, message, conversation_id)
 
-    def _get_elevenlabs_client(self):
-        """Initializes and returns a single ElevenLabs client instance."""
-        global ELEVENLABS_CLIENT
-        if ELEVENLABS_CLIENT is None:
-            if not ELEVENLABS_API_KEY or ELEVENLABS_API_KEY == "your_elevenlabs_api_key_here":
-                raise ValueError("ElevenLabs API key is not set or is a placeholder in .env.")
-            try:
-                ELEVENLABS_CLIENT = ElevenLabs(api_key=ELEVENLABS_API_KEY)
-                logger.info("ElevenLabs client initialized successfully.")
-            except Exception as e:
-                logger.error(f"Failed to initialize ElevenLabs client: {e}")
-                raise
-        return ELEVENLABS_CLIENT
-
-    def _play_text_via_stream(self, text_to_speak, voice="alloy"):
-        """Generates and streams audio to the user with error handling."""
+    def _play_text_via_modern_api(self, text_to_speak, voice=None):
+        """Generates and plays audio using the modern ElevenLabs API."""
         try:
-            # FIX: Use the direct API instead of client.generate
-            logger.info(f"Playing text via ElevenLabs stream: {text_to_speak}")
+            voice_id = voice or VOICE_ID
+            logger.info(f"Playing text via modern ElevenLabs API: {text_to_speak[:50]}...")
             
-            audio = generate(
-                text=text_to_speak,
-                voice=voice,
-                model="eleven_turbo_v2",
-                stream=True,
-                api_key=ELEVENLABS_API_KEY
-            )
+            success = generate_speech(text_to_speak, voice_id)
             
-            # FIX: Use play function for streaming
-            play(audio)
+            if success:
+                self._log_to_frontend(f"Agent spoke: {text_to_speak[:50]}...", 'info')
+                self._log_to_database(self.user_id, 'INFO', f"Agent spoke: {text_to_speak[:50]}...", self.conversation_id)
+            else:
+                self._log_to_frontend("Failed to generate speech", 'error')
+                self._log_to_database(self.user_id, 'ERROR', "Speech generation failed", self.conversation_id)
             
-            self._log_to_frontend(f"Agent spoke: {text_to_speak[:50]}...", 'info')
-            self._log_to_database(self.user_id, 'INFO', f"Agent spoke: {text_to_speak[:50]}...", self.conversation_id)
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"ElevenLabs network error: {e}")
-            self._log_to_frontend(f"Network error with ElevenLabs API: {e}", 'error')
-            self._play_text_via_pyttsx3(text_to_speak)
         except Exception as e:
-            logger.error(f"Error playing text via ElevenLabs stream: {e}")
+            logger.error(f"Error in modern ElevenLabs API: {e}")
             logger.error(traceback.format_exc())
             self._log_to_frontend("An error occurred while speaking.", 'error')
-            self._play_text_via_pyttsx3(text_to_speak)
-
-    def _play_text_via_pyttsx3(self, text):
-        """Fallback TTS using pyttsx3."""
-        try:
-            engine = pyttsx3.init()
-            engine.say(text)
-            engine.runAndWait()
-            logger.info("Used pyttsx3 fallback.")
-        except Exception as e:
-            logger.error(f"pyttsx3 fallback failed: {e}")
 
     def _process_llm_response(self, response_text, user_id, user_name):
         """Processes an agent's text response, executes commands, and plays audio."""
@@ -524,10 +441,8 @@ class VoiceAssistant:
                 command_executed_message = f"Sorry, I couldn't get the weather right now: {e}"
                 self._log_to_frontend(f"Error executing command: {command_executed_message}", 'error')
 
-        # ... (rest of your command processing logic) ...
-
         if "CONVERSATION_END" in response_text:
-            self._play_text_via_stream(f"Goodbye, {user_name}!")
+            self._play_text_via_modern_api(f"Goodbye, {user_name}!")
             conversation_active = False
             self._log_to_database(user_id, 'INFO', "Voice conversation ended by agent.", self.conversation_id)
             return
@@ -537,9 +452,9 @@ class VoiceAssistant:
             preferred_voice = user.preferred_voice if user else "alloy"
 
         if command_executed_message:
-            self._play_text_via_stream(command_executed_message, voice=preferred_voice)
+            self._play_text_via_modern_api(command_executed_message, voice=preferred_voice)
         else:
-            self._play_text_via_stream(response_text, voice=preferred_voice)
+            self._play_text_via_modern_api(response_text, voice=preferred_voice)
 
     def _simulate_llm_response(self, transcript):
         """Simulates a dynamic LLM response based on the transcript."""
@@ -580,11 +495,17 @@ class VoiceAssistant:
         self._log_to_frontend("Listening for commands...", 'status')
 
         initial_greeting = f"How can I help you?"
-        self._play_text_via_stream(initial_greeting, voice=preferred_voice)
+        self._play_text_via_modern_api(initial_greeting, voice=preferred_voice)
 
         while self.is_listening:
             try:
                 transcript = self.user_transcript_queue.get(timeout=1)
+                
+                # Check for shutdown signal
+                if transcript == "SHUTDOWN_SIGNAL":
+                    self._log_to_frontend("Shutting down voice assistant...", 'status')
+                    self.status = "Inactive"
+                    break
 
                 self._log_to_frontend(f"User: {transcript}", 'info')
                 self._log_to_database(self.user_id, 'USER', transcript, self.conversation_id)
@@ -598,8 +519,6 @@ class VoiceAssistant:
                 logger.error(f"Error in listening loop: {e}")
                 logger.error(traceback.format_exc())
                 self._log_to_frontend("An unexpected error occurred.", 'error')
-                self._play_text_via_stream("Sorry, an internal error occurred. The conversation will now end.")
-                self.stop_listening()
 
         self._log_to_frontend("Voice assistant session ended.", 'info')
         self._log_to_database(self.user_id, 'INFO', "Voice assistant session ended.", self.conversation_id)
@@ -607,7 +526,7 @@ class VoiceAssistant:
     def start_listening(self, user_id):
         """Starts the voice assistant in a separate thread."""
         if self.is_listening:
-            return False, "Voice assistant is already active for this user."
+            return False, "Voice assistant is already listening"
 
         self.user_id = user_id
         self.is_listening = True
@@ -615,9 +534,8 @@ class VoiceAssistant:
         self._log_to_frontend("Starting voice assistant...", 'info')
 
         with _flask_app_instance.app_context():
-            user = User.query.get(self.user_id)
             session_id = str(uuid.uuid4())
-            new_db_conversation = DBConversation(user_id=self.user_id, session_id=session_id)
+            new_db_conversation = DBConversation(user_id=user_id, session_id=session_id)
             db.session.add(new_db_conversation)
             db.session.commit()
             self.conversation_id = new_db_conversation.id
@@ -625,22 +543,30 @@ class VoiceAssistant:
         self.listening_thread = threading.Thread(target=self._listening_loop, daemon=True)
         self.listening_thread.start()
 
-        return True, "Voice assistant started successfully."
+        return True, "Voice assistant started successfully"
 
     def stop_listening(self):
         """Stops the voice assistant."""
         if not self.is_listening:
-            return False, "Voice assistant is not active."
+            return False, "Voice assistant is not currently active"
 
         self.is_listening = False
         self.status = "Inactive"
         self._log_to_frontend("Voice assistant stopped.", 'info')
-        return True, "Voice assistant stopped successfully."
+        
+        # Add shutdown signal to queue
+        try:
+            self.user_transcript_queue.put("SHUTDOWN_SIGNAL")
+        except:
+            pass
+            
+        return True, "Voice assistant stopped"
 
     def get_status(self):
         """Returns the current status of the voice assistant."""
         return {
-            "status": self.status,
-            "is_listening": self.is_listening,
-            "user_id": str(self.user_id) if self.user_id else None
+            'active': self.is_listening,
+            'status': self.status,
+            'user_id': str(self.user_id) if self.user_id else None,
+            'is_listening': self.is_listening
         }

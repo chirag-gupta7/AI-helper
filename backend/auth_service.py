@@ -7,7 +7,7 @@ import secrets
 import re
 from models import db, User, UserSession, APIToken # Ensure models are correctly imported
 import logging
-import uuid # Ensure uuid is imported
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class AuthService:
     @staticmethod
     def validate_email(email):
         """Validate email format"""
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         return re.match(pattern, email) is not None
 
     @staticmethod
@@ -34,10 +34,10 @@ class AuthService:
         if not re.search(r'[a-z]', password):
             errors.append("Password must contain at least one lowercase letter")
 
-        if not re.search(r'\\d', password):
+        if not re.search(r'\d', password):
             errors.append("Password must contain at least one digit")
 
-        if not re.search(r'[!@#$%^&*()_+\-=\\[\]{};\':"\\|,.<>\\/?]', password):
+        if not re.search(r'[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]', password):
             errors.append("Password must contain at least one special character")
 
         return errors
@@ -256,23 +256,17 @@ def require_auth(f):
                 user = AuthService.get_user_from_api_token(token)
 
         # If still no user and we are in DEBUG mode, create/get a test user
-        # This block is often the source of subtle syntax errors due to copy-pasting or manual edits.
-        # Ensure indentation and all characters are correct.
         if not user and current_app.config.get('DEBUG'):
             logger.warning("No user authenticated. Using debug fallback user.")
             user = User.query.filter_by(email='testuser@example.com').first()
             if not user:
                 logger.info("Creating debug fallback user.")
-                # Ensure UUID object is passed, or its string representation if directly assigning to a String column.
-                # With the custom UUIDType, passing a uuid.UUID object is now the correct way.
                 test_user_uuid = uuid.UUID('00000000-0000-0000-0000-000000000001')
                 user = User(id=test_user_uuid, username='testuser', email='testuser@example.com')
-                user.set_password('TestPassword123!') # Set password BEFORE adding and committing
+                user.set_password('TestPassword123!')
                 db.session.add(user)
                 db.session.commit()
-                # After commit, refresh the user object to ensure its ID is correctly loaded
                 db.session.refresh(user)
-
 
         if not user:
             return jsonify({
@@ -297,8 +291,10 @@ def require_verified(f):
                 'error': 'Email verification required',
                 'code': 'VERIFICATION_REQUIRED'
             }), 403
-
-        return decorated_function
+        
+        return f(*args, **kwargs)
+    
+    return decorated_function
 
 def optional_auth(f):
     """Decorator for optional authentication"""
