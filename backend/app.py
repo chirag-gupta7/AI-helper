@@ -17,10 +17,10 @@ import webbrowser
 import queue
 
 # Import configuration and other modules
-from config import config
-from models import db, Log, User
-from auth_service import AuthService, require_auth, optional_auth
-from google_calendar_integration import (
+from .config import config
+from .models import db, Log, User
+from .auth_service import AuthService, require_auth, optional_auth
+from .google_calendar_integration import (
     get_today_schedule,
     get_upcoming_events,
     create_event_from_conversation,
@@ -33,7 +33,7 @@ from google_calendar_integration import (
     set_event_reminder
 )
 # Import the new VoiceAssistant class
-from voice_assistant import VoiceAssistant
+from .voice_assistant import VoiceAssistant
 
 # Voice session management (replace app.state usage)
 voice_sessions = {}  # Global dictionary to track voice sessions
