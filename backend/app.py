@@ -15,9 +15,27 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import webbrowser
 import queue
-# At the top of app.py
+
+# Load environment variables from .env file
 from dotenv import load_dotenv
-load_dotenv()  # Load environment variables from .env file
+load_dotenv()
+
+# Configure logging with better formatting
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(os.environ.get('LOG_FILE', 'backend.log'))
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Log environment setup
+logger.info("Environment variables loaded from .env file")
+logger.info(f"ElevenLabs API key: {'Set' if os.environ.get('ELEVENLABS_API_KEY') else 'Not set'}")
+logger.info(f"ElevenLabs voice ID: {os.environ.get('ELEVENLABS_VOICE_ID', 'Not set')}")
+
 # Import configuration and other modules
 from .config import config
 from .models import db, Log, User
@@ -36,6 +54,8 @@ from .google_calendar_integration import (
 )
 # Import the new VoiceAssistant class
 from .voice_assistant import VoiceAssistant
+# Import the socket fix
+from .socket_fix import patch_socketio_emit
 
 # Voice session management (replace app.state usage)
 voice_sessions = {}  # Global dictionary to track voice sessions
@@ -47,12 +67,6 @@ if hasattr(sys.stdout, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
     except Exception:
         pass
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
-logger = logging.getLogger(__name__)
 
 # Flask app setup
 app = Flask(__name__, instance_relative_config=True)
@@ -71,6 +85,9 @@ limiter = Limiter(
 )
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
+# Apply the socket fix for compatibility
+socketio = patch_socketio_emit(socketio)
 
 def log_to_database(user_id, level, message, conversation_id=None):
     try:
@@ -143,7 +160,6 @@ def init_voice_assistant():
         logger.error(f"Failed to initialize voice assistant: {str(e)}")
         logger.error(traceback.format_exc())
         return False
-
 
 # --- ROUTES ---
 @app.route('/health', methods=['GET'])

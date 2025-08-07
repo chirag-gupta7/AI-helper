@@ -1,0 +1,12 @@
+Collecting gevent
+  Downloading gevent-25.5.1-cp313-cp313-win_amd64.whl.metadata (14 kB)
+Requirement already satisfied: greenlet>=3.2.2 in d:\colledge notes\python\lib\site-packages (from gevent) (3.2.3)
+Requirement already satisfied: cffi>=1.17.1 in d:\colledge notes\python\lib\site-packages (from gevent) (1.17.1)
+Requirement already satisfied: zope.event in d:\colledge notes\python\lib\site-packages (from gevent) (5.1.1)
+Requirement already satisfied: zope.interface in d:\colledge notes\python\lib\site-packages (from gevent) (7.2)
+Requirement already satisfied: pycparser in d:\colledge notes\python\lib\site-packages (from cffi>=1.17.1->gevent) (2.22)
+Requirement already satisfied: setuptools>=75.8.2 in d:\colledge notes\python\lib\site-packages (from zope.event->gevent) (80.9.0)
+Downloading gevent-25.5.1-cp313-cp313-win_amd64.whl (1.6 MB)
+   ---------------------------------------- 1.6/1.6 MB 2.2 MB/s  0:00:00
+Installing collected packages: gevent
+Successfully installed gevent-25.5.1

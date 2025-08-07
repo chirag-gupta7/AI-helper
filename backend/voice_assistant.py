@@ -1,29 +1,49 @@
 # backend/voice_assistant.py
 import os
-import logging
-import threading
-import time
-import queue
-import uuid
+import sys
 import traceback
+import logging
+import time
+from threading import Thread, Event
+import queue
+import json
+from datetime import datetime, timezone
+import re
+import uuid
+import threading
 from typing import Optional, Callable
 from flask import Flask
 
-# Import for ElevenLabs SDK with modern API
+# Check if ElevenLabs is installed and import it
 try:
-    from elevenlabs import generate, play, set_api_key
+    from elevenlabs import generate, play, set_api_key, voices
     ELEVENLABS_AVAILABLE = True
 except ImportError:
     ELEVENLABS_AVAILABLE = False
-    logging.warning("ElevenLabs not found. TTS functionality will be limited to pyttsx3 fallback.")
+    print("ElevenLabs not installed. Run 'pip install elevenlabs' to use ElevenLabs TTS.")
 
-# Attempt to import pyttsx3 for fallback audio, if available
+# Check if pyttsx3 is installed and import it
 try:
     import pyttsx3
     PYTTSX3_AVAILABLE = True
 except ImportError:
     PYTTSX3_AVAILABLE = False
-    logging.warning("pyttsx3 not found. Local TTS fallback will not be available.")
+    print("pyttsx3 not installed. Run 'pip install pyttsx3' to use fallback TTS.")
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+# Load ElevenLabs configuration from environment variables
+API_KEY = os.environ.get("ELEVENLABS_API_KEY")
+VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "echo")
+
+# Configure ElevenLabs API
+if ELEVENLABS_AVAILABLE and API_KEY:
+    try:
+        set_api_key(API_KEY)
+        logger.info("ElevenLabs API key configured successfully")
+    except Exception as e:
+        logger.error(f"Error configuring ElevenLabs API key: {e}")
 
 from .memory import ConversationMemory, ConversationContext
 
@@ -38,9 +58,6 @@ from .google_calendar_integration import (
     get_free_time_today
 )
 
-# Set up logging for this module
-logger = logging.getLogger(__name__)
-
 # Global variables for Flask app context and callbacks
 _flask_app_instance = None
 _on_status_change: Optional[Callable] = None
@@ -51,10 +68,6 @@ _on_log_to_db: Optional[Callable] = None
 conversation_active = False
 current_user_id = None
 current_conversation_id = None
-
-# ElevenLabs API setup
-API_KEY = os.getenv("ELEVENLABS_API_KEY")
-VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "echo")  # Default voice
 
 user_name_placeholder = "Chirag"
 prompt_template = """You are {user_name}'s personal assistant with comprehensive voice command capabilities. Today's schedule: {schedule}
@@ -106,12 +119,11 @@ Respond with: "Goodbye! Have a great day, {user_name}. CONVERSATION_END"
 
 Keep responses brief and helpful. Always confirm actions before executing commands."""
 
-# Modern ElevenLabs speech generation function
 def generate_speech(text: str, voice_id: str = None) -> bool:
     """Generate and play speech using modern ElevenLabs API with pyttsx3 fallback"""
     try:
         # Try ElevenLabs first
-        if ELEVENLABS_AVAILABLE and API_KEY and API_KEY != "your_elevenlabs_api_key_here":
+        if ELEVENLABS_AVAILABLE and API_KEY:
             voice = voice_id or VOICE_ID
             try:
                 logger.info(f"Attempting to use ElevenLabs with voice: {voice}")
@@ -126,6 +138,7 @@ def generate_speech(text: str, voice_id: str = None) -> bool:
             except Exception as e:
                 logger.error(f"ElevenLabs TTS error: {e}")
                 logger.error(traceback.format_exc())
+                logger.warning("Falling back to pyttsx3")
         else:
             logger.warning("ElevenLabs not available or API key not set")
             
@@ -151,15 +164,18 @@ def generate_speech(text: str, voice_id: str = None) -> bool:
             except Exception as fallback_e:
                 logger.error(f"pyttsx3 fallback failed with error: {fallback_e}")
                 logger.error(traceback.format_exc())
-        
-        # If we reach here, both methods failed
-        logger.error("All TTS methods failed, returning success anyway to continue flow")
-        # Return True anyway to allow conversation to continue in text mode
-        return True
+                
+                # Even if both TTS methods fail, log the response as text
+                logger.info(f"Text response (no audio): {text}")
+                return False
+        else:
+            logger.error("No TTS methods available")
+            return False
+            
     except Exception as e:
         logger.error(f"Catastrophic error in speech generation: {e}")
         logger.error(traceback.format_exc())
-        return True  # Return true to continue in text-only mode
+        return False
 
 # Simple voice processing implementation using direct API calls
 class SimpleVoiceAssistant:
@@ -179,61 +195,28 @@ class SimpleVoiceAssistant:
             _log_and_commit(self.user_id, 'ERROR', f"Failed to speak: {text[:50]}...", self.conversation_id)
 
     def process_voice_input(self, text_input):
-        """Process voice input and generate response"""
+        """Process voice input from the user."""
+        if not text_input or not isinstance(text_input, str):
+            self._log_to_frontend("Received empty or invalid input", 'warning')
+            return
+        
+        # Log the input
+        self._log_to_frontend(f"User: {text_input}", 'info')
+        self._log_to_database(self.user_id, 'USER', text_input, self.conversation_id)
+        
         try:
-            # Log user input
-            _log_and_commit(self.user_id, 'USER', f"User said: {text_input}", self.conversation_id)
-
-            # Process the command using the existing command processor
-            response = self._generate_response(text_input)
-
-            # Log agent response
-            _log_and_commit(self.user_id, 'AGENT', f"Agent response: {response}", self.conversation_id)
-
-            # Speak the response
-            self.speak(response)
-
-            return response
-
+            # Add to transcript queue for processing
+            self.user_transcript_queue.put(text_input)
+            self._log_to_frontend(f"Added to processing queue: {text_input}", 'debug')
         except Exception as e:
-            logger.error(f"Error processing voice input: {e}")
-            error_response = "I'm sorry, I encountered an error processing your request."
-            self.speak(error_response)
-            return error_response
+            self._log_to_frontend(f"Error queuing input: {str(e)}", 'error')
+            logger.error(f"Error queuing voice input: {str(e)}")
+            logger.error(traceback.format_exc())
 
-    def _generate_response(self, text_input):
-        """Generate response based on user input"""
-        text_lower = text_input.lower()
-
-        # Handle common commands
-        if "schedule" in text_lower and ("meeting" in text_lower or "event" in text_lower):
-            try:
-                result = create_event_from_conversation(text_input)
-                return f"I've created that event for you: {result}"
-            except Exception as e:
-                return f"I had trouble creating that event: {str(e)}"
-
-        elif "weather" in text_lower:
-            processor = VoiceCommandProcessor(user_id=self.user_id)
-            location = "your location"
-            if "in" in text_lower:
-                location = text_lower.split("in")[-1].strip()
-            result = processor.process_command('weather', location=location)
-            return result.get('user_message', 'Weather information is not available right now.')
-
-        elif "calendar" in text_lower or "schedule" in text_lower:
-            try:
-                schedule = get_today_schedule()
-                return f"Here's your schedule: {schedule}"
-            except Exception as e:
-                return f"I couldn't access your calendar right now: {str(e)}"
-
-        elif any(phrase in text_lower for phrase in ["goodbye", "bye", "end chat", "stop", "that's all"]):
-            return "Goodbye! Have a great day. CONVERSATION_END"
-
-        else:
-            # Default helpful response
-            return f"I heard you say: {text_input}. I can help you with scheduling events, checking weather, viewing your calendar, and more. What would you like me to do?"
+    def _process_input_with_agent(self, text_input, user_name):
+        """Process input and generate a response using the agent logic."""
+        # Use the existing _simulate_llm_response method for now
+        return self._simulate_llm_response(text_input)
 
 # Global voice assistant instance
 current_voice_assistant = None

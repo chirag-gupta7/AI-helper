@@ -1,34 +1,27 @@
 # Core Flask Framework
+flask==2.2.3
+flask-socketio==5.3.3
+elevenlabs==0.2.24
+pyttsx3==2.90
+python-dotenv==1.0.0
+flask-limiter==3.3.1
+gunicorn==20.1.0
+gevent==22.10.2
+gevent-websocket==0.10.1
 
-Flask==2.3.3
-Flask-CORS==4.0.0
-Flask-SocketIO==5.3.6
-werkzeug==2.3.7
-Flask-Limiter==3.5.0
 # Database & Authentication
 Flask-SQLAlchemy==3.0.5
 SQLAlchemy==1.4.52
 flask-migrate==4.0.5
 flask-login==0.6.2
-python-dotenv==1.0.0
+Flask-CORS==4.0.0
+werkzeug==2.3.7
 
 # Google Calendar Integration
-
 google-auth==2.23.4
 google-auth-oauthlib==1.1.0
 google-api-python-client==2.134.0
 python-dateutil==2.8.2
-
-# ElevenLabs Voice API
-elevenlabs==2.8.1
-
-# Speech recognition and audio handling
-pyttsx3==2.90
-
-pytest-flask==1.2.0
-
-# Security
-Flask-Talisman==1.1.0
 
 # Enhanced Voice Command Dependencies
 # Weather API support
@@ -40,13 +33,14 @@ newsapi-python==0.2.6  # Alternative: use requests directly with NewsAPI
 # Background task processing (for reminders and timers)
 APScheduler==3.10.4
 
-# UUID support (built-in with Python 3.7+)
-# uuid is built-in
-
-# JSON handling (built-in)
-# json is built-in
 # HTTP Requests
 requests==2.31.0
+
+# Security
+Flask-Talisman==1.1.0
+
+# Testing
+pytest-flask==1.2.0
 
 # Logging and Helpers
 packaging
