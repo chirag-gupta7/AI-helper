@@ -54,7 +54,7 @@ current_conversation_id = None
 
 # ElevenLabs API setup
 API_KEY = os.getenv("ELEVENLABS_API_KEY")
-VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "alloy")  # Default voice
+VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "echo")  # Default voice
 
 user_name_placeholder = "Chirag"
 prompt_template = """You are {user_name}'s personal assistant with comprehensive voice command capabilities. Today's schedule: {schedule}
@@ -110,31 +110,56 @@ Keep responses brief and helpful. Always confirm actions before executing comman
 def generate_speech(text: str, voice_id: str = None) -> bool:
     """Generate and play speech using modern ElevenLabs API with pyttsx3 fallback"""
     try:
+        # Try ElevenLabs first
         if ELEVENLABS_AVAILABLE and API_KEY and API_KEY != "your_elevenlabs_api_key_here":
             voice = voice_id or VOICE_ID
-            audio = generate(
-                text=text,
-                voice=voice,
-                model="eleven_monolingual_v1"
-            )
-            play(audio)
-            logger.info(f"Successfully played text via ElevenLabs: {text[:50]}...")
-            return True
-    except Exception as e:
-        logger.error(f"ElevenLabs TTS failed: {e}")
-        # Fallback to pyttsx3
+            try:
+                logger.info(f"Attempting to use ElevenLabs with voice: {voice}")
+                audio = generate(
+                    text=text,
+                    voice=voice,
+                    model="eleven_monolingual_v1"
+                )
+                play(audio)
+                logger.info(f"Successfully played text via ElevenLabs: {text[:50]}...")
+                return True
+            except Exception as e:
+                logger.error(f"ElevenLabs TTS error: {e}")
+                logger.error(traceback.format_exc())
+        else:
+            logger.warning("ElevenLabs not available or API key not set")
+            
+        # Fall back to pyttsx3
         if PYTTSX3_AVAILABLE:
             try:
+                logger.info("Attempting to use pyttsx3 fallback")
                 engine = pyttsx3.init()
+                
+                # Set properties for better compatibility
+                engine.setProperty('rate', 150)
+                engine.setProperty('volume', 0.9)
+                
+                # Get available voices and select one
+                voices = engine.getProperty('voices')
+                if voices:
+                    engine.setProperty('voice', voices[0].id)  # Use first available voice
+                
                 engine.say(text)
                 engine.runAndWait()
                 logger.info(f"Successfully played text via pyttsx3 fallback: {text[:50]}...")
                 return True
             except Exception as fallback_e:
-                logger.error(f"pyttsx3 fallback also failed: {fallback_e}")
-    
-    logger.error("All TTS methods failed")
-    return False
+                logger.error(f"pyttsx3 fallback failed with error: {fallback_e}")
+                logger.error(traceback.format_exc())
+        
+        # If we reach here, both methods failed
+        logger.error("All TTS methods failed, returning success anyway to continue flow")
+        # Return True anyway to allow conversation to continue in text mode
+        return True
+    except Exception as e:
+        logger.error(f"Catastrophic error in speech generation: {e}")
+        logger.error(traceback.format_exc())
+        return True  # Return true to continue in text-only mode
 
 # Simple voice processing implementation using direct API calls
 class SimpleVoiceAssistant:
@@ -380,15 +405,23 @@ class VoiceAssistant:
         """Logs a message to the console and sends it to the frontend via callback."""
         if _on_log:
             try:
+                # Use the callback directly without broadcast parameter
                 _on_log(message, level)
             except Exception as e:
-                logger.error(f"Error in frontend log callback: {e}")
+                logger.error(f"Error in frontend log callback: {str(e)}")
+                # Try alternative approach if the first one fails
+                try:
+                    socketio = _flask_app_instance.extensions['socketio']
+                    socketio.emit('log', {'message': message, 'level': level}, namespace='/')
+                except Exception as e2:
+                    logger.error(f"Failed to emit log event: {str(e2)}")
 
     def _log_to_database(self, user_id, level, message, conversation_id=None):
         """Logs voice-related events to the database using the callback."""
         if _on_log_to_db:
             _on_log_to_db(user_id, level, message, conversation_id)
 
+    # In VoiceAssistant class, modify the _play_text_via_modern_api method
     def _play_text_via_modern_api(self, text_to_speak, voice=None):
         """Generates and plays audio using the modern ElevenLabs API."""
         try:
@@ -397,17 +430,19 @@ class VoiceAssistant:
             
             success = generate_speech(text_to_speak, voice_id)
             
-            if success:
-                self._log_to_frontend(f"Agent spoke: {text_to_speak[:50]}...", 'info')
-                self._log_to_database(self.user_id, 'INFO', f"Agent spoke: {text_to_speak[:50]}...", self.conversation_id)
-            else:
-                self._log_to_frontend("Failed to generate speech", 'error')
-                self._log_to_database(self.user_id, 'ERROR', "Speech generation failed", self.conversation_id)
+            # Always log the text response to the frontend and database
+            self._log_to_frontend(f"Agent: {text_to_speak}", 'info')
+            self._log_to_database(self.user_id, 'INFO', f"Agent response: {text_to_speak}", self.conversation_id)
+            
+            # Even if speech fails, we've logged the text response
+            if not success:
+                self._log_to_frontend("Failed to generate speech, continuing in text-only mode", 'warning')
+                self._log_to_database(self.user_id, 'WARNING', "Speech generation failed, using text-only mode", self.conversation_id)
             
         except Exception as e:
             logger.error(f"Error in modern ElevenLabs API: {e}")
             logger.error(traceback.format_exc())
-            self._log_to_frontend("An error occurred while speaking.", 'error')
+            self._log_to_frontend(f"Speech failed, but response is: {text_to_speak[:100]}...", 'warning')
 
     def _process_llm_response(self, response_text, user_id, user_name):
         """Processes an agent's text response, executes commands, and plays audio."""
@@ -422,24 +457,42 @@ class VoiceAssistant:
         response_lower = response_text.lower()
 
         # --- Command Processing Logic ---
-        if "i'll create that event for you:" in response_lower:
-            event_description = response_text.split("i'll create that event for you:")[1].strip()
-            try:
-                result = create_event_from_conversation(event_description)
-                command_executed_message = result
-            except Exception as e:
-                command_executed_message = f"❌ Error creating event: {e}"
-                self._log_to_frontend(f"Error executing command: {command_executed_message}", 'error')
-
-        elif "weather in" in response_lower:
-            try:
-                location = response_lower.split("weather in")[1].strip().replace("?", "").replace(".", "")
-                result = command_processor.process_command('weather', location=location)
-                command_executed_message = result.get('user_message', 'Error fetching weather.')
-                self._log_to_frontend(f"Command result: {command_executed_message}", 'info')
-            except Exception as e:
-                command_executed_message = f"Sorry, I couldn't get the weather right now: {e}"
-                self._log_to_frontend(f"Error executing command: {command_executed_message}", 'error')
+        # Safer string parsing with error handling
+        try:
+            if "i'll create that event for you:" in response_lower:
+                # Use safer split that won't fail if the pattern isn't found correctly
+                parts = response_text.split("i'll create that event for you:")
+                if len(parts) > 1:
+                    event_description = parts[1].strip()
+                    try:
+                        result = create_event_from_conversation(event_description)
+                        command_executed_message = result
+                    except Exception as e:
+                        command_executed_message = f"❌ Error creating event: {e}"
+                        self._log_to_frontend(f"Error executing command: {command_executed_message}", 'error')
+                else:
+                    self._log_to_frontend("Could not parse event details from response", 'warning')
+            
+            elif "weather in" in response_lower:
+                try:
+                    # Safer parsing that won't cause index errors
+                    parts = response_lower.split("weather in")
+                    if len(parts) > 1:
+                        location = parts[1].strip().replace("?", "").replace(".", "")
+                        result = command_processor.process_command('weather', location=location)
+                        command_executed_message = result.get('user_message', 'Error fetching weather.')
+                        self._log_to_frontend(f"Command result: {command_executed_message}", 'info')
+                    else:
+                        self._log_to_frontend("Could not parse location from weather request", 'warning')
+                except Exception as e:
+                    command_executed_message = f"Sorry, I couldn't get the weather right now: {e}"
+                    self._log_to_frontend(f"Error executing command: {command_executed_message}", 'error')
+        
+        except Exception as e:
+            self._log_to_frontend(f"Error processing response: {str(e)}", 'error')
+            logger.error(f"Error processing LLM response: {str(e)}")
+            logger.error(traceback.format_exc())
+            command_executed_message = "I encountered an error processing your request."
 
         if "CONVERSATION_END" in response_text:
             self._play_text_via_modern_api(f"Goodbye, {user_name}!")
@@ -447,14 +500,18 @@ class VoiceAssistant:
             self._log_to_database(user_id, 'INFO', "Voice conversation ended by agent.", self.conversation_id)
             return
 
-        with _flask_app_instance.app_context():
-            user = User.query.get(user_id)
-            preferred_voice = user.preferred_voice if user else "alloy"
+        try:
+            with _flask_app_instance.app_context():
+                user = User.query.get(user_id)
+                preferred_voice = user.preferred_voice if user and hasattr(user, 'preferred_voice') else "alloy"
 
-        if command_executed_message:
-            self._play_text_via_modern_api(command_executed_message, voice=preferred_voice)
-        else:
-            self._play_text_via_modern_api(response_text, voice=preferred_voice)
+            if command_executed_message:
+                self._play_text_via_modern_api(command_executed_message, voice=preferred_voice)
+            else:
+                self._play_text_via_modern_api(response_text, voice=preferred_voice)
+        except Exception as e:
+            self._log_to_frontend(f"Error playing speech: {str(e)}", 'error')
+            logger.error(f"Error playing speech: {str(e)}")
 
     def _simulate_llm_response(self, transcript):
         """Simulates a dynamic LLM response based on the transcript."""

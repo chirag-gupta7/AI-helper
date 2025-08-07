@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify, session, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 import time
 import traceback
@@ -15,7 +15,9 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import webbrowser
 import queue
-
+# At the top of app.py
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from .env file
 # Import configuration and other modules
 from .config import config
 from .models import db, Log, User
@@ -110,22 +112,35 @@ voice_assistant = None
 
 def on_voice_log(message, level):
     """Callback to send log messages from the voice thread to the frontend."""
-    socketio.emit('log', {'message': message, 'level': level}, namespace='/', broadcast=True)
+    try:
+        socketio.emit('log', {'message': message, 'level': level})
+    except Exception as e:
+        logger.error(f"Error in voice log callback: {e}")
+        logger.error(traceback.format_exc())
 
 def on_voice_status_change(status):
     """Callback to send status updates from the voice thread to the frontend."""
-    socketio.emit('status_update', {'status': status}, namespace='/', broadcast=True)
-
+    try:
+        socketio.emit('status_update', {'status': status})
+    except Exception as e:
+        logger.error(f"Error in status change callback: {e}")
+        logger.error(traceback.format_exc())
+        
 def init_voice_assistant():
-    """Initializes the global VoiceAssistant instance."""
+    """Initializes the global VoiceAssistant instance with better error handling."""
     global voice_assistant
+    
     try:
         if voice_assistant is None:
+            logger.info("Initializing voice assistant...")
             voice_assistant = VoiceAssistant(app, on_voice_status_change, on_voice_log, log_to_database)
             logger.info("Voice assistant initialized successfully")
-        return True
+            return True
+        else:
+            logger.info("Voice assistant already initialized")
+            return True
     except Exception as e:
-        logger.error(f"Error initializing voice assistant: {str(e)}")
+        logger.error(f"Failed to initialize voice assistant: {str(e)}")
         logger.error(traceback.format_exc())
         return False
 
@@ -150,7 +165,7 @@ def health_check():
 
         return jsonify({
             'status': 'healthy',
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'user': user_info,
             'database': 'connected',
             'calendar_connected': calendar_ok,
@@ -603,7 +618,7 @@ def api_start_voice():
         # Already listening for this user, just confirm success
         voice_sessions[str(user_id)] = {
             'active': True,
-            'started_at': datetime.utcnow().isoformat(),
+            'started_at': datetime.now(timezone.utc).isoformat(),
             'user_id': user_id
         }
         return jsonify({'success': True, 'message': 'Voice assistant already active'})
@@ -620,7 +635,7 @@ def api_start_voice():
     if success:
         voice_sessions[str(user_id)] = {
             'active': True,
-            'started_at': datetime.utcnow().isoformat(),
+            'started_at': datetime.now(timezone.utc).isoformat(),
             'user_id': user_id
         }
         logger.info(f"Voice assistant started successfully for user {user_id}")
@@ -645,7 +660,7 @@ def api_stop_voice():
         # FIX: Update voice_sessions instead of app.state
         if str(user_id) in voice_sessions:
             voice_sessions[str(user_id)]['active'] = False
-            voice_sessions[str(user_id)]['stopped_at'] = datetime.utcnow().isoformat()
+            voice_sessions[str(user_id)]['stopped_at'] = datetime.now(timezone.utc).isoformat()
         return jsonify({'success': True, 'message': message})
     else:
         return jsonify({'success': False, 'error': message}), 500
@@ -695,7 +710,7 @@ def api_voice_input():
     if str(user_id) not in voice_sessions:
         voice_sessions[str(user_id)] = {
             'active': True,
-            'started_at': datetime.utcnow().isoformat(),
+            'started_at': datetime.now(timezone.utc).isoformat(),
             'user_id': user_id
         }
     
@@ -725,17 +740,26 @@ def api_voice_input():
         log_to_database(user_id, 'INFO', f"Voice input queued for processing")
         
         # Emit to the user's room for real-time updates
-        socketio.emit('voice_response', {
-            'input': text_input,
-            'status': 'queued',
-            'timestamp': datetime.utcnow().isoformat()
-        }, room=f"user_{str(user_id)}")
+        try:
+            socketio.emit('voice_response', {
+                'input': text_input,
+                'status': 'queued',
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            }, room=f"user_{str(user_id)}")
+        except Exception as e:
+            logger.error(f"Socket.IO emit error: {str(e)}")
+            # Fall back to non-room broadcast if room-specific emit fails
+            socketio.emit('voice_response', {
+                'input': text_input,
+                'status': 'queued',
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            })
         
         return jsonify({
             'success': True,
             'data': {
                 'input': text_input,
-                'status': 'queued_for_processing',
+                'status': 'queued',
                 'voice_assistant_status': 'listening'
             },
             'message': "Voice input queued successfully"
