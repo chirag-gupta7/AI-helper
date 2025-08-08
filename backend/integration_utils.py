@@ -1,40 +1,54 @@
 """
-Backend Integration Utilities
-Provides enhanced error handling, compatibility fixes, and utility functions.
+Integration utilities for enhanced error handling and database operations.
+Compatible with SQLAlchemy 1.4 and Flask 2.x
 """
-import os
-import sys
 import logging
+import functools
 import traceback
+import sys
 import uuid
 from datetime import datetime, timezone
-from flask import g, request, session
-from functools import wraps
+from flask import jsonify, request, session, g
+from werkzeug.exceptions import BadRequest
 
 logger = logging.getLogger(__name__)
 
+def setup_enhanced_logging():
+    """Setup enhanced logging configuration with better formatting."""
+    log_format = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(log_format)
+    
+    # File handler
+    file_handler = logging.FileHandler('backend_enhanced.log')
+    file_handler.setFormatter(log_format)
+    
+    # Setup root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    
+    if not root_logger.handlers:
+        root_logger.addHandler(console_handler)
+        root_logger.addHandler(file_handler)
+    
+    return root_logger
+
 def ensure_uuid_compatibility():
     """Ensure UUID handling works consistently across the application."""
-    def safe_uuid_convert(value):
-        """Safely convert various UUID formats to string."""
-        if value is None:
-            return None
-        if isinstance(value, uuid.UUID):
-            return str(value)
-        if isinstance(value, str):
-            try:
-                # Validate it's a proper UUID
-                uuid.UUID(value)
-                return value
-            except ValueError:
-                return None
-        return str(value)
+    def convert_uuid_to_string(obj):
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        return obj
     
-    return safe_uuid_convert
+    return convert_uuid_to_string
 
 def enhanced_error_handler(func):
-    """Decorator for enhanced error handling in routes."""
-    @wraps(func)
+    """Enhanced error handler decorator with improved error tracking."""
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -58,17 +72,17 @@ def enhanced_error_handler(func):
             except Exception as db_error:
                 logger.error(f"Failed to log error to database: {db_error}")
             
-            return {
-                'success': False,
-                'error': 'Internal server error',
-                'message': str(e) if hasattr(e, 'message') else 'An unexpected error occurred'
-            }, 500
-    
+            return create_api_response(
+                success=False,
+                error='Internal server error',
+                message=str(e) if hasattr(e, 'message') else 'An unexpected error occurred',
+                status_code=500
+            )
     return wrapper
 
 def safe_database_operation(operation_func):
     """Safely execute database operations with automatic rollback on error."""
-    @wraps(operation_func)
+    @functools.wraps(operation_func)
     def wrapper(*args, **kwargs):
         try:
             result = operation_func(*args, **kwargs)
@@ -86,33 +100,37 @@ def safe_database_operation(operation_func):
 
 def get_user_session_info():
     """Get current user and session information safely."""
-    user_info = {
-        'authenticated': False,
-        'user_id': None,
-        'session_id': None,
-        'user': None
-    }
-    
     try:
-        if hasattr(request, 'current_user') and request.current_user:
-            user_info.update({
-                'authenticated': True,
-                'user_id': str(request.current_user.id),
-                'user': request.current_user.to_dict()
-            })
+        session_info = {
+            'session_id': session.get('session_id', str(uuid.uuid4())),
+            'user_id': session.get('user_id'),
+            'authenticated': 'user_id' in session,
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
         
-        user_info['session_id'] = session.get('session_id', str(uuid.uuid4()))
-        
+        # Store in Flask's g object for request-scoped access
+        if not hasattr(g, 'session_info'):
+            g.session_info = session_info
+            
+        return session_info
     except Exception as e:
-        logger.warning(f"Could not get user session info: {e}")
-    
-    return user_info
+        logger.error(f"Error getting session info: {e}")
+        return {
+            'session_id': str(uuid.uuid4()),
+            'user_id': None,
+            'authenticated': False,
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
 
 def initialize_voice_sessions():
     """Initialize voice session tracking."""
-    if not hasattr(g, 'voice_sessions'):
-        g.voice_sessions = {}
-    return g.voice_sessions
+    if not hasattr(g, 'voice_session'):
+        g.voice_session = {
+            'active': False,
+            'started_at': None,
+            'session_id': str(uuid.uuid4())
+        }
+    return g.voice_session
 
 def create_api_response(success=True, data=None, message=None, error=None, status_code=200):
     """Create standardized API responses."""
@@ -123,72 +141,133 @@ def create_api_response(success=True, data=None, message=None, error=None, statu
     
     if data is not None:
         response['data'] = data
-    
-    if message:
+    if message is not None:
         response['message'] = message
-    
-    if error:
+    if error is not None:
         response['error'] = error
-        
-    return response, status_code
+    
+    return jsonify(response), status_code
 
 def validate_json_request(required_fields=None):
     """Validate JSON request data."""
     def decorator(func):
-        @wraps(func)
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            if not request.is_json:
-                return create_api_response(
-                    success=False,
-                    error="Request must be JSON",
-                    status_code=400
-                )
-            
-            data = request.get_json()
-            if not data:
-                return create_api_response(
-                    success=False,
-                    error="No JSON data provided",
-                    status_code=400
-                )
-            
-            if required_fields:
-                missing_fields = []
-                for field in required_fields:
-                    if field not in data or not data[field]:
-                        missing_fields.append(field)
-                
-                if missing_fields:
+            try:
+                if not request.is_json:
                     return create_api_response(
                         success=False,
-                        error=f"Missing required fields: {', '.join(missing_fields)}",
+                        error="Request must be JSON",
                         status_code=400
                     )
-            
-            return func(*args, **kwargs)
+                
+                if required_fields:
+                    data = request.get_json()
+                    if not data:
+                        return create_api_response(
+                            success=False,
+                            error="Invalid JSON data",
+                            status_code=400
+                        )
+                    
+                    missing_fields = [field for field in required_fields if field not in data]
+                    if missing_fields:
+                        return create_api_response(
+                            success=False,
+                            error=f"Missing required fields: {', '.join(missing_fields)}",
+                            status_code=400
+                        )
+                
+                return func(*args, **kwargs)
+            except BadRequest as e:
+                return create_api_response(
+                    success=False,
+                    error="Invalid request format",
+                    message=str(e),
+                    status_code=400
+                )
+            except Exception as e:
+                logger.error(f"Request validation error: {e}")
+                return create_api_response(
+                    success=False,
+                    error="Request validation failed",
+                    status_code=400
+                )
         return wrapper
     return decorator
 
-def setup_enhanced_logging():
-    """Setup enhanced logging with better formatting."""
-    log_format = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    
-    # Console handler
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(log_format)
-    
-    # File handler
-    file_handler = logging.FileHandler('backend_enhanced.log')
-    file_handler.setFormatter(log_format)
-    
-    # Setup root logger
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-    
-    if not root_logger.handlers:
-        root_logger.addHandler(console_handler)
-        root_logger.addHandler(file_handler)
-    
-    return root_logger
+def log_api_call(endpoint, method, user_id=None, response_time=None, status_code=200):
+    """Log API calls for monitoring and analytics."""
+    try:
+        from .models import db, APIUsage
+        
+        api_usage = APIUsage(
+            user_id=user_id,
+            endpoint=endpoint,
+            method=method,
+            response_time_ms=response_time,
+            status_code=status_code,
+            timestamp=datetime.utcnow()
+        )
+        
+        db.session.add(api_usage)
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"Failed to log API call: {e}")
+
+def handle_database_error(func):
+    """Decorator to handle database-specific errors gracefully."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            from .models import db
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            
+            error_message = str(e)
+            if "UNIQUE constraint failed" in error_message:
+                return create_api_response(
+                    success=False,
+                    error="Duplicate entry",
+                    message="The requested operation would create a duplicate entry",
+                    status_code=409
+                )
+            elif "FOREIGN KEY constraint failed" in error_message:
+                return create_api_response(
+                    success=False,
+                    error="Invalid reference",
+                    message="The operation references non-existent data",
+                    status_code=400
+                )
+            else:
+                logger.error(f"Database error in {func.__name__}: {e}")
+                return create_api_response(
+                    success=False,
+                    error="Database error",
+                    message="An error occurred while accessing the database",
+                    status_code=500
+                )
+    return wrapper
+
+def format_datetime_for_api(dt):
+    """Format datetime objects for API responses."""
+    if dt is None:
+        return None
+    if isinstance(dt, datetime):
+        return dt.isoformat()
+    return str(dt)
+
+def parse_uuid_safely(uuid_str):
+    """Safely parse UUID strings."""
+    try:
+        if isinstance(uuid_str, uuid.UUID):
+            return uuid_str
+        if isinstance(uuid_str, str):
+            return uuid.UUID(uuid_str)
+        return None
+    except (ValueError, TypeError):
+        return None
