@@ -2,12 +2,12 @@
 flask==2.3.3
 werkzeug==2.3.7
 python-dotenv==1.0.0
+flask-limiter==3.3.1
+gunicorn==20.1.0
+gevent==22.10.2
+gevent-websocket==0.10.1
 
-# SocketIO with compatibility
-flask-socketio==5.3.6
-python-socketio==5.8.0
-
-# Database & ORM
+# Database & Authentication
 Flask-SQLAlchemy==3.0.5
 SQLAlchemy==2.0.21
 flask-migrate==4.0.5
@@ -39,8 +39,8 @@ httpx==0.25.0
 # Task Scheduling
 APScheduler==3.10.4
 
-# Date/Time utilities
-python-dateutil==2.8.2
+# HTTP Requests
+requests==2.31.0
 
 # Development & Testing
 pytest==7.4.3
