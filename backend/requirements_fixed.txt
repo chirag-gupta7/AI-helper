@@ -1,0 +1,30 @@
+# Core Flask Framework - Compatible versions
+flask==2.2.3
+flask-socketio==5.0.3  # Compatible with Flask 2.2.3
+werkzeug==2.3.7
+python-dotenv==1.0.0
+flask-cors==4.0.0
+
+# Voice Assistant Dependencies
+pyttsx3==2.90
+elevenlabs==0.2.24
+
+# Database & Authentication
+Flask-SQLAlchemy==3.0.5
+SQLAlchemy==1.4.52
+flask-migrate==4.0.5
+flask-login==0.6.2
+flask-limiter==3.3.1
+
+# Google Calendar Integration
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+google-api-python-client==2.134.0
+python-dateutil==2.8.2
+
+# Enhanced Voice Command Dependencies
+requests==2.31.0
+APScheduler==3.10.4
+
+# Use newer gevent that has pre-built wheels
+gevent==23.9.1

@@ -2,6 +2,11 @@
 import os
 import sys
 import logging
+
+# Apply Flask compatibility patches BEFORE importing Flask
+from .flask_patch import apply_flask_patches
+apply_flask_patches()
+
 from flask import Flask, request, jsonify, session, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_limiter import Limiter
