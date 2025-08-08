@@ -13,9 +13,10 @@ flask-login==0.6.2
 Flask-CORS==4.0.0
 werkzeug==2.3.7
 
-# API Libraries
-requests==2.31.0
+# API Libraries (updated for exa-py compatibility)
+requests>=2.32.3
+httpx>=0.28.1
 APScheduler==3.10.4
 
 # Use newer gevent that has pre-built wheels
-gevent==24.10.2
+gevent==23.9.1
