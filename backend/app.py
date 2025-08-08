@@ -1,4 +1,4 @@
-# backend/app.py - Final Corrected Version
+# backend/app.py - Enhanced Version with Integrated Fixes
 import os
 import sys
 import logging
@@ -7,7 +7,7 @@ import logging
 from .flask_patch import apply_flask_patches
 apply_flask_patches()
 
-from flask import Flask, request, jsonify, session, g
+from flask import Flask, request, jsonify, session, g, render_template_string
 from flask_sqlalchemy import SQLAlchemy
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -25,15 +25,18 @@ import queue
 from dotenv import load_dotenv
 load_dotenv()
 
-# Configure logging with better formatting
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler(os.environ.get('LOG_FILE', 'backend.log'))
-    ]
+# Import enhanced utilities
+from .integration_utils import (
+    enhanced_error_handler, 
+    safe_database_operation,
+    get_user_session_info,
+    create_api_response,
+    validate_json_request,
+    setup_enhanced_logging
 )
+
+# Configure enhanced logging
+setup_enhanced_logging()
 logger = logging.getLogger(__name__)
 
 # Log environment setup
@@ -59,7 +62,7 @@ from .google_calendar_integration import (
 )
 # Import the new VoiceAssistant class
 from .voice_assistant import VoiceAssistant
-# Import the socket fix
+# Import the enhanced socket fix
 from .socket_fix import patch_socketio_emit
 
 # Voice session management (replace app.state usage)
@@ -78,7 +81,7 @@ app = Flask(__name__, instance_relative_config=True)
 app.config.from_object(config['development'])
 
 # Enable CORS for the app
-CORS(app)
+CORS(app, origins=app.config.get('ALLOWED_ORIGINS', '*'))
 
 # Initialize extensions
 db.init_app(app)
@@ -89,12 +92,30 @@ limiter = Limiter(
     app=app,
 )
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+# Enhanced SocketIO setup with better error handling
+try:
+    socketio = SocketIO(
+        app, 
+        cors_allowed_origins="*", 
+        async_mode='threading',
+        logger=False,
+        engineio_logger=False,
+        ping_timeout=60,
+        ping_interval=25
+    )
+    
+    # Apply the enhanced socket fix for compatibility
+    socketio = patch_socketio_emit(socketio)
+    logger.info("✅ SocketIO initialized and patched successfully")
+    
+except Exception as e:
+    logger.error(f"Failed to initialize SocketIO: {e}")
+    socketio = None
 
-# Apply the socket fix for compatibility
-socketio = patch_socketio_emit(socketio)
-
+# Enhanced database logging function
+@safe_database_operation
 def log_to_database(user_id, level, message, conversation_id=None):
+    """Enhanced database logging with better error handling."""
     try:
         with app.app_context():
             user_id_str = str(user_id) if isinstance(user_id, uuid.UUID) else user_id
@@ -103,10 +124,11 @@ def log_to_database(user_id, level, message, conversation_id=None):
                 level=level,
                 message=message,
                 conversation_id=conversation_id,
-                source='app_backend'
+                source='app_backend_enhanced'
             )
             db.session.add(new_log)
             db.session.commit()
+            logger.debug(f"Logged to database: {level} - {message}")
     except Exception as e:
         logger.error(f"Failed to log to database: {e}")
         logger.error(traceback.format_exc())
@@ -115,6 +137,7 @@ def log_to_database(user_id, level, message, conversation_id=None):
         except Exception as rollback_e:
             logger.error(f"Error during rollback: {rollback_e}")
 
+# Enhanced before_request handler
 @app.before_request
 def before_request_func():
     if not getattr(g, 'db_initialized', False):
@@ -123,10 +146,13 @@ def before_request_func():
             inspector = inspect(db.engine)
             if not inspector.has_table("users"):
                 logger.info("Database tables not found. Creating them now...")
-                db.create_all()
-                logger.info("Database tables created successfully.")
+                try:
+                    db.create_all()
+                    logger.info("✅ Database tables created successfully.")
+                except Exception as e:
+                    logger.error(f"❌ Failed to create database tables: {e}")
             else:
-                logger.info("Database tables already exist.")
+                logger.debug("Database tables already exist.")
         g.db_initialized = True
 
 # Global VoiceAssistant instance

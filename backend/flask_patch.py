@@ -1,5 +1,6 @@
 """
 Flask compatibility patch for newer Flask versions with older Flask-SocketIO
+Enhanced version with better error handling and compatibility.
 """
 import sys
 import logging
@@ -20,15 +21,36 @@ def apply_flask_patches():
             logger.info("Applying Flask compatibility patch for SocketIO")
             
             # Create the attribute in flask module pointing to the correct location
-            import werkzeug.local
-            flask._request_ctx_stack = flask.globals._request_ctx_stack
+            from werkzeug.local import LocalStack
+            flask._request_ctx_stack = LocalStack()
+            
+            # Ensure flask.globals has _request_ctx_stack
+            if hasattr(flask, 'globals'):
+                if not hasattr(flask.globals, '_request_ctx_stack'):
+                    flask.globals._request_ctx_stack = flask._request_ctx_stack
             
             # Also patch flask_json if needed
             if not hasattr(flask, 'json'):
                 import json
                 flask.json = json
+            
+            # Flask-SocketIO compatibility fixes
+            try:
+                import flask_socketio
+                # Patch for newer Flask-SocketIO versions
+                if hasattr(flask_socketio, 'SocketIO'):
+                    original_init = flask_socketio.SocketIO.__init__
+                    
+                    def patched_init(self, app=None, **kwargs):
+                        # Remove problematic kwargs for newer versions
+                        kwargs.pop('async_handlers', None)
+                        return original_init(self, app, **kwargs)
+                    
+                    flask_socketio.SocketIO.__init__ = patched_init
+            except ImportError:
+                pass
                 
-            logger.info("Flask patch applied successfully")
+            logger.info("✅ Flask compatibility patches applied successfully")
             return True
         else:
             logger.info("Flask patch not needed")
