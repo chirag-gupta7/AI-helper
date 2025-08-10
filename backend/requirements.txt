@@ -23,10 +23,12 @@ flask-socketio==5.3.6
 
 # Voice & Audio
 pyttsx3==2.90
-SpeechRecognition==3.10.0
+# SpeechRecognition - using specific version for Python 3.13 compatibility
+SpeechRecognition>=3.8.1
+pyaudio>=0.2.11
 
 # ElevenLabs API - Updated version
-elevenlabs==0.2.27
+elevenlabs>=0.2.26
 
 # Google Services
 google-auth==2.23.4

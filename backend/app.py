@@ -61,12 +61,17 @@ from .google_calendar_integration import (
     set_event_reminder
 )
 # Import the new VoiceAssistant class
-from .voice_assistant import VoiceAssistant
+from .voice_assistant import VoiceAssistant, test_voice_synthesis, initialize_elevenlabs_agent
+# Import the microphone handler
+from .microphone_handler import MicrophoneHandler
 # Import the enhanced socket fix
 from .socket_fix import patch_socketio_emit
 
 # Voice session management (replace app.state usage)
 voice_sessions = {}  # Global dictionary to track voice sessions
+
+# Global microphone handler
+microphone_handler = None
 
 # UTF-8 console fix
 if hasattr(sys.stdout, "reconfigure"):
@@ -817,6 +822,102 @@ def api_voice_input():
         logger.error(traceback.format_exc())
         log_to_database(user_id, 'ERROR', f"Failed to process voice input: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/voice/start-microphone', methods=['POST'])
+@require_auth
+def start_microphone():
+    """Start microphone listening"""
+    global microphone_handler, voice_assistant
+    
+    try:
+        user_id = request.current_user.id
+        
+        # Initialize voice assistant if needed
+        if not voice_assistant:
+            init_voice_assistant()
+            if not voice_assistant:
+                return jsonify({'success': False, 'error': 'Failed to initialize voice assistant'}), 500
+        
+        # Initialize microphone handler if not exists
+        if not microphone_handler:
+            def voice_callback(text):
+                # Send recognized text to voice assistant
+                if voice_assistant and voice_assistant.is_listening:
+                    logger.info(f"Microphone recognized: {text}")
+                    voice_assistant.user_transcript_queue.put(text)
+                    
+                    # Emit to frontend for real-time updates
+                    try:
+                        socketio.emit('voice_input', {
+                            'text': text,
+                            'source': 'microphone',
+                            'timestamp': datetime.now(timezone.utc).isoformat()
+                        }, room=f"user_{str(user_id)}")
+                    except Exception as e:
+                        logger.error(f"Socket.IO emit error: {e}")
+            
+            microphone_handler = MicrophoneHandler(callback=voice_callback)
+        
+        # Start listening
+        success = microphone_handler.start_listening()
+        
+        if success:
+            log_to_database(user_id, 'INFO', "Microphone listening started")
+            return jsonify({'success': True, 'message': 'Microphone started'})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to start microphone'})
+            
+    except Exception as e:
+        logger.error(f"Error starting microphone: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/voice/stop-microphone', methods=['POST'])
+@require_auth
+def stop_microphone():
+    """Stop microphone listening"""
+    global microphone_handler
+    
+    try:
+        user_id = request.current_user.id
+        
+        if microphone_handler:
+            microphone_handler.stop_listening()
+            log_to_database(user_id, 'INFO', "Microphone listening stopped")
+        
+        return jsonify({'success': True, 'message': 'Microphone stopped'})
+        
+    except Exception as e:
+        logger.error(f"Error stopping microphone: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/voice/test', methods=['POST'])
+@require_auth
+def test_voice_system():
+    """Test the complete voice system"""
+    try:
+        user_id = request.current_user.id
+        
+        result = test_voice_synthesis()
+        
+        # Test agent initialization
+        agent_test = initialize_elevenlabs_agent()
+        
+        log_to_database(user_id, 'INFO', f"Voice system test completed - Result: {result}")
+        
+        return jsonify({
+            'success': result,
+            'message': 'Voice system test completed',
+            'elevenlabs_available': True,  # We know it's available since we imported it
+            'api_key_set': bool(os.environ.get("ELEVENLABS_API_KEY") and len(os.environ.get("ELEVENLABS_API_KEY", "")) > 10),
+            'agent_id_set': bool(os.environ.get("ELEVENLABS_AGENT_ID")),
+            'voice_id_set': bool(os.environ.get("ELEVENLABS_VOICE_ID")),
+            'agent_init_success': agent_test
+        })
+        
+    except Exception as e:
+        logger.error(f"Error testing voice system: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # Static file serving routes
 @app.route('/static/<path:filename>')
 def serve_static(filename):
