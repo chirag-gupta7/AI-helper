@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 
 # Fix the import to use relative import with leading dot
-from .models import db, User, Conversation, Message, UserPreference, Log
+from .models import db, User, Conversation, Message, Log
 
 logger = logging.getLogger(__name__)
 
