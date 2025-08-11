@@ -16,22 +16,49 @@ import uuid
 import threading
 from typing import Optional, Callable
 from flask import Flask
+import io
 
-# Check if ElevenLabs is installed and import it
+# Set UTF-8 encoding for stdout/stderr to fix encoding errors
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        if sys.stdout.encoding != 'utf-8':
+            sys.stdout.reconfigure(encoding='utf-8')
+        if sys.stderr.encoding != 'utf-8':
+            sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
+# Check if ElevenLabs is installed and import it with improved error handling
 try:
-    from elevenlabs import generate, play, set_api_key, voices
-    from elevenlabs.client import ElevenLabs
-    from elevenlabs import VoiceSettings
-    # Import ElevenLabs Agent API
-    from elevenlabs.conversational_ai import ConversationalAI
+    from elevenlabs import generate, set_api_key, Voice, VoiceSettings
+    from elevenlabs.api import Models
+    try:
+        from elevenlabs import play
+    except ImportError:
+        play = None
+        logger.warning("ElevenLabs play function not available")
+    
+    try:
+        from elevenlabs.client import ElevenLabs
+    except ImportError:
+        ElevenLabs = None
+        logger.warning("ElevenLabs client not available")
+    
+    try:
+        # Import ElevenLabs Agent API
+        from elevenlabs.conversational_ai import ConversationalAI
+    except ImportError:
+        ConversationalAI = None
+        logger.warning("ElevenLabs ConversationalAI not available")
+    
     ELEVENLABS_AVAILABLE = True
-    logger = logging.getLogger(__name__)
-    logger.info("ElevenLabs imports successful - Agent API available")
+    logger.info("ElevenLabs package successfully imported")
 except ImportError as e:
     ELEVENLABS_AVAILABLE = False
-    logger = logging.getLogger(__name__)
-    logger.error(f"ElevenLabs not available: {e}")
-    print("ElevenLabs not installed. Run 'pip install elevenlabs' to use ElevenLabs TTS.")
+    logger.warning(f"ElevenLabs package not available: {e}, will use pyttsx3 fallback")
 
 # Check if pyttsx3 is installed and import it
 try:
@@ -163,111 +190,159 @@ class ElevenLabsAgent:
 elevenlabs_agent = None
 
 def initialize_elevenlabs_agent():
-    """Initialize the ElevenLabs agent with proper error handling"""
+    """Initialize ElevenLabs agent with API key from environment variables."""
     global elevenlabs_agent
     
     if not ELEVENLABS_AVAILABLE:
-        logger.error("✗ ElevenLabs not available - please install: pip install elevenlabs")
-        return False
-        
-    if not API_KEY or API_KEY.startswith('sk_') and len(API_KEY) < 10:
-        logger.error("✗ Invalid ElevenLabs API key")
+        logger.warning("ElevenLabs package not available, will use pyttsx3 fallback")
         return False
     
     try:
-        elevenlabs_agent = ElevenLabsAgent(voice_id=VOICE_ID, agent_id=AGENT_ID)
+        # Get API key from environment variable - more secure than hardcoding
+        api_key = os.environ.get("ELEVENLABS_API_KEY")
         
-        # Test the agent
-        if elevenlabs_agent.client:
-            logger.info("✓ ElevenLabs agent initialized successfully")
-            return True
-        else:
-            logger.error("✗ Failed to initialize ElevenLabs client")
+        if not api_key:
+            logger.error("⚠️ ElevenLabs API key not found in environment variables")
+            return False
+            
+        # Set the API key
+        set_api_key(api_key)
+        
+        # Test the API connection
+        try:
+            # Use a simpler test to verify connection
+            if Models:
+                models = Models.from_api()
+                if models:
+                    logger.info("✅ ElevenLabs API connected successfully")
+                    # Initialize the agent
+                    elevenlabs_agent = ElevenLabsAgent(voice_id=VOICE_ID, agent_id=AGENT_ID)
+                    return True
+            else:
+                logger.warning("Models API not available, proceeding with basic initialization")
+                elevenlabs_agent = ElevenLabsAgent(voice_id=VOICE_ID, agent_id=AGENT_ID)
+                return True
+        except Exception as e:
+            logger.error(f"❌ ElevenLabs API connection test failed: {str(e)}")
             return False
             
     except Exception as e:
-        logger.error(f"✗ Error initializing ElevenLabs agent: {e}")
+        logger.error(f"❌ ElevenLabs not available - {str(e)}")
         return False
 
-def generate_speech(text: str, voice_id: str = None) -> bool:
-    """Generate and play speech using ElevenLabs with proper fallback"""
+def generate_speech(text_to_speak, voice="Rachel"):
+    """Generate speech using ElevenLabs, with fallback to pyttsx3."""
+    
+    # Remove any problematic characters that might cause encoding issues
+    text_to_speak = ''.join(c for c in text_to_speak if ord(c) < 65536)
+    
+    # Try ElevenLabs first
+    if ELEVENLABS_AVAILABLE:
+        try:
+            # Get API key
+            api_key = os.environ.get("ELEVENLABS_API_KEY")
+            if not api_key:
+                logger.warning("⚠️ ElevenLabs not available, using pyttsx3...")
+                return _fallback_pyttsx3(text_to_speak)
+                
+            # Generate speech with ElevenLabs
+            voice_settings = VoiceSettings(stability=0.71, similarity_boost=0.5, style=0.0, use_speaker_boost=True)
+            
+            # Generate audio using the newer API
+            audio = generate(
+                text=text_to_speak,
+                voice=voice,
+                model="eleven_turbo_v2",
+                voice_settings=voice_settings,
+            )
+            
+            # Save to temporary file and play
+            with open("temp_audio.mp3", "wb") as f:
+                f.write(audio)
+                
+            # Play the audio file
+            _play_audio_file("temp_audio.mp3")
+                
+            logger.info(f"✓ ElevenLabs successful: {text_to_speak[:50]}...")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ ElevenLabs error: {str(e)}")
+            logger.warning("⚠️ ElevenLabs not available, using pyttsx3...")
+            return _fallback_pyttsx3(text_to_speak)
+    else:
+        logger.info("🔊 Using pyttsx3 fallback...")
+        return _fallback_pyttsx3(text_to_speak)
+
+def _fallback_pyttsx3(text_to_speak):
+    """Fallback to pyttsx3 for speech generation."""
     try:
-        # Try ElevenLabs Agent first
-        global elevenlabs_agent
-        if elevenlabs_agent:
-            success = elevenlabs_agent.speak_with_agent(text, "Voice assistant conversation")
-            if success:
-                return True
+        # Initialize the pyttsx3 engine
+        engine = pyttsx3.init()
         
-        # Direct ElevenLabs API fallback
-        if ELEVENLABS_AVAILABLE and API_KEY:
-            voice = voice_id or VOICE_ID
-            try:
-                logger.info("🔊 Trying direct ElevenLabs API...")
-                client = ElevenLabs(api_key=API_KEY)
-                
-                audio = client.generate(
-                    text=text,
-                    voice=voice,
-                    model="eleven_multilingual_v2",
-                    voice_settings=VoiceSettings(
-                        stability=0.5,
-                        similarity_boost=0.8,
-                        style=0.2,
-                        use_speaker_boost=True
-                    )
-                )
-                
-                play(audio)
-                logger.info(f"✓ Direct ElevenLabs successful: {text[:50]}...")
-                return True
-                
-            except Exception as e:
-                logger.error(f"✗ Direct ElevenLabs failed: {e}")
-                logger.info("🔄 Falling back to pyttsx3...")
-        else:
-            logger.warning("⚠️  ElevenLabs not available, using pyttsx3...")
-            
-        # pyttsx3 fallback
-        if PYTTSX3_AVAILABLE:
-            try:
-                logger.info("🔊 Using pyttsx3 fallback...")
-                engine = pyttsx3.init()
-                
-                # Better voice settings
-                engine.setProperty('rate', 165)
-                engine.setProperty('volume', 0.95)
-                
-                # Select best voice
-                voices = engine.getProperty('voices')
-                if voices:
-                    # Prefer female or higher quality voices
-                    selected_voice = voices[0]
-                    for voice in voices:
-                        voice_name = voice.name.lower()
-                        if any(name in voice_name for name in ['zira', 'hazel', 'female', 'cortana']):
-                            selected_voice = voice
-                            break
-                    engine.setProperty('voice', selected_voice.id)
-                    logger.info(f"Using voice: {selected_voice.name}")
-                
-                engine.say(text)
-                engine.runAndWait()
-                logger.info(f"✓ pyttsx3 successful: {text[:50]}...")
-                return True
-                
-            except Exception as fallback_e:
-                logger.error(f"✗ pyttsx3 failed: {fallback_e}")
-                logger.info(f"📝 Text only: {text}")
-                return False
-        else:
-            logger.error("✗ No TTS methods available")
-            return False
-            
+        # Convert non-ASCII characters to their closest ASCII equivalent or remove them
+        safe_text = ''.join(c if ord(c) < 128 else ' ' for c in text_to_speak)
+        
+        # Set properties (optional)
+        engine.setProperty('rate', 180)  # Speed of speech
+        engine.setProperty('volume', 0.9)  # Volume (0.0 to 1.0)
+        
+        # Speak the text
+        engine.say(safe_text)
+        engine.runAndWait()
+        
+        logger.info(f"🔊 pyttsx3 successful: {safe_text[:50]}...")
+        return True
     except Exception as e:
-        logger.error(f"✗ Critical error in speech generation: {e}")
-        logger.error(traceback.format_exc())
+        logger.error(f"❌ pyttsx3 error: {str(e)}")
         return False
+
+def _play_audio_file(file_path):
+    """Play an audio file."""
+    try:
+        # Try pygame first
+        try:
+            import pygame
+            pygame.mixer.init()
+            pygame.mixer.music.load(file_path)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
+            # Clean up temporary file
+            try:
+                os.remove(file_path)
+            except:
+                pass
+            return True
+        except ImportError:
+            logger.warning("pygame not available, trying alternative playback method")
+        
+        # If pygame fails, try using the play function if available
+        if play and os.path.exists(file_path):
+            try:
+                with open(file_path, 'rb') as f:
+                    audio_data = f.read()
+                play(audio_data)
+                os.remove(file_path)
+                return True
+            except Exception as play_e:
+                logger.error(f"❌ Play function also failed: {play_e}")
+        
+        # Clean up file if we couldn't play it
+        try:
+            os.remove(file_path)
+        except:
+            pass
+        return False
+        
+    except Exception as e:
+        logger.error(f"❌ Error playing audio file: {str(e)}")
+        return False
+
+def _play_text_via_modern_api(text_to_speak, voice="Rachel"):
+    """Play text using modern API approach."""
+    success = generate_speech(text_to_speak, voice)
+    return success
 
 # Global variables for Flask app context and callbacks
 _flask_app_instance = None
@@ -735,5 +810,15 @@ def test_voice_synthesis():
     else:
         logger.error("❌ Agent initialization failed")
         return False
+
+def _listening_loop(self, initial_greeting=None):
+    """Main listening loop for the voice assistant."""
+    # Play initial greeting if provided
+    if initial_greeting:
+        self._play_text_via_modern_api(initial_greeting)
+    
+    # Continue with the rest of listening loop code
+    # This function can be extended based on specific needs
+    logger.info("🎧 Voice assistant listening loop started")
 
 # END OF voice_assistant.py
