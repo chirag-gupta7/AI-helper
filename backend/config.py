@@ -27,7 +27,7 @@ class Config:
     # ElevenLabs Configuration
     AGENT_ID = os.getenv('ELEVENLABS_AGENT_ID')
     API_KEY = os.getenv('ELEVENLABS_API_KEY')
-    
+    VOICE_ID = os.getenv('ELEVENLABS_VOICE_ID', '21m00Tcm4TlvDq8ikWAM')
     # CORS Configuration
     ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', '*').split(',')
     

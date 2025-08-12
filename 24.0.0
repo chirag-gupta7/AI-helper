@@ -1,12 +1,24 @@
+Defaulting to user installation because normal site-packages is not writeable
 Collecting gevent
   Downloading gevent-25.5.1-cp313-cp313-win_amd64.whl.metadata (14 kB)
-Requirement already satisfied: greenlet>=3.2.2 in d:\colledge notes\python\lib\site-packages (from gevent) (3.2.3)
-Requirement already satisfied: cffi>=1.17.1 in d:\colledge notes\python\lib\site-packages (from gevent) (1.17.1)
-Requirement already satisfied: zope.event in d:\colledge notes\python\lib\site-packages (from gevent) (5.1.1)
-Requirement already satisfied: zope.interface in d:\colledge notes\python\lib\site-packages (from gevent) (7.2)
-Requirement already satisfied: pycparser in d:\colledge notes\python\lib\site-packages (from cffi>=1.17.1->gevent) (2.22)
-Requirement already satisfied: setuptools>=75.8.2 in d:\colledge notes\python\lib\site-packages (from zope.event->gevent) (80.9.0)
+Requirement already satisfied: greenlet>=3.2.2 in c:\users\dell\appdata\roaming\python\python313\site-packages (from gevent) (3.2.4)
+Collecting cffi>=1.17.1 (from gevent)
+  Downloading cffi-1.17.1-cp313-cp313-win_amd64.whl.metadata (1.6 kB)
+Collecting zope.event (from gevent)
+  Downloading zope_event-5.1.1-py3-none-any.whl.metadata (5.0 kB)
+Collecting zope.interface (from gevent)
+  Downloading zope.interface-7.2-cp313-cp313-win_amd64.whl.metadata (45 kB)
+Collecting pycparser (from cffi>=1.17.1->gevent)
+  Downloading pycparser-2.22-py3-none-any.whl.metadata (943 bytes)
+Collecting setuptools>=75.8.2 (from zope.event->gevent)
+  Using cached setuptools-80.9.0-py3-none-any.whl.metadata (6.6 kB)
 Downloading gevent-25.5.1-cp313-cp313-win_amd64.whl (1.6 MB)
-   ---------------------------------------- 1.6/1.6 MB 2.2 MB/s  0:00:00
-Installing collected packages: gevent
-Successfully installed gevent-25.5.1
+   ---------------------------------------- 1.6/1.6 MB 4.3 MB/s  0:00:00
+Downloading cffi-1.17.1-cp313-cp313-win_amd64.whl (182 kB)
+Downloading pycparser-2.22-py3-none-any.whl (117 kB)
+Downloading zope_event-5.1.1-py3-none-any.whl (7.0 kB)
+Using cached setuptools-80.9.0-py3-none-any.whl (1.2 MB)
+Downloading zope.interface-7.2-cp313-cp313-win_amd64.whl (212 kB)
+Installing collected packages: setuptools, pycparser, zope.interface, zope.event, cffi, gevent
+
+Successfully installed cffi-1.17.1 gevent-25.5.1 pycparser-2.22 setuptools-80.9.0 zope.event-5.1.1 zope.interface-7.2

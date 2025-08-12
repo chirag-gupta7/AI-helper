@@ -17,6 +17,15 @@ import threading
 from typing import Optional, Callable
 from flask import Flask
 import io
+import wave
+
+# Check if PyAudio is installed and import it
+try:
+    import pyaudio
+    PYAUDIO_AVAILABLE = True
+except ImportError:
+    PYAUDIO_AVAILABLE = False
+    print("PyAudio not installed. Run 'pip install pyaudio' for audio playback support.")
 
 # Set UTF-8 encoding for stdout/stderr to fix encoding errors
 if hasattr(sys.stdout, "reconfigure"):
@@ -34,26 +43,8 @@ logger = logging.getLogger(__name__)
 # Check if ElevenLabs is installed and import it with improved error handling
 try:
     from elevenlabs import generate, set_api_key, Voice, VoiceSettings
-    from elevenlabs.api import Models
-    try:
-        from elevenlabs import play
-    except ImportError:
-        play = None
-        logger.warning("ElevenLabs play function not available")
-    
-    try:
-        from elevenlabs.client import ElevenLabs
-    except ImportError:
-        ElevenLabs = None
-        logger.warning("ElevenLabs client not available")
-    
-    try:
-        # Import ElevenLabs Agent API
-        from elevenlabs.conversational_ai import ConversationalAI
-    except ImportError:
-        ConversationalAI = None
-        logger.warning("ElevenLabs ConversationalAI not available")
-    
+    from elevenlabs.client import ElevenLabs
+    from elevenlabs.conversational_ai import ConversationalAI
     ELEVENLABS_AVAILABLE = True
     logger.info("ElevenLabs package successfully imported")
 except ImportError as e:
@@ -68,9 +59,15 @@ except ImportError:
     PYTTSX3_AVAILABLE = False
     print("pyttsx3 not installed. Run 'pip install pyttsx3' to use fallback TTS.")
 
-# Set up logging
-logger = logging.getLogger(__name__)
-
+# Check for pydub to handle audio playback
+try:
+    from pydub import AudioSegment
+    from pydub.playback import play as pydub_play
+    PYDUB_AVAILABLE = True
+except ImportError:
+    PYDUB_AVAILABLE = False
+    print("pydub not installed. Run 'pip install pydub' for enhanced audio playback.")
+    
 # Load ElevenLabs configuration from environment variables
 API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # Rachel voice
@@ -78,7 +75,7 @@ AGENT_ID = os.environ.get("ELEVENLABS_AGENT_ID")
 
 # Validate configuration
 logger.info(f"ElevenLabs Configuration:")
-logger.info(f"- API Key: {'✓ SET' if API_KEY and API_KEY != 'sk_' else '✗ NOT SET'}")
+logger.info(f"- API Key: {'✓ SET' if API_KEY and len(API_KEY) > 10 else '✗ NOT SET'}")
 logger.info(f"- Voice ID: {VOICE_ID}")
 logger.info(f"- Agent ID: {'✓ SET' if AGENT_ID else '✗ NOT SET'}")
 logger.info(f"- ElevenLabs Available: {ELEVENLABS_AVAILABLE}")
@@ -145,16 +142,20 @@ class ElevenLabsAgent:
                 logger.info("🎤 Using ElevenLabs Agent API...")
                 
                 # Use the agent to generate and play response
+                # Note: This is simplified as the Agent API can be complex.
+                # In a real app, you'd handle the streaming response.
                 response = self.conversational_ai.generate_response(
                     message=text,
                     voice_id=self.voice_id
                 )
                 
                 # Play the agent's audio response
-                if hasattr(response, 'audio') and response.audio:
-                    play(response.audio)
+                # This assumes the response is a stream or a complete audio object
+                audio_stream = response.audio_stream if hasattr(response, 'audio_stream') else response.audio
+                if audio_stream:
+                    _play_audio_stream(audio_stream)
                     logger.info(f"✓ Agent spoke successfully: {text[:50]}...")
-                    return True
+                return True
                     
             except Exception as e:
                 logger.error(f"✗ ElevenLabs Agent API error: {e}")
@@ -177,14 +178,46 @@ class ElevenLabsAgent:
                     )
                 )
                 
-                play(audio)
+                _play_audio_stream(audio)
                 logger.info(f"✓ Standard TTS successful: {text[:50]}...")
                 return True
                 
             except Exception as e:
-                logger.error(f"✗ Standard TTS failed: {e}")
-                
+                logger.error(f"✗ Standard TTS error: {e}")
+                return False
+def _play_audio_stream(audio_stream):
+    """Play a streaming audio response from ElevenLabs using PyAudio."""
+    if not PYAUDIO_AVAILABLE:
+        logger.error("PyAudio not available. Cannot play audio stream.")
         return False
+        
+    try:
+        p = pyaudio.PyAudio()
+
+        stream = p.open(format=pyaudio.paInt16,
+                        channels=1,
+                        rate=22050,
+                        output=True)
+
+        with audio_stream as stream_source:
+            for chunk in stream_source:
+                if chunk:
+                    stream.write(chunk)
+
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+        return True
+    except Exception as e:
+        logger.error(f"Error playing audio stream: {e}")
+        return False
+        for chunk in stream_source:
+            if chunk:
+                stream.write(chunk)
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
 
 # Global agent instance
 elevenlabs_agent = None
@@ -197,37 +230,24 @@ def initialize_elevenlabs_agent():
         logger.warning("ElevenLabs package not available, will use pyttsx3 fallback")
         return False
     
+    # Test the API connection by trying to initialize the client
     try:
-        # Get API key from environment variable - more secure than hardcoding
-        api_key = os.environ.get("ELEVENLABS_API_KEY")
-        
-        if not api_key:
-            logger.error("⚠️ ElevenLabs API key not found in environment variables")
-            return False
-            
-        # Set the API key
-        set_api_key(api_key)
-        
-        # Test the API connection
-        try:
-            # Use a simpler test to verify connection
-            if Models:
-                models = Models.from_api()
-                if models:
-                    logger.info("✅ ElevenLabs API connected successfully")
-                    # Initialize the agent
-                    elevenlabs_agent = ElevenLabsAgent(voice_id=VOICE_ID, agent_id=AGENT_ID)
-                    return True
-            else:
-                logger.warning("Models API not available, proceeding with basic initialization")
+        if API_KEY:
+            client = ElevenLabs(api_key=API_KEY)
+            # Try a simple API call to verify the key
+            voices = client.voices.get_all()
+            if voices:
+                logger.info("✅ ElevenLabs API connected successfully")
                 elevenlabs_agent = ElevenLabsAgent(voice_id=VOICE_ID, agent_id=AGENT_ID)
                 return True
-        except Exception as e:
-            logger.error(f"❌ ElevenLabs API connection test failed: {str(e)}")
+            else:
+                logger.error("❌ ElevenLabs API key seems invalid or has no accessible voices.")
+                return False
+        else:
+            logger.error("❌ ElevenLabs API key not set.")
             return False
-            
     except Exception as e:
-        logger.error(f"❌ ElevenLabs not available - {str(e)}")
+        logger.error(f"❌ ElevenLabs API connection test failed: {str(e)}")
         return False
 
 def generate_speech(text_to_speak, voice="Rachel"):
@@ -237,31 +257,19 @@ def generate_speech(text_to_speak, voice="Rachel"):
     text_to_speak = ''.join(c for c in text_to_speak if ord(c) < 65536)
     
     # Try ElevenLabs first
-    if ELEVENLABS_AVAILABLE:
+    if ELEVENLABS_AVAILABLE and API_KEY:
         try:
-            # Get API key
-            api_key = os.environ.get("ELEVENLABS_API_KEY")
-            if not api_key:
-                logger.warning("⚠️ ElevenLabs not available, using pyttsx3...")
-                return _fallback_pyttsx3(text_to_speak)
-                
-            # Generate speech with ElevenLabs
-            voice_settings = VoiceSettings(stability=0.71, similarity_boost=0.5, style=0.0, use_speaker_boost=True)
+            logger.info("🔊 Using ElevenLabs standard TTS...")
             
             # Generate audio using the newer API
-            audio = generate(
+            audio_stream = generate(
                 text=text_to_speak,
                 voice=voice,
                 model="eleven_turbo_v2",
-                voice_settings=voice_settings,
+                stream=True
             )
             
-            # Save to temporary file and play
-            with open("temp_audio.mp3", "wb") as f:
-                f.write(audio)
-                
-            # Play the audio file
-            _play_audio_file("temp_audio.mp3")
+            _play_audio_stream(audio_stream)
                 
             logger.info(f"✓ ElevenLabs successful: {text_to_speak[:50]}...")
             return True
@@ -276,6 +284,10 @@ def generate_speech(text_to_speak, voice="Rachel"):
 
 def _fallback_pyttsx3(text_to_speak):
     """Fallback to pyttsx3 for speech generation."""
+    if not PYTTSX3_AVAILABLE:
+        logger.error("❌ pyttsx3 is not available. Cannot generate speech.")
+        return False
+        
     try:
         # Initialize the pyttsx3 engine
         engine = pyttsx3.init()
@@ -299,44 +311,16 @@ def _fallback_pyttsx3(text_to_speak):
 
 def _play_audio_file(file_path):
     """Play an audio file."""
-    try:
-        # Try pygame first
-        try:
-            import pygame
-            pygame.mixer.init()
-            pygame.mixer.music.load(file_path)
-            pygame.mixer.music.play()
-            while pygame.mixer.music.get_busy():
-                pygame.time.Clock().tick(10)
-            # Clean up temporary file
-            try:
-                os.remove(file_path)
-            except:
-                pass
-            return True
-        except ImportError:
-            logger.warning("pygame not available, trying alternative playback method")
-        
-        # If pygame fails, try using the play function if available
-        if play and os.path.exists(file_path):
-            try:
-                with open(file_path, 'rb') as f:
-                    audio_data = f.read()
-                play(audio_data)
-                os.remove(file_path)
-                return True
-            except Exception as play_e:
-                logger.error(f"❌ Play function also failed: {play_e}")
-        
-        # Clean up file if we couldn't play it
-        try:
-            os.remove(file_path)
-        except:
-            pass
+    if not PYDUB_AVAILABLE:
+        logger.error("❌ pydub not available. Cannot play audio file.")
         return False
         
+    try:
+        song = AudioSegment.from_file(file_path)
+        pydub_play(song)
+        return True
     except Exception as e:
-        logger.error(f"❌ Error playing audio file: {str(e)}")
+        logger.error(f"❌ pydub error playing audio file: {e}")
         return False
 
 def _play_text_via_modern_api(text_to_speak, voice="Rachel"):
@@ -444,7 +428,7 @@ class SimpleVoiceAssistant:
         
         if any(phrase in transcript_lower for phrase in ["today's schedule", "my schedule today", "schedule for today"]):
             try:
-                schedule = get_today_schedule(self.user_id)
+                schedule = get_today_schedule()
                 if schedule:
                     return f"Here's your schedule for today: {schedule}"
                 else:
@@ -455,7 +439,7 @@ class SimpleVoiceAssistant:
         
         if "next meeting" in transcript_lower:
             try:
-                next_meeting = get_next_meeting(self.user_id)
+                next_meeting = get_next_meeting()
                 if next_meeting:
                     return f"Your next meeting is: {next_meeting}"
                 else:
@@ -466,7 +450,7 @@ class SimpleVoiceAssistant:
         
         if "free time" in transcript_lower:
             try:
-                free_time = get_free_time_today(self.user_id)
+                free_time = get_free_time_today()
                 if free_time:
                     return f"Your free time today: {free_time}"
                 else:
@@ -551,7 +535,7 @@ def _start_voice_assistant_internal(user_id: uuid.UUID):
             new_db_conversation = DBConversation(
                 user_id=user_id,
                 title=f"Voice Chat - {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}",
-                created_at=datetime.now(timezone.utc)
+                started_at=datetime.now(timezone.utc)
             )
             db.session.add(new_db_conversation)
             db.session.commit()
@@ -729,7 +713,7 @@ class VoiceAssistant:
                 response_text = simple_assistant._simulate_llm_response(transcript)
                 
                 self._log_to_frontend(f"🤖 Assistant: {response_text}", 'info')
-                self._log_to_database(self.user_id, 'AGENT', response_text, self.conversation_id)
+                self._log_to_database(self.user_id, 'ASSISTANT', response_text, self.conversation_id)
                 
                 self._play_text_via_modern_api(response_text)
 
