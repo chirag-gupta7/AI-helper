@@ -8,6 +8,10 @@ import subprocess
 import logging
 from pathlib import Path
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -48,6 +52,14 @@ def main():
         # Change to the project directory
         project_root = Path(__file__).parent
         os.chdir(project_root)
+        
+        # Verify environment variables are loaded
+        api_key = os.environ.get('ELEVENLABS_API_KEY')
+        if api_key:
+            logger.info("✅ ElevenLabs API key loaded successfully")
+        else:
+            logger.warning("⚠️ ElevenLabs API key not found in environment variables")
+            logger.warning("⚠️ Make sure your .env file is in the root directory and contains ELEVENLABS_API_KEY")
         
         # Install requirements
         if not install_requirements():

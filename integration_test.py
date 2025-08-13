@@ -5,6 +5,10 @@ Simple test script to verify the voice system integration
 import os
 import sys
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 def test_imports():
     """Test all imports"""
     print("🧪 Testing Imports...")

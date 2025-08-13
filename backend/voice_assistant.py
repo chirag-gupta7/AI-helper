@@ -37,8 +37,12 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
+
 # Setup logging
 logger = logging.getLogger(__name__)
+
+# Import our improved ElevenLabs integration
+from .elevenlabs_integration import ElevenLabsService, elevenlabs_available
 
 # Check if ElevenLabs is installed and import it with improved error handling
 try:
@@ -98,7 +102,6 @@ from .google_calendar_integration import (
     get_next_meeting,
     get_free_time_today
 )
-
 # ElevenLabs Agent Implementation
 class ElevenLabsAgent:
     """ElevenLabs Conversational Agent Implementation with proper Agent API"""
@@ -186,101 +189,103 @@ class ElevenLabsAgent:
                 logger.error(f"✗ Standard TTS error: {e}")
                 return False
 def _play_audio_stream(audio_stream):
-    """Play a streaming audio response from ElevenLabs using PyAudio."""
+    """Play a streaming audio response using PyAudio with improved error handling"""
     if not PYAUDIO_AVAILABLE:
-        logger.error("PyAudio not available. Cannot play audio stream.")
+        logger.error("❌ PyAudio not available. Cannot play audio stream.")
         return False
         
     try:
         p = pyaudio.PyAudio()
-
         stream = p.open(format=pyaudio.paInt16,
-                        channels=1,
-                        rate=22050,
-                        output=True)
-
-        with audio_stream as stream_source:
-            for chunk in stream_source:
-                if chunk:
-                    stream.write(chunk)
-
+                      channels=1,
+                      rate=22050,
+                      output=True)
+                      
+        # Process the stream safely
+        try:
+            with audio_stream as stream_source:
+                for chunk in stream_source:
+                    if chunk:
+                        stream.write(chunk)
+        except Exception as stream_error:
+            logger.error(f"❌ Error processing audio stream: {stream_error}")
+            return False
+            
+        # Clean up resources
         stream.stop_stream()
         stream.close()
         p.terminate()
         return True
     except Exception as e:
-        logger.error(f"Error playing audio stream: {e}")
+        logger.error(f"❌ Error setting up audio playback: {e}")
         return False
-        for chunk in stream_source:
-            if chunk:
-                stream.write(chunk)
 
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
+# Global ElevenLabs service instance
+elevenlabs_service = ElevenLabsService()
 
-# Global agent instance
-elevenlabs_agent = None
-
-def initialize_elevenlabs_agent():
-    """Initialize ElevenLabs agent with API key from environment variables."""
-    global elevenlabs_agent
+def initialize_elevenlabs_service():
+    """Initialize ElevenLabs service with API key from environment variables."""
+    global elevenlabs_service
     
-    if not ELEVENLABS_AVAILABLE:
-        logger.warning("ElevenLabs package not available, will use pyttsx3 fallback")
+    if not elevenlabs_available:
+        logger.warning("⚠️ ElevenLabs package not available")
         return False
     
-    # Test the API connection by trying to initialize the client
     try:
-        if API_KEY:
-            client = ElevenLabs(api_key=API_KEY)
-            # Try a simple API call to verify the key
-            voices = client.voices.get_all()
-            if voices:
-                logger.info("✅ ElevenLabs API connected successfully")
-                elevenlabs_agent = ElevenLabsAgent(voice_id=VOICE_ID, agent_id=AGENT_ID)
-                return True
-            else:
-                logger.error("❌ ElevenLabs API key seems invalid or has no accessible voices.")
-                return False
+        success = elevenlabs_service.initialize()
+        if success:
+            logger.info("✅ ElevenLabs service initialized successfully")
+            return True
         else:
-            logger.error("❌ ElevenLabs API key not set.")
+            logger.warning("⚠️ ElevenLabs service initialization failed")
             return False
     except Exception as e:
-        logger.error(f"❌ ElevenLabs API connection test failed: {str(e)}")
+        logger.error(f"❌ Error initializing ElevenLabs service: {e}")
         return False
-
-def generate_speech(text_to_speak, voice="Rachel"):
-    """Generate speech using ElevenLabs, with fallback to pyttsx3."""
     
-    # Remove any problematic characters that might cause encoding issues
-    text_to_speak = ''.join(c for c in text_to_speak if ord(c) < 65536)
+def generate_speech(text_to_speak):
+    """Generate speech from text using available TTS engines"""
+    
+    # Remove all emojis and problematic Unicode characters
+    emoji_pattern = re.compile("["
+                           u"\U0001F600-\U0001F64F"  # emoticons
+                           u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                           u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                           u"\U0001F700-\U0001F77F"  # alchemical symbols
+                           u"\U0001F780-\U0001F7FF"  # Geometric Shapes
+                           u"\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+                           u"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+                           u"\U0001FA00-\U0001FA6F"  # Chess Symbols
+                           u"\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+                           u"\U00002702-\U000027B0"  # Dingbats
+                           u"\U000024C2-\U0001F251" 
+                           "]+", flags=re.UNICODE)
+    
+    filtered_text = emoji_pattern.sub(r'', text_to_speak)
     
     # Try ElevenLabs first
-    if ELEVENLABS_AVAILABLE and API_KEY:
+    if elevenlabs_available and elevenlabs_service.initialized:
         try:
-            logger.info("🔊 Using ElevenLabs standard TTS...")
+            logger.info("🔊 Using ElevenLabs for speech...")
+            audio_stream = elevenlabs_service.generate_speech(filtered_text)
             
-            # Generate audio using the newer API
-            audio_stream = generate(
-                text=text_to_speak,
-                voice=voice,
-                model="eleven_turbo_v2",
-                stream=True
-            )
-            
-            _play_audio_stream(audio_stream)
+            if audio_stream:
+                success = _play_audio_stream(audio_stream)
+                if success:
+                    logger.info(f"✅ ElevenLabs speech successful: {filtered_text[:50]}...")
+                    return True
+                else:
+                    logger.warning("⚠️ Failed to play ElevenLabs audio stream")
+            else:
+                logger.warning("⚠️ ElevenLabs returned empty audio stream")
                 
-            logger.info(f"✓ ElevenLabs successful: {text_to_speak[:50]}...")
-            return True
-            
         except Exception as e:
             logger.error(f"❌ ElevenLabs error: {str(e)}")
-            logger.warning("⚠️ ElevenLabs not available, using pyttsx3...")
-            return _fallback_pyttsx3(text_to_speak)
-    else:
-        logger.info("🔊 Using pyttsx3 fallback...")
-        return _fallback_pyttsx3(text_to_speak)
+            
+    # Fall back to pyttsx3
+    logger.info("🔊 Using pyttsx3 fallback...")
+    return _fallback_pyttsx3(filtered_text)
+
 
 def _fallback_pyttsx3(text_to_speak):
     """Fallback to pyttsx3 for speech generation."""
@@ -292,8 +297,27 @@ def _fallback_pyttsx3(text_to_speak):
         # Initialize the pyttsx3 engine
         engine = pyttsx3.init()
         
-        # Convert non-ASCII characters to their closest ASCII equivalent or remove them
-        safe_text = ''.join(c if ord(c) < 128 else ' ' for c in text_to_speak)
+        # Filter out emojis and other problematic Unicode characters completely
+        # This is more robust than the current approach that only handles ASCII
+        import re
+        # Remove all emojis and special Unicode characters
+        emoji_pattern = re.compile("["
+                                   u"\U0001F600-\U0001F64F"  # emoticons
+                                   u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                                   u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                                   u"\U0001F700-\U0001F77F"  # alchemical symbols
+                                   u"\U0001F780-\U0001F7FF"  # Geometric Shapes
+                                   u"\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+                                   u"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+                                   u"\U0001FA00-\U0001FA6F"  # Chess Symbols
+                                   u"\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+                                   u"\U00002702-\U000027B0"  # Dingbats
+                                   u"\U000024C2-\U0001F251" 
+                                   "]+", flags=re.UNICODE)
+        
+        safe_text = emoji_pattern.sub(r'', text_to_speak)
+        # Additional safety - only keep printable ASCII characters if still having issues
+        safe_text = ''.join(c for c in safe_text if ord(c) < 127)
         
         # Set properties (optional)
         engine.setProperty('rate', 180)  # Speed of speech
@@ -308,6 +332,7 @@ def _fallback_pyttsx3(text_to_speak):
     except Exception as e:
         logger.error(f"❌ pyttsx3 error: {str(e)}")
         return False
+    
 
 def _play_audio_file(file_path):
     """Play an audio file."""
@@ -356,9 +381,9 @@ class SimpleVoiceAssistant:
         self.user_transcript_queue = queue.Queue()
         
         # Initialize ElevenLabs agent
-        global elevenlabs_agent
-        if not elevenlabs_agent:
-            agent_initialized = initialize_elevenlabs_agent()
+        global elevenlabs_service
+        if not elevenlabs_service.initialized:
+            agent_initialized = initialize_elevenlabs_service()
             if agent_initialized:
                 logger.info("✓ ElevenLabs agent ready for SimpleVoiceAssistant")
             else:
@@ -370,13 +395,8 @@ class SimpleVoiceAssistant:
         
         logger.info(f"🗣️  Speaking: {text[:100]}...")
         
-        # Try ElevenLabs agent first
-        if elevenlabs_agent:
-            success = elevenlabs_agent.speak_with_agent(text, "Voice assistant conversation")
-        
-        # Fallback to generate_speech function
-        if not success:
-            success = generate_speech(text)
+        # Use the improved generate_speech function which handles ElevenLabs and fallback
+        success = generate_speech(text)
         
         # Log result
         if success:
@@ -519,10 +539,10 @@ def _start_voice_assistant_internal(user_id: uuid.UUID):
     try:
         current_user_id = user_id
         
-        # Initialize ElevenLabs agent
-        agent_initialized = initialize_elevenlabs_agent()
+        # Initialize ElevenLabs service
+        agent_initialized = initialize_elevenlabs_service()
         if agent_initialized:
-            logger.info("✓ ElevenLabs conversational agent initialized successfully")
+            logger.info("✓ ElevenLabs service initialized successfully")
         else:
             logger.warning("⚠️  ElevenLabs agent not available, using fallback TTS")
         
@@ -663,10 +683,10 @@ class VoiceAssistant:
         self.status = "Listening"
         self._log_to_frontend("🚀 Starting voice assistant...", 'info')
 
-        # Initialize ElevenLabs agent
-        agent_initialized = initialize_elevenlabs_agent()
+        # Initialize ElevenLabs service
+        agent_initialized = initialize_elevenlabs_service()
         if agent_initialized:
-            self._log_to_frontend("✅ ElevenLabs Agent initialized", 'success')
+            self._log_to_frontend("✅ ElevenLabs Service initialized", 'success')
         else:
             self._log_to_frontend("⚠️  Using fallback TTS", 'warning')
 
@@ -776,10 +796,10 @@ def test_voice_synthesis():
     """Test function to verify ElevenLabs setup"""
     logger.info("🧪 Testing voice synthesis...")
     
-    # Initialize agent
-    success = initialize_elevenlabs_agent()
+    # Initialize service
+    success = initialize_elevenlabs_service()
     if success:
-        logger.info("✅ Agent initialization successful")
+        logger.info("✅ ElevenLabs service initialization successful")
         
         # Test speech
         test_text = "Hello! This is a test of the ElevenLabs voice synthesis system."
