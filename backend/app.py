@@ -3,6 +3,15 @@ import os
 import sys
 import logging
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+        # Also patch Flask's logger to use UTF-8
+        logging.getLogger('flask.app').handlers[0].encoding = 'utf-8'
+        logging.getLogger('werkzeug').handlers[0].encoding = 'utf-8'
+    except Exception:
+        pass
 # Apply Flask compatibility patches BEFORE importing Flask
 from .flask_patch import apply_flask_patches
 apply_flask_patches()
@@ -61,7 +70,7 @@ from .google_calendar_integration import (
     set_event_reminder
 )
 # Import the new VoiceAssistant class
-from .voice_assistant import VoiceAssistant, test_voice_synthesis, initialize_elevenlabs_agent
+from .voice_assistant import VoiceAssistant, test_voice_synthesis, initialize_elevenlabs_service
 # Import the microphone handler
 from .microphone_handler import MicrophoneHandler
 # Import the enhanced socket fix
@@ -900,7 +909,7 @@ def test_voice_system():
         result = test_voice_synthesis()
         
         # Test agent initialization
-        agent_test = initialize_elevenlabs_agent()
+        agent_test = initialize_elevenlabs_service()
         
         log_to_database(user_id, 'INFO', f"Voice system test completed - Result: {result}")
         

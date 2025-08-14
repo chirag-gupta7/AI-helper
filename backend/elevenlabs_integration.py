@@ -22,8 +22,9 @@ elevenlabs_available = False
 
 # Try to import ElevenLabs packages with better error handling
 try:
-    from elevenlabs import generate, set_api_key, Voice, VoiceSettings
+    # We now import the client and not the top-level 'generate' function
     from elevenlabs.client import ElevenLabs
+    from elevenlabs import Voice, VoiceSettings
     
     elevenlabs_available = True
     logger.info("✅ ElevenLabs package successfully imported")
@@ -57,10 +58,7 @@ class ElevenLabsService:
             try:
                 logger.info(f"Attempt {attempt+1}/{MAX_RETRIES} to initialize ElevenLabs...")
                 
-                # Set the API key
-                set_api_key(self.api_key)
-                
-                # Create client
+                # Create client (API key is passed directly to the client)
                 self.client = ElevenLabs(api_key=self.api_key)
                 
                 # Test connection by getting user info
@@ -100,12 +98,12 @@ class ElevenLabsService:
             # Filter problematic characters from the text to prevent issues
             filtered_text = ''.join(c for c in text if ord(c) < 65536)
             
-            # Generate audio using ElevenLabs
-            audio = generate(
+            # Use the updated API method for ElevenLabs 2.9.2+
+            audio = self.client.text_to_speech.convert(
                 text=filtered_text,
-                voice=self.voice_id,
-                model="eleven_turbo_v2",
-                stream=True
+                voice_id=self.voice_id,
+                model_id="eleven_turbo_v2",
+                output_format="mp3_44100_128"
             )
             
             logger.info(f"✅ Speech generated successfully for: {filtered_text[:50]}...")

@@ -46,8 +46,9 @@ from .elevenlabs_integration import ElevenLabsService, elevenlabs_available
 
 # Check if ElevenLabs is installed and import it with improved error handling
 try:
-    from elevenlabs import generate, set_api_key, Voice, VoiceSettings
+    # We now import the client and not the top-level 'generate' function
     from elevenlabs.client import ElevenLabs
+    from elevenlabs import Voice, VoiceSettings
     from elevenlabs.conversational_ai import ConversationalAI
     ELEVENLABS_AVAILABLE = True
     logger.info("ElevenLabs package successfully imported")
@@ -84,13 +85,7 @@ logger.info(f"- Voice ID: {VOICE_ID}")
 logger.info(f"- Agent ID: {'✓ SET' if AGENT_ID else '✗ NOT SET'}")
 logger.info(f"- ElevenLabs Available: {ELEVENLABS_AVAILABLE}")
 
-# Configure ElevenLabs API
-if ELEVENLABS_AVAILABLE and API_KEY:
-    try:
-        set_api_key(API_KEY)
-        logger.info("✓ ElevenLabs API key configured successfully")
-    except Exception as e:
-        logger.error(f"✗ Error configuring ElevenLabs API key: {e}")
+# Note: API key configuration is now handled in the ElevenLabsService class
 
 from .memory import ConversationMemory, ConversationContext
 from .models import Conversation as DBConversation, Message, MessageType, db, User, Log
@@ -169,16 +164,11 @@ class ElevenLabsAgent:
             try:
                 logger.info("🔊 Using ElevenLabs standard TTS...")
                 
-                audio = self.client.generate(
+                audio = self.client.text_to_speech.convert(
                     text=text,
-                    voice=self.voice_id,
-                    model="eleven_turbo_v2",
-                    voice_settings=VoiceSettings(
-                        stability=0.5,
-                        similarity_boost=0.8,
-                        style=0.3,
-                        use_speaker_boost=True
-                    )
+                    voice_id=self.voice_id,
+                    model_id="eleven_turbo_v2",
+                    output_format="mp3_44100_128"
                 )
                 
                 _play_audio_stream(audio)
@@ -188,37 +178,72 @@ class ElevenLabsAgent:
             except Exception as e:
                 logger.error(f"✗ Standard TTS error: {e}")
                 return False
-def _play_audio_stream(audio_stream):
-    """Play a streaming audio response using PyAudio with improved error handling"""
-    if not PYAUDIO_AVAILABLE:
-        logger.error("❌ PyAudio not available. Cannot play audio stream.")
+def _play_audio_stream(audio_data):
+    """Play audio data using PyAudio or pydub with improved error handling"""
+    if not audio_data:
+        logger.error("❌ No audio data provided")
         return False
-        
-    try:
-        p = pyaudio.PyAudio()
-        stream = p.open(format=pyaudio.paInt16,
-                      channels=1,
-                      rate=22050,
-                      output=True)
-                      
-        # Process the stream safely
+    
+    # Try using pydub first if available (better for MP3)
+    if PYDUB_AVAILABLE:
         try:
-            with audio_stream as stream_source:
-                for chunk in stream_source:
-                    if chunk:
-                        stream.write(chunk)
-        except Exception as stream_error:
-            logger.error(f"❌ Error processing audio stream: {stream_error}")
-            return False
+            import io
+            audio_io = io.BytesIO(audio_data)
+            audio_segment = AudioSegment.from_file(audio_io, format="mp3")
+            pydub_play(audio_segment)
+            logger.info("✅ Audio played successfully using pydub")
+            return True
+        except Exception as e:
+            logger.warning(f"⚠️ pydub playback failed: {e}, trying PyAudio...")
+    
+    # Fallback to PyAudio (for raw audio)
+    if PYAUDIO_AVAILABLE:
+        try:
+            p = pyaudio.PyAudio()
             
-        # Clean up resources
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
-        return True
-    except Exception as e:
-        logger.error(f"❌ Error setting up audio playback: {e}")
-        return False
+            # If it's bytes data (not a stream), we need to handle it differently
+            if isinstance(audio_data, bytes):
+                # For MP3 data, we'd need to decode it first, but this is complex
+                # This is a basic implementation for raw PCM data
+                stream = p.open(format=pyaudio.paInt16,
+                              channels=1,
+                              rate=22050,
+                              output=True)
+                stream.write(audio_data)
+                stream.stop_stream()
+                stream.close()
+                p.terminate()
+                logger.info("✅ Audio played successfully using PyAudio")
+                return True
+            else:
+                # Handle streaming audio (old format)
+                stream = p.open(format=pyaudio.paInt16,
+                              channels=1,
+                              rate=22050,
+                              output=True)
+                              
+                # Process the stream safely
+                try:
+                    with audio_data as stream_source:
+                        for chunk in stream_source:
+                            if chunk:
+                                stream.write(chunk)
+                except Exception as stream_error:
+                    logger.error(f"❌ Error processing audio stream: {stream_error}")
+                    return False
+                finally:
+                    stream.stop_stream()
+                    stream.close()
+                    p.terminate()
+                
+                logger.info("✅ Audio stream played successfully using PyAudio")
+                return True
+                
+        except Exception as e:
+            logger.error(f"❌ PyAudio playback error: {e}")
+    
+    logger.error("❌ No audio playback method available")
+    return False
 
 # Global ElevenLabs service instance
 elevenlabs_service = ElevenLabsService()
