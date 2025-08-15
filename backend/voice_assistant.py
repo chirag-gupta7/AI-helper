@@ -31,30 +31,61 @@ except ImportError:
 if hasattr(sys.stdout, "reconfigure"):
     try:
         if sys.stdout.encoding != 'utf-8':
-            sys.stdout.reconfigure(encoding='utf-8')
+            sys.stdout.reconfigure(encoding='utf-8', errors='ignore')
         if sys.stderr.encoding != 'utf-8':
-            sys.stderr.reconfigure(encoding='utf-8')
+            sys.stderr.reconfigure(encoding='utf-8', errors='ignore')
     except Exception:
         pass
 
+# Clean logging setup
+class CleanFormatter(logging.Formatter):
+    def format(self, record):
+        if hasattr(record, 'msg') and isinstance(record.msg, str):
+            record.msg = record.msg.encode('ascii', 'ignore').decode('ascii')
+        return super().format(record)
 
-# Setup logging
+# Setup clean logger
 logger = logging.getLogger(__name__)
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(CleanFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+
+def clean_log(message, level='INFO'):
+    """Log clean messages without problematic characters"""
+    clean_message = message.encode('ascii', 'ignore').decode('ascii')
+    if level == 'INFO':
+        logger.info(clean_message)
+    elif level == 'ERROR':
+        logger.error(clean_message)
+    elif level == 'WARNING':
+        logger.warning(clean_message)
 
 # Import our improved ElevenLabs integration
 from .elevenlabs_integration import ElevenLabsService, elevenlabs_available
 
 # Check if ElevenLabs is installed and import it with improved error handling
 try:
-    # We now import the client and not the top-level 'generate' function
+    # Import only available components - ConversationalAI might not be available
     from elevenlabs.client import ElevenLabs
     from elevenlabs import Voice, VoiceSettings
-    from elevenlabs.conversational_ai import ConversationalAI
     ELEVENLABS_AVAILABLE = True
-    logger.info("ElevenLabs package successfully imported")
+    clean_log("ElevenLabs package successfully imported")
+    
+    # Try importing ConversationalAI separately
+    try:
+        from elevenlabs.conversational_ai import ConversationalAI
+        CONVERSATIONAL_AI_AVAILABLE = True
+        clean_log("ElevenLabs ConversationalAI available")
+    except ImportError:
+        CONVERSATIONAL_AI_AVAILABLE = False
+        clean_log("ElevenLabs ConversationalAI not available - using basic TTS only", 'WARNING')
+        
 except ImportError as e:
     ELEVENLABS_AVAILABLE = False
-    logger.warning(f"ElevenLabs package not available: {e}, will use pyttsx3 fallback")
+    CONVERSATIONAL_AI_AVAILABLE = False
+    clean_log(f"ElevenLabs package not available: {e}, will use pyttsx3 fallback", 'WARNING')
 
 # Check if pyttsx3 is installed and import it
 try:
@@ -79,11 +110,11 @@ VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # Rach
 AGENT_ID = os.environ.get("ELEVENLABS_AGENT_ID")
 
 # Validate configuration
-logger.info(f"ElevenLabs Configuration:")
-logger.info(f"- API Key: {'✓ SET' if API_KEY and len(API_KEY) > 10 else '✗ NOT SET'}")
-logger.info(f"- Voice ID: {VOICE_ID}")
-logger.info(f"- Agent ID: {'✓ SET' if AGENT_ID else '✗ NOT SET'}")
-logger.info(f"- ElevenLabs Available: {ELEVENLABS_AVAILABLE}")
+clean_log("ElevenLabs Configuration:")
+clean_log(f"- API Key: {'SET' if API_KEY and len(API_KEY) > 10 else 'NOT SET'}")
+clean_log(f"- Voice ID: {VOICE_ID}")
+clean_log(f"- Agent ID: {'SET' if AGENT_ID else 'NOT SET'}")
+clean_log(f"- ElevenLabs Available: {ELEVENLABS_AVAILABLE}")
 
 # Note: API key configuration is now handled in the ElevenLabsService class
 
@@ -253,19 +284,19 @@ def initialize_elevenlabs_service():
     global elevenlabs_service
     
     if not elevenlabs_available:
-        logger.warning("⚠️ ElevenLabs package not available")
+        clean_log("ElevenLabs package not available", 'WARNING')
         return False
     
     try:
         success = elevenlabs_service.initialize()
         if success:
-            logger.info("✅ ElevenLabs service initialized successfully")
+            clean_log("ElevenLabs service initialized successfully")
             return True
         else:
-            logger.warning("⚠️ ElevenLabs service initialization failed")
+            clean_log("ElevenLabs service initialization failed", 'WARNING')
             return False
     except Exception as e:
-        logger.error(f"❌ Error initializing ElevenLabs service: {e}")
+        clean_log(f"Error initializing ElevenLabs service: {e}", 'ERROR')
         return False
     
 def generate_speech(text_to_speak):
@@ -410,9 +441,9 @@ class SimpleVoiceAssistant:
         if not elevenlabs_service.initialized:
             agent_initialized = initialize_elevenlabs_service()
             if agent_initialized:
-                logger.info("✓ ElevenLabs agent ready for SimpleVoiceAssistant")
+                clean_log("ElevenLabs agent ready for SimpleVoiceAssistant")
             else:
-                logger.warning("⚠️  ElevenLabs agent not available, using fallback")
+                clean_log("ElevenLabs agent not available, using fallback", 'WARNING')
 
     def speak(self, text):
         """Speak using ElevenLabs agent with comprehensive fallback"""
@@ -711,9 +742,9 @@ class VoiceAssistant:
         # Initialize ElevenLabs service
         agent_initialized = initialize_elevenlabs_service()
         if agent_initialized:
-            self._log_to_frontend("✅ ElevenLabs Service initialized", 'success')
+            self._log_to_frontend("ElevenLabs Service initialized", 'success')
         else:
-            self._log_to_frontend("⚠️  Using fallback TTS", 'warning')
+            self._log_to_frontend("Using fallback TTS", 'warning')
 
         with _flask_app_instance.app_context():
             session_id = str(uuid.uuid4())
@@ -735,8 +766,8 @@ class VoiceAssistant:
             user = User.query.get(self.user_id)
             user_name = user.username if user else "User"
 
-        self._log_to_frontend("🎧 Voice assistant session started.", 'success')
-        self._log_to_frontend("👂 Listening for commands...", 'status')
+        self._log_to_frontend("Voice assistant session started.", 'success')
+        self._log_to_frontend("Listening for commands...", 'status')
 
         initial_greeting = "Hello! I'm your ElevenLabs powered voice assistant. How can I help you today?"
         self._play_text_via_modern_api(initial_greeting)
@@ -746,18 +777,18 @@ class VoiceAssistant:
                 transcript = self.user_transcript_queue.get(timeout=1)
                 
                 if transcript == "SHUTDOWN_SIGNAL":
-                    self._log_to_frontend("🛑 Shutting down voice assistant...", 'status')
+                    self._log_to_frontend("Shutting down voice assistant...", 'status')
                     self.status = "Inactive"
                     break
 
-                self._log_to_frontend(f"👤 User: {transcript}", 'info')
+                self._log_to_frontend(f"User: {transcript}", 'info')
                 self._log_to_database(self.user_id, 'USER', transcript, self.conversation_id)
 
                 # Create simple assistant instance for processing
                 simple_assistant = SimpleVoiceAssistant(self.user_id, self.conversation_id)
                 response_text = simple_assistant._simulate_llm_response(transcript)
                 
-                self._log_to_frontend(f"🤖 Assistant: {response_text}", 'info')
+                self._log_to_frontend(f"Assistant: {response_text}", 'info')
                 self._log_to_database(self.user_id, 'ASSISTANT', response_text, self.conversation_id)
                 
                 self._play_text_via_modern_api(response_text)
@@ -769,11 +800,10 @@ class VoiceAssistant:
             except queue.Empty:
                 time.sleep(0.5)
             except Exception as e:
-                logger.error(f"Error in listening loop: {e}")
-                logger.error(traceback.format_exc())
-                self._log_to_frontend("💥 An unexpected error occurred.", 'error')
+                clean_log(f"Error in listening loop: {e}", 'ERROR')
+                self._log_to_frontend("An unexpected error occurred.", 'error')
 
-        self._log_to_frontend("👋 Voice assistant session ended.", 'info')
+        self._log_to_frontend("Voice assistant session ended.", 'info')
         self._log_to_database(self.user_id, 'INFO', "Voice assistant session ended.", self.conversation_id)
 
     def stop_listening(self):
@@ -783,7 +813,7 @@ class VoiceAssistant:
 
         self.is_listening = False
         self.status = "Inactive"
-        self._log_to_frontend("🛑 Voice assistant stopped.", 'info')
+        self._log_to_frontend("Voice assistant stopped.", 'info')
         
         try:
             self.user_transcript_queue.put("SHUTDOWN_SIGNAL")

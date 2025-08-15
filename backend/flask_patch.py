@@ -1,63 +1,58 @@
+# backend/flask_patch.py
 """
-Flask compatibility patch for newer Flask versions with older Flask-SocketIO
-Enhanced version with better error handling and compatibility.
+Flask compatibility patches for the voice assistant application.
+This module contains patches to ensure Flask works properly with the application.
 """
-import sys
+
 import logging
+import sys
+import os
 
 logger = logging.getLogger(__name__)
 
 def apply_flask_patches():
     """
-    Apply patches to make Flask-SocketIO work with newer Flask versions
-    by redirecting imports of deprecated/moved components.
+    Apply Flask compatibility patches.
+    This function is called before Flask is imported to ensure compatibility.
     """
     try:
-        import flask
-        import flask.globals
-        
-        # Check if we need to patch (if _request_ctx_stack is not in flask)
-        if not hasattr(flask, '_request_ctx_stack'):
-            logger.info("Applying Flask compatibility patch for SocketIO")
-            
-            # Create the attribute in flask module pointing to the correct location
-            from werkzeug.local import LocalStack
-            flask._request_ctx_stack = LocalStack()
-            
-            # Ensure flask.globals has _request_ctx_stack
-            if hasattr(flask, 'globals'):
-                if not hasattr(flask.globals, '_request_ctx_stack'):
-                    flask.globals._request_ctx_stack = flask._request_ctx_stack
-            
-            # Also patch flask_json if needed
-            if not hasattr(flask, 'json'):
-                import json
-                flask.json = json
-            
-            # Flask-SocketIO compatibility fixes
+        # Patch 1: Ensure proper UTF-8 encoding for console output
+        if hasattr(sys.stdout, "reconfigure"):
             try:
-                import flask_socketio
-                # Patch for newer Flask-SocketIO versions
-                if hasattr(flask_socketio, 'SocketIO'):
-                    original_init = flask_socketio.SocketIO.__init__
-                    
-                    def patched_init(self, app=None, **kwargs):
-                        # Remove problematic kwargs for newer versions
-                        kwargs.pop('async_handlers', None)
-                        return original_init(self, app, **kwargs)
-                    
-                    flask_socketio.SocketIO.__init__ = patched_init
-            except ImportError:
-                pass
-                
-            logger.info("✅ Flask compatibility patches applied successfully")
-            return True
-        else:
-            logger.info("Flask patch not needed")
-            return False
-            
+                sys.stdout.reconfigure(encoding="utf-8", errors="ignore")
+                sys.stderr.reconfigure(encoding="utf-8", errors="ignore")
+            except Exception as e:
+                logger.warning(f"Could not reconfigure stdout/stderr encoding: {e}")
+        
+        # Patch 2: Set environment variables for Flask compatibility
+        if not os.environ.get('FLASK_ENV'):
+            os.environ['FLASK_ENV'] = 'development'
+        
+        # Patch 3: Fix Werkzeug development server issues
+        # Remove problematic environment variables that cause KeyError
+        werkzeug_vars_to_remove = [
+            'WERKZEUG_SERVER_FD',
+            'WERKZEUG_RUN_MAIN'
+        ]
+        for var in werkzeug_vars_to_remove:
+            if var in os.environ:
+                del os.environ[var]
+        
+        # Set safe Werkzeug variables
+        os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+        
+        # Patch 4: Set proper locale for Unicode handling
+        try:
+            import locale
+            locale.setlocale(locale.LC_ALL, '')
+        except Exception as e:
+            logger.warning(f"Could not set locale: {e}")
+        
+        # Patch 5: Disable Flask reloader to prevent server issues
+        os.environ['FLASK_DEBUG'] = '0'
+        
+        logger.info("Flask compatibility patches applied successfully")
+        
     except Exception as e:
-        logger.error(f"Error applying Flask patch: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
-        return False
+        logger.error(f"Error applying Flask patches: {e}")
+        # Don't raise the exception to prevent startup failure

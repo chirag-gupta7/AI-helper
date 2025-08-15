@@ -1,70 +1,57 @@
 # Core Flask Framework - Compatible versions
-
 flask==2.3.3
 werkzeug==2.3.7
 python-dotenv==1.0.0
 
 # Database & ORM - Fixed versions for compatibility
-
 Flask-SQLAlchemy==3.0.5
 SQLAlchemy==1.4.53
 flask-migrate==4.0.5
 
 # HTTP & Async - Fixed versions to resolve conflicts
-
 requests==2.32.3
 httpx==0.28.1
 
 # Authentication & Security
-
 flask-login==0.6.3
 
 # CORS Support
-
 flask-cors==4.0.0
 
 # WebSocket Support
-
 flask-socketio==5.3.6
 
-# Voice & Audio
-
+# Voice & Audio - Fixed versions
 pyttsx3==2.90
-
-# SpeechRecognition - using specific version for Python 3.13 compatibility
-
-SpeechRecognition>=3.8.1
+SpeechRecognition==3.10.0
 pyaudio>=0.2.11
 pydub==0.25.1
 
-# ElevenLabs API - Using a more stable version
-
-elevenlabs>=1.0.0
-
-# Pydantic - Add this to ensure compatibility with elevenlabs
-
+# ElevenLabs API - Using compatible version without ConversationalAI
+elevenlabs==0.2.27
 
 # Google Services
-
 google-auth==2.23.4
 google-auth-oauthlib==1.1.0
-google-api-python-client==2.108.0
-google-auth-httplib2==0.1.1
+google-api-python-client==2.103.0
+
+# Additional required packages
+pydantic>=1.8.0
+typing-extensions>=4.0.0
+
+# Rate limiting
+flask-limiter==3.5.0
 
 # Date utility for parsing
-
 python-dateutil==2.8.2
 
 # Task Scheduling
-
 APScheduler==3.10.4
 
 # Production server
-# 
 gunicorn==21.2.0
 eventlet==0.33.3
 
 # Development & Testing
-
 pytest==7.4.3
 pytest-flask==1.3.0

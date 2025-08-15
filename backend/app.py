@@ -3,15 +3,37 @@ import os
 import sys
 import logging
 
+# Configure clean logging first - remove problematic characters
+class CleanFormatter(logging.Formatter):
+    def format(self, record):
+        # Remove all emoji and special unicode characters from log messages
+        if hasattr(record, 'msg') and isinstance(record.msg, str):
+            # Replace problematic characters
+            record.msg = record.msg.encode('ascii', 'ignore').decode('ascii')
+        return super().format(record)
+
+# Setup clean console output
 if hasattr(sys.stdout, "reconfigure"):
     try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-        # Also patch Flask's logger to use UTF-8
-        logging.getLogger('flask.app').handlers[0].encoding = 'utf-8'
-        logging.getLogger('werkzeug').handlers[0].encoding = 'utf-8'
+        sys.stdout.reconfigure(encoding="utf-8", errors="ignore")
+        sys.stderr.reconfigure(encoding="utf-8", errors="ignore")
     except Exception:
         pass
+
+# Configure logging with clean formatter
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# Apply clean formatter to all loggers
+for logger_name in ['flask.app', 'werkzeug', 'backend', __name__]:
+    logger = logging.getLogger(logger_name)
+    for handler in logger.handlers:
+        handler.setFormatter(CleanFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 # Apply Flask compatibility patches BEFORE importing Flask
 from .flask_patch import apply_flask_patches
 apply_flask_patches()
@@ -44,14 +66,42 @@ from .integration_utils import (
     setup_enhanced_logging
 )
 
-# Configure enhanced logging
-setup_enhanced_logging()
-logger = logging.getLogger(__name__)
+# Configure enhanced logging with clean output
+def setup_clean_logging():
+    """Setup clean logging without problematic characters"""
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    
+    # Remove existing handlers
+    for handler in logger.handlers[:]:
+        logger.removeHandler(handler)
+    
+    # Create clean handler
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(CleanFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(handler)
+    
+    return logger
 
-# Log environment setup
-logger.info("Environment variables loaded from .env file")
-logger.info(f"ElevenLabs API key: {'Set' if os.environ.get('ELEVENLABS_API_KEY') else 'Not set'}")
-logger.info(f"ElevenLabs voice ID: {os.environ.get('ELEVENLABS_VOICE_ID', 'Not set')}")
+# Setup clean logging
+logger = setup_clean_logging()
+
+# Clean log messages without problematic characters
+def clean_log(message, level='INFO'):
+    """Log a clean message without special characters"""
+    clean_message = message.encode('ascii', 'ignore').decode('ascii')
+    if level == 'INFO':
+        logger.info(clean_message)
+    elif level == 'ERROR':
+        logger.error(clean_message)
+    elif level == 'WARNING':
+        logger.warning(clean_message)
+
+# Log environment setup cleanly
+clean_log("Environment variables loaded from .env file")
+api_key_status = 'Set' if os.environ.get('ELEVENLABS_API_KEY') else 'Not set'
+clean_log(f"ElevenLabs API key: {api_key_status}")
+clean_log(f"ElevenLabs voice ID: {os.environ.get('ELEVENLABS_VOICE_ID', 'Not set')}")
 
 # Import configuration and other modules
 from .config import config
@@ -120,13 +170,11 @@ try:
     
     # Apply the enhanced socket fix for compatibility
     socketio = patch_socketio_emit(socketio)
-    logger.info("✅ SocketIO initialized and patched successfully")
+    clean_log("SocketIO initialized and patched successfully")
     
 except Exception as e:
-    logger.error(f"Failed to initialize SocketIO: {e}")
-    socketio = None
-
-# Enhanced database logging function
+    clean_log(f"Failed to initialize SocketIO: {e}", 'ERROR')
+    socketio = None# Enhanced database logging function
 @safe_database_operation
 def log_to_database(user_id, level, message, conversation_id=None):
     """Enhanced database logging with better error handling."""
@@ -194,16 +242,15 @@ def init_voice_assistant():
     
     try:
         if voice_assistant is None:
-            logger.info("Initializing voice assistant...")
+            clean_log("Initializing voice assistant...")
             voice_assistant = VoiceAssistant(app, on_voice_status_change, on_voice_log, log_to_database)
-            logger.info("Voice assistant initialized successfully")
+            clean_log("Voice assistant initialized successfully")
             return True
         else:
-            logger.info("Voice assistant already initialized")
+            clean_log("Voice assistant already initialized")
             return True
     except Exception as e:
-        logger.error(f"Failed to initialize voice assistant: {str(e)}")
-        logger.error(traceback.format_exc())
+        clean_log(f"Failed to initialize voice assistant: {str(e)}", 'ERROR')
         return False
 
 # --- ROUTES ---
@@ -963,22 +1010,121 @@ if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     host = os.getenv('HOST', '0.0.0.0')
     
-    logger.info(f"🚀 Starting Voice Assistant Backend on {host}:{port}")
-    logger.info(f"🔧 Debug mode: {app.config['DEBUG']}")
-    logger.info(f"👤 User: Chirag Gupta")
+    clean_log(f"Starting Voice Assistant Backend on {host}:{port}")
+    clean_log(f"Debug mode: {app.config['DEBUG']}")
+    clean_log("User: Chirag Gupta")
     
-    if app.config['DEBUG'] and not os.environ.get('WERKZEUG_RUN_MAIN'):
-        import webbrowser
-        time.sleep(1.5)
-        webbrowser.open_new_tab(f"http://127.0.0.1:{port}/static/index.html")
-        logger.info(f"🌍 Opened browser to http://127.0.0.1:{port}/static/index.html")
+    # Open browser in development mode (but don't rely on WERKZEUG_RUN_MAIN)
+    if app.config['DEBUG']:
+        try:
+            import webbrowser
+            import threading
+            def open_browser():
+                time.sleep(2)  # Wait for server to start
+                webbrowser.open_new_tab(f"http://127.0.0.1:{port}/static/index.html")
+                clean_log(f"Opened browser to http://127.0.0.1:{port}/static/index.html")
+            
+            # Open browser in a separate thread to avoid blocking
+            browser_thread = threading.Thread(target=open_browser, daemon=True)
+            browser_thread.start()
+        except Exception as e:
+            clean_log(f"Could not open browser: {e}", 'WARNING')
     
-    init_voice_assistant()
+    # Initialize voice assistant and check if it's working properly
+    clean_log("Initializing voice assistant...")
+    if init_voice_assistant():
+        clean_log("Voice assistant initialization successful")
+        
+        # Also initialize ElevenLabs service separately to ensure it's working
+        try:
+            from .voice_assistant import initialize_elevenlabs_service
+            if initialize_elevenlabs_service():
+                clean_log("ElevenLabs agent initialized successfully")
+            else:
+                clean_log("ElevenLabs agent initialization failed - using fallback TTS", 'WARNING')
+        except Exception as e:
+            clean_log(f"Error initializing ElevenLabs agent: {e}", 'ERROR')
+    else:
+        clean_log("Voice assistant initialization failed", 'ERROR')
 
-    socketio.run(
-        app,
-        host=host,
-        port=port,
-        debug=app.config['DEBUG'],
-        use_reloader=False
-    )
+    # Use a more robust server startup method
+    try:
+        # Clean up any problematic environment variables before starting
+        problematic_vars = ['WERKZEUG_SERVER_FD', 'WERKZEUG_RUN_MAIN']
+        for var in problematic_vars:
+            if var in os.environ:
+                del os.environ[var]
+                clean_log(f"Removed problematic environment variable: {var}")
+        
+        # Force set safe environment variables
+        os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+        
+        if socketio:
+            clean_log("Starting SocketIO server...")
+            try:
+                socketio.run(
+                    app,
+                    host=host,
+                    port=port,
+                    debug=False,  # Force debug to False to avoid Werkzeug issues
+                    use_reloader=False,
+                    allow_unsafe_werkzeug=True  # Allow unsafe Werkzeug for development
+                )
+            except KeyError as ke:
+                if 'WERKZEUG_SERVER_FD' in str(ke):
+                    clean_log("Werkzeug environment issue detected, trying direct Flask start...", 'WARNING')
+                    app.run(
+                        host=host,
+                        port=port,
+                        debug=False,
+                        use_reloader=False,
+                        threaded=True
+                    )
+                else:
+                    raise ke
+            except Exception as socketio_e:
+                clean_log(f"SocketIO server failed: {socketio_e}", 'ERROR')
+                clean_log("Falling back to basic Flask server...", 'WARNING')
+                app.run(
+                    host=host,
+                    port=port,
+                    debug=False,
+                    use_reloader=False,
+                    threaded=True
+                )
+        else:
+            clean_log("SocketIO not available, starting Flask app directly...")
+            app.run(
+                host=host,
+                port=port,
+                debug=False,
+                use_reloader=False,
+                threaded=True
+            )
+    except KeyError as ke:
+        if 'WERKZEUG_SERVER_FD' in str(ke):
+            clean_log("Werkzeug environment issue in main handler, using alternative startup...", 'WARNING')
+            try:
+                # Alternative startup method - create a new Flask app instance
+                from werkzeug.serving import make_server
+                server = make_server(host, port, app, threaded=True)
+                clean_log(f"Alternative server starting on {host}:{port}")
+                server.serve_forever()
+            except Exception as alt_e:
+                clean_log(f"Alternative server also failed: {alt_e}", 'ERROR')
+        else:
+            raise ke
+    except Exception as e:
+        clean_log(f"Server startup error: {e}", 'ERROR')
+        clean_log("Attempting fallback server startup...", 'WARNING')
+        try:
+            # Fallback: Simple Flask app without SocketIO
+            app.run(
+                host=host,
+                port=port,
+                debug=False,
+                use_reloader=False,
+                threaded=True
+            )
+        except Exception as fallback_e:
+            clean_log(f"Fallback server also failed: {fallback_e}", 'ERROR')

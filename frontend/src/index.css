@@ -3,8 +3,16 @@
   --font-mono: 'Roboto Mono', monospace;
   
   --primary-color: #646cff;
+  --accent-color: #646cff;
+  --accent-hover: #535bf2;
   --success-color: #4ade80;
+  --success-hover: #22c55e;
   --error-color: #f87171;
+  --text-primary: var(--text-color);
+  --text-secondary: var(--muted-color);
+  --bg-primary: var(--background-color);
+  --bg-secondary: var(--secondary-background);
+  --bg-hover: var(--hover-color);
   
   --light-background: #f8f9fa;
   --light-secondary-background: #ffffff;

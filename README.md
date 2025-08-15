@@ -2,28 +2,55 @@
 
 This project is a full-stack AI Voice Assistant with a Python-based backend and a React-based frontend. The assistant can understand voice commands, interact with external services like Google Calendar, and provide real-time feedback through a web interface.
 
-## Table of Contents
+## Quick Start
 
-- [Project Overview & Description](#project-overview--description)
-- [Key Features & Capabilities](#key-features--capabilities)
-- [Technical Architecture](#technical-architecture)
-- [Installation & Setup](#installation--setup)
-- [Usage Examples](#usage-examples)
-- [Contributing & Development](#contributing--development)
-- [Future Roadmap](#future-roadmap)
+1. **Install dependencies:**
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
 
-## Project Overview & Description
+2. **Configure environment:**
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   # Edit .env and add your ElevenLabs API key
+   ```
 
-The AI Voice Assistant is designed to provide a hands-free interface for managing tasks and retrieving information. It leverages speech recognition and natural language processing to understand user commands and perform actions, such as managing your Google Calendar. The web-based frontend serves as a control panel and a visual feedback mechanism, showing the assistant's status in real-time.
+3. **Check configuration:**
+   ```bash
+   python config_check.py
+   ```
 
-This project is for anyone interested in voice-controlled applications, AI/ML integration, or full-stack Python and JavaScript development.
+4. **Start the application:**
+   ```bash
+   python start.py
+   ```
+
+## Project Structure
+
+```
+AI/
+├── backend/                 # Python Flask backend
+│   ├── app.py              # Main Flask application
+│   ├── voice_assistant.py  # Voice processing logic
+│   ├── elevenlabs_integration.py  # ElevenLabs TTS integration
+│   ├── microphone_handler.py     # Speech recognition
+│   ├── google_calendar_integration.py  # Google Calendar API
+│   ├── requirements.txt    # Python dependencies
+│   └── static/            # Static web files
+├── frontend/              # React frontend (optional)
+├── .env                   # Environment configuration
+├── start.py              # Application launcher
+└── config_check.py       # Configuration validator
+```
 
 ## Key Features & Capabilities
 
-- **Voice Command Recognition**: Listens for and processes voice commands.
-- **Google Calendar Integration**: Fetches and displays upcoming events from your Google Calendar.
-- **Real-time Communication**: Uses WebSockets for instant communication between the frontend and backend.
-- **Web-based Control Panel**: An intuitive UI to start, stop, and monitor the voice assistant.
+- **Voice Command Recognition**: Listens for and processes voice commands using speech recognition
+- **ElevenLabs TTS Integration**: High-quality text-to-speech using ElevenLabs API
+- **Google Calendar Integration**: Fetches and displays upcoming events from your Google Calendar
+- **Real-time Communication**: Uses WebSockets for instant communication between frontend and backend
+- **Web-based Control Panel**: An intuitive UI to start, stop, and monitor the voice assistant
 
 ## Technical Architecture
 

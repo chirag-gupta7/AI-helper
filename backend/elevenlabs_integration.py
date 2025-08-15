@@ -9,8 +9,29 @@ import sys
 import time
 from typing import Optional
 
-# Setup logging
+# Clean logging setup
+class CleanFormatter(logging.Formatter):
+    def format(self, record):
+        if hasattr(record, 'msg') and isinstance(record.msg, str):
+            record.msg = record.msg.encode('ascii', 'ignore').decode('ascii')
+        return super().format(record)
+
+# Setup clean logger
 logger = logging.getLogger(__name__)
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(CleanFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+def clean_log(message, level='INFO'):
+    """Log clean messages without problematic characters"""
+    clean_message = message.encode('ascii', 'ignore').decode('ascii')
+    if level == 'INFO':
+        logger.info(clean_message)
+    elif level == 'ERROR':
+        logger.error(clean_message)
+    elif level == 'WARNING':
+        logger.warning(clean_message)
 
 # Constants for ElevenLabs
 DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"  # Rachel voice
@@ -27,11 +48,11 @@ try:
     from elevenlabs import Voice, VoiceSettings
     
     elevenlabs_available = True
-    logger.info("✅ ElevenLabs package successfully imported")
+    clean_log("ElevenLabs package successfully imported")
 except ImportError as e:
     elevenlabs_available = False
-    logger.warning(f"⚠️ ElevenLabs package not available: {e}")
-    logger.warning("⚠️ To use ElevenLabs, install with: pip install elevenlabs")
+    clean_log(f"ElevenLabs package not available: {e}", 'WARNING')
+    clean_log("To use ElevenLabs, install with: pip install elevenlabs", 'WARNING')
 
 class ElevenLabsService:
     """Service class for ElevenLabs TTS functionality"""
@@ -46,17 +67,17 @@ class ElevenLabsService:
     def initialize(self) -> bool:
         """Initialize the ElevenLabs service with proper error handling and retry logic"""
         if not elevenlabs_available:
-            logger.warning("⚠️ ElevenLabs package not available. Cannot initialize.")
+            clean_log("ElevenLabs package not available. Cannot initialize.", 'WARNING')
             return False
             
         if not self.api_key:
-            logger.warning("⚠️ ElevenLabs API key not set in environment variables.")
+            clean_log("ElevenLabs API key not set in environment variables.", 'WARNING')
             return False
         
         # Try to initialize with retries
         for attempt in range(MAX_RETRIES):
             try:
-                logger.info(f"Attempt {attempt+1}/{MAX_RETRIES} to initialize ElevenLabs...")
+                clean_log(f"Attempt {attempt+1}/{MAX_RETRIES} to initialize ElevenLabs...")
                 
                 # Create client (API key is passed directly to the client)
                 self.client = ElevenLabs(api_key=self.api_key)
@@ -72,26 +93,26 @@ class ElevenLabsService:
                         "remaining_characters": user_data.subscription.character_limit - user_data.subscription.character_count
                     }
                     
-                    logger.info(f"✅ ElevenLabs initialized successfully!")
-                    logger.info(f"✅ Subscription: {self.subscription_info['tier']}")
-                    logger.info(f"✅ Characters remaining: {self.subscription_info['remaining_characters']}/{self.subscription_info['character_limit']}")
+                    clean_log("ElevenLabs initialized successfully!")
+                    clean_log(f"Subscription: {self.subscription_info['tier']}")
+                    clean_log(f"Characters remaining: {self.subscription_info['remaining_characters']}/{self.subscription_info['character_limit']}")
                     
                     self.initialized = True
                     return True
                     
             except Exception as e:
-                logger.error(f"❌ ElevenLabs initialization error (attempt {attempt+1}): {str(e)}")
+                clean_log(f"ElevenLabs initialization error (attempt {attempt+1}): {str(e)}", 'ERROR')
                 if attempt < MAX_RETRIES - 1:
-                    logger.info(f"⏳ Retrying in {RETRY_DELAY} seconds...")
+                    clean_log(f"Retrying in {RETRY_DELAY} seconds...")
                     time.sleep(RETRY_DELAY)
         
-        logger.error(f"❌ Failed to initialize ElevenLabs after {MAX_RETRIES} attempts")
+        clean_log(f"Failed to initialize ElevenLabs after {MAX_RETRIES} attempts", 'ERROR')
         return False
     
     def generate_speech(self, text: str) -> Optional[bytes]:
         """Generate speech from text using ElevenLabs"""
         if not self.initialized or not self.client:
-            logger.warning("⚠️ ElevenLabs service not initialized")
+            clean_log("ElevenLabs service not initialized", 'WARNING')
             return None
             
         try:
@@ -106,17 +127,17 @@ class ElevenLabsService:
                 output_format="mp3_44100_128"
             )
             
-            logger.info(f"✅ Speech generated successfully for: {filtered_text[:50]}...")
+            clean_log(f"Speech generated successfully for: {filtered_text[:50]}...")
             return audio
             
         except Exception as e:
-            logger.error(f"❌ ElevenLabs speech generation error: {str(e)}")
+            clean_log(f"ElevenLabs speech generation error: {str(e)}", 'ERROR')
             return None
     
     def get_available_voices(self):
         """Get list of available voices from ElevenLabs"""
         if not self.initialized or not self.client:
-            logger.warning("⚠️ ElevenLabs service not initialized")
+            clean_log("ElevenLabs service not initialized", 'WARNING')
             return []
             
         try:
@@ -124,5 +145,5 @@ class ElevenLabsService:
             return [{"id": voice.voice_id, "name": voice.name} for voice in voices]
             
         except Exception as e:
-            logger.error(f"❌ ElevenLabs get voices error: {str(e)}")
+            clean_log(f"ElevenLabs get voices error: {str(e)}", 'ERROR')
             return []
